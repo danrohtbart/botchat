@@ -1,0 +1,11 @@
+{
+  "AppSyncApiName": "botchat",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authbotchat15158084",
+      "Outputs.UserPoolId"
+    ]
+  }
+}
