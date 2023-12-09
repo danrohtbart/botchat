@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-botchat-dev-135408-authRole",
+      "UnauthRoleArn": "arn:aws:iam::253178317163:role/amplify-botchat-dev-135408-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::253178317163:role/amplify-botchat-dev-135408-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-botchat-dev-135408-deployment",
+      "UnauthRoleName": "amplify-botchat-dev-135408-unauthRole",
+      "StackName": "amplify-botchat-dev-135408",
+      "StackId": "arn:aws:cloudformation:us-east-1:253178317163:stack/amplify-botchat-dev-135408/55a558c0-96c4-11ee-ab3e-12c707d6e8df",
+      "AmplifyAppId": "d3bo8xtge7s7fh"
+    },
+    "categories": {
+      "auth": {
+        "botchat15158084": {}
+      }
+    }
+  }
+}
