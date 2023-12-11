@@ -1,42 +1,45 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const createHeadline = /* GraphQL */ `
-  mutation CreateHeadline(
-    $input: CreateHeadlineInput!
-    $condition: ModelHeadlineConditionInput
+export const createChat = /* GraphQL */ `
+  mutation CreateChat(
+    $input: CreateChatInput!
+    $condition: ModelChatConditionInput
   ) {
-    createHeadline(input: $input, condition: $condition) {
+    createChat(input: $input, condition: $condition) {
       id
-      message
+      text
+      email
       createdAt
       updatedAt
       __typename
     }
   }
 `;
-export const updateHeadline = /* GraphQL */ `
-  mutation UpdateHeadline(
-    $input: UpdateHeadlineInput!
-    $condition: ModelHeadlineConditionInput
+export const updateChat = /* GraphQL */ `
+  mutation UpdateChat(
+    $input: UpdateChatInput!
+    $condition: ModelChatConditionInput
   ) {
-    updateHeadline(input: $input, condition: $condition) {
+    updateChat(input: $input, condition: $condition) {
       id
-      message
+      text
+      email
       createdAt
       updatedAt
       __typename
     }
   }
 `;
-export const deleteHeadline = /* GraphQL */ `
-  mutation DeleteHeadline(
-    $input: DeleteHeadlineInput!
-    $condition: ModelHeadlineConditionInput
+export const deleteChat = /* GraphQL */ `
+  mutation DeleteChat(
+    $input: DeleteChatInput!
+    $condition: ModelChatConditionInput
   ) {
-    deleteHeadline(input: $input, condition: $condition) {
+    deleteChat(input: $input, condition: $condition) {
       id
-      message
+      text
+      email
       createdAt
       updatedAt
       __typename

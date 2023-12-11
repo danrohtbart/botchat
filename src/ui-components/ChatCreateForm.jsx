@@ -6,12 +6,12 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextAreaField } from "@aws-amplify/ui-react";
+import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
-import { createHeadline } from "../graphql/mutations";
+import { createChat } from "../graphql/mutations";
 const client = generateClient();
-export default function HeadlineCreateForm(props) {
+export default function ChatCreateForm(props) {
   const {
     clearOnSuccess = true,
     onSuccess,
@@ -23,16 +23,20 @@ export default function HeadlineCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    message: "",
+    text: "",
+    email: "",
   };
-  const [message, setMessage] = React.useState(initialValues.message);
+  const [text, setText] = React.useState(initialValues.text);
+  const [email, setEmail] = React.useState(initialValues.email);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setMessage(initialValues.message);
+    setText(initialValues.text);
+    setEmail(initialValues.email);
     setErrors({});
   };
   const validations = {
-    message: [],
+    text: [{ type: "Required" }],
+    email: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -60,7 +64,8 @@ export default function HeadlineCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          message,
+          text,
+          email,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -91,7 +96,7 @@ export default function HeadlineCreateForm(props) {
             }
           });
           await client.graphql({
-            query: createHeadline.replaceAll("__typename", ""),
+            query: createChat.replaceAll("__typename", ""),
             variables: {
               input: {
                 ...modelFields,
@@ -111,36 +116,72 @@ export default function HeadlineCreateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "HeadlineCreateForm")}
+      {...getOverrideProps(overrides, "ChatCreateForm")}
       {...rest}
     >
-      <TextAreaField
-        label="New headline to talk about"
-        isRequired={false}
+      <TextField
+        label="Text"
+        isRequired={true}
         isReadOnly={false}
+        value={text}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              message: value,
+              text: value,
+              email,
             };
             const result = onChange(modelFields);
-            value = result?.message ?? value;
+            value = result?.text ?? value;
           }
-          if (errors.message?.hasError) {
-            runValidationTasks("message", value);
+          if (errors.text?.hasError) {
+            runValidationTasks("text", value);
           }
-          setMessage(value);
+          setText(value);
         }}
-        onBlur={() => runValidationTasks("message", message)}
-        errorMessage={errors.message?.errorMessage}
-        hasError={errors.message?.hasError}
-        {...getOverrideProps(overrides, "message")}
-      ></TextAreaField>
+        onBlur={() => runValidationTasks("text", text)}
+        errorMessage={errors.text?.errorMessage}
+        hasError={errors.text?.hasError}
+        {...getOverrideProps(overrides, "text")}
+      ></TextField>
+      <TextField
+        label="Email"
+        isRequired={false}
+        isReadOnly={false}
+        value={email}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              text,
+              email: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.email ?? value;
+          }
+          if (errors.email?.hasError) {
+            runValidationTasks("email", value);
+          }
+          setEmail(value);
+        }}
+        onBlur={() => runValidationTasks("email", email)}
+        errorMessage={errors.email?.errorMessage}
+        hasError={errors.email?.hasError}
+        {...getOverrideProps(overrides, "email")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
       >
+        <Button
+          children="Clear"
+          type="reset"
+          onClick={(event) => {
+            event.preventDefault();
+            resetStateValues();
+          }}
+          {...getOverrideProps(overrides, "ClearButton")}
+        ></Button>
         <Flex
           gap="15px"
           {...getOverrideProps(overrides, "RightAlignCTASubFlex")}

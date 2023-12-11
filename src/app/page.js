@@ -4,44 +4,72 @@ import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsconfig from '../aws-exports';
 import { Authenticator } from '@aws-amplify/ui-react';
-import { ThemeProvider } from "@aws-amplify/ui-react";
-import {
-  HeadlineCreateForm 
- } from '../ui-components';
+import { ThemeProvider } from '@aws-amplify/ui-react';
+import React from "react";
+import * as mutations from '../graphql/mutations';
+import { generateClient } from 'aws-amplify/api';
+
 
 Amplify.configure({
   ...awsconfig,
   // this lets you run Amplify code on the server-side in Next.js
   ssr: true
 });
+const client = generateClient();
+
+
+/* 
+Good news! Found a blog post: 
+https://dev.to/codebeast/build-a-multi-user-chat-app-with-aws-amplify-3915
+but needed this article to get the GraphQL API working
+https://docs.amplify.aws/javascript/build-a-backend/graphqlapi/set-up-graphql-api/
+*/ 
+
 
 export default function Home() {
+  const [chats, setChats] = React.useState([]);
+    
   return (<Authenticator><ThemeProvider>
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <HeadlineCreateForm/>
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
+    <div className="flex justify-center items-center h-screen w-full">
+          <div className={`w-3/4 flex flex-col`}>
+            {chats}
+            <div>
+              <div className="relative mt-2 flex items-center">
+                <input
+                  type="text"
+                  name="search"
+                  id="search"
+                  onKeyUp={async (e) => {
+                    if (e.key === "Enter") {
+                      await client.graphql({
+                        query: mutations.createChat,
+                        variables: {
+                          input: {
+                            text: e.target.value,
+                            email: 'dan@rohtbart.com', /*obviously fix this in the future*/
+                          },
+                        },
+                      });
+                      e.target.value = "";
+                    }
+                  }}
+                  className="block w-full rounded-md border-0 py-1.5 pr-14 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
+                  <kbd className="inline-flex items-center rounded border border-gray-200 px-1 font-sans text-xs text-gray-400">
+                    Enter
+                  </kbd>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
         <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
           Get started by editing&nbsp;
           <code className="font-mono font-bold">src/app/page.js</code>
         </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
       </div>
     </main>
     </ThemeProvider></Authenticator>

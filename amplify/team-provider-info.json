@@ -14,6 +14,9 @@
     "categories": {
       "auth": {
         "botchat15158084": {}
+      },
+      "api": {
+        "botchat": {}
       }
     }
   }

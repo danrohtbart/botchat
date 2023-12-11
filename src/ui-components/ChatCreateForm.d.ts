@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextAreaFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -21,25 +21,28 @@ export declare type ValidationResponse = {
     errorMessage?: string;
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
-export declare type HeadlineCreateFormInputValues = {
-    message?: string;
+export declare type ChatCreateFormInputValues = {
+    text?: string;
+    email?: string;
 };
-export declare type HeadlineCreateFormValidationValues = {
-    message?: ValidationFunction<string>;
+export declare type ChatCreateFormValidationValues = {
+    text?: ValidationFunction<string>;
+    email?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
-export declare type HeadlineCreateFormOverridesProps = {
-    HeadlineCreateFormGrid?: PrimitiveOverrideProps<GridProps>;
-    message?: PrimitiveOverrideProps<TextAreaFieldProps>;
+export declare type ChatCreateFormOverridesProps = {
+    ChatCreateFormGrid?: PrimitiveOverrideProps<GridProps>;
+    text?: PrimitiveOverrideProps<TextFieldProps>;
+    email?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
-export declare type HeadlineCreateFormProps = React.PropsWithChildren<{
-    overrides?: HeadlineCreateFormOverridesProps | undefined | null;
+export declare type ChatCreateFormProps = React.PropsWithChildren<{
+    overrides?: ChatCreateFormOverridesProps | undefined | null;
 } & {
     clearOnSuccess?: boolean;
-    onSubmit?: (fields: HeadlineCreateFormInputValues) => HeadlineCreateFormInputValues;
-    onSuccess?: (fields: HeadlineCreateFormInputValues) => void;
-    onError?: (fields: HeadlineCreateFormInputValues, errorMessage: string) => void;
-    onChange?: (fields: HeadlineCreateFormInputValues) => HeadlineCreateFormInputValues;
-    onValidate?: HeadlineCreateFormValidationValues;
+    onSubmit?: (fields: ChatCreateFormInputValues) => ChatCreateFormInputValues;
+    onSuccess?: (fields: ChatCreateFormInputValues) => void;
+    onError?: (fields: ChatCreateFormInputValues, errorMessage: string) => void;
+    onChange?: (fields: ChatCreateFormInputValues) => ChatCreateFormInputValues;
+    onValidate?: ChatCreateFormValidationValues;
 } & React.CSSProperties>;
-export default function HeadlineCreateForm(props: HeadlineCreateFormProps): React.ReactElement;
+export default function ChatCreateForm(props: ChatCreateFormProps): React.ReactElement;

@@ -1,33 +1,36 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const onCreateHeadline = /* GraphQL */ `
-  subscription OnCreateHeadline($filter: ModelSubscriptionHeadlineFilterInput) {
-    onCreateHeadline(filter: $filter) {
+export const onCreateChat = /* GraphQL */ `
+  subscription OnCreateChat($filter: ModelSubscriptionChatFilterInput) {
+    onCreateChat(filter: $filter) {
       id
-      message
+      text
+      email
       createdAt
       updatedAt
       __typename
     }
   }
 `;
-export const onUpdateHeadline = /* GraphQL */ `
-  subscription OnUpdateHeadline($filter: ModelSubscriptionHeadlineFilterInput) {
-    onUpdateHeadline(filter: $filter) {
+export const onUpdateChat = /* GraphQL */ `
+  subscription OnUpdateChat($filter: ModelSubscriptionChatFilterInput) {
+    onUpdateChat(filter: $filter) {
       id
-      message
+      text
+      email
       createdAt
       updatedAt
       __typename
     }
   }
 `;
-export const onDeleteHeadline = /* GraphQL */ `
-  subscription OnDeleteHeadline($filter: ModelSubscriptionHeadlineFilterInput) {
-    onDeleteHeadline(filter: $filter) {
+export const onDeleteChat = /* GraphQL */ `
+  subscription OnDeleteChat($filter: ModelSubscriptionChatFilterInput) {
+    onDeleteChat(filter: $filter) {
       id
-      message
+      text
+      email
       createdAt
       updatedAt
       __typename

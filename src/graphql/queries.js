@@ -1,27 +1,29 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const getHeadline = /* GraphQL */ `
-  query GetHeadline($id: ID!) {
-    getHeadline(id: $id) {
+export const getChat = /* GraphQL */ `
+  query GetChat($id: ID!) {
+    getChat(id: $id) {
       id
-      message
+      text
+      email
       createdAt
       updatedAt
       __typename
     }
   }
 `;
-export const listHeadlines = /* GraphQL */ `
-  query ListHeadlines(
-    $filter: ModelHeadlineFilterInput
+export const listChats = /* GraphQL */ `
+  query ListChats(
+    $filter: ModelChatFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listHeadlines(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listChats(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        message
+        text
+        email
         createdAt
         updatedAt
         __typename
