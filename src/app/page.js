@@ -52,9 +52,9 @@ export default function Home() {
 
     
   return (<Authenticator>
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="flex justify-center items-center h-screen w-full">
-        <div className={`w-3/4 flex flex-col`}>
+    <main className="flex min-h-screen max-h-screen flex-col items-center justify-between p-3">
+      <div className="flex justify-center items-left h-screen w-3/4 flex-col">
+        <div className={`h-3/4 flex flex-col overflow-y-scroll`}>
           {chats
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
             .map((chat) => (
@@ -82,34 +82,32 @@ export default function Home() {
                 </div>
               </div>
             ))}
-            <div>
-              <div className="relative mt-2 flex items-center">
-                Enter&nbsp;message:  
-                <input
-                  type="text"
-                  name="search"
-                  id="search"
-                  onKeyUp={async (e) => {
-                    if (e.key === "Enter") {
-                      await client.graphql({
-                        query: mutations.createChat,
-                        variables: {
-                          input: {
-                            text: e.target.value,
-                            email: 'User', /*obviously fix this in the future*/
-                          },
-                        },
-                      });
-                      console.log(e.target.value)
-                      e.target.value = "";
-                    }
-                  }}
-                  className="block w-full rounded-md border-0 py-1.5 pr-14 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                />
-              </div>
-            </div>
-          </div>
         </div>
+        <div className="h-1/6 flex items-center">
+          Enter&nbsp;message:&nbsp;  
+          <input
+            type="text"
+            name="search"
+            id="search"
+            onKeyUp={async (e) => {
+              if (e.key === "Enter") {
+                await client.graphql({
+                  query: mutations.createChat,
+                  variables: {
+                    input: {
+                      text: e.target.value,
+                      email: 'User', /*obviously fix this in the future*/
+                    },
+                  },
+                });
+                console.log(e.target.value)
+                e.target.value = "";
+              }
+            }}
+            className="block w-full rounded-md border-0 py-1.5 pr-14 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          />
+        </div>
+      </div>
     </main>
     </Authenticator>
   )
