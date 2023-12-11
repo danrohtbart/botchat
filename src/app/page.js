@@ -3,12 +3,12 @@ import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsconfig from '../aws-exports';
 import { Authenticator } from '@aws-amplify/ui-react';
+import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React from "react";
 import * as mutations from '../graphql/mutations';
-import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import * as queries from "../graphql/queries";
-import intlFormatDistance from "date-fns/intlFormatDistance";
 import * as subscriptions from "../graphql/subscriptions";
+import intlFormatDistance from "date-fns/intlFormatDistance";
 
 Amplify.configure({
   ...awsconfig,
