@@ -1,10 +1,8 @@
 'use client'
-import Image from 'next/image'
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsconfig from '../aws-exports';
 import { Authenticator } from '@aws-amplify/ui-react';
-import { ThemeProvider } from '@aws-amplify/ui-react';
 import React from "react";
 import * as mutations from '../graphql/mutations';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
