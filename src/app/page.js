@@ -9,13 +9,14 @@ import * as mutations from '../graphql/mutations';
 import * as queries from "../graphql/queries";
 import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 
 Amplify.configure({
   ...awsconfig,
   // this lets you run Amplify code on the server-side in Next.js
   ssr: true
 });
-const client = generateClient();
+const amplifyClient = generateClient();
 
 /* 
 Good news! Found a blog post: 
@@ -29,10 +30,9 @@ export default function Home() {
 
   React.useEffect(() => {
     async function fetchChats() {
-      const allChats = await client.graphql({
+      const allChats = await amplifyClient.graphql({
         query: queries.listChats,
       });
-      console.log(allChats.data.listChats.items);
       setChats(allChats.data.listChats.items);
     }
     fetchChats();
@@ -40,7 +40,7 @@ export default function Home() {
 
   // Rewrote this section based on https://docs.amplify.aws/javascript/build-a-backend/graphqlapi/subscribe-data/
   React.useEffect(() => {
-    const sub = client.graphql({
+    const sub = amplifyClient.graphql({
       query: subscriptions.onCreateChat
     }).subscribe({
       next: ({ provider, data }) =>
@@ -91,7 +91,7 @@ export default function Home() {
             id="search"
             onKeyUp={async (e) => {
               if (e.key === "Enter") {
-                await client.graphql({
+                await amplifyClient.graphql({
                   query: mutations.createChat,
                   variables: {
                     input: {
@@ -100,7 +100,8 @@ export default function Home() {
                     },
                   },
                 });
-                console.log(e.target.value)
+                console.log(e.target.value);
+                WriteToSNS(e.target.value);
                 e.target.value = "";
               }
             }}
@@ -112,3 +113,23 @@ export default function Home() {
     </Authenticator>
   )
 }
+
+
+// Function named WriteToSNS which takes a string parameter called message, then writes the message to an SNS topic named sports_radio_message_sns.fifo
+async function WriteToSNS(message) {
+  const client = new SNSClient({
+    region: 'us-east-1', 
+    credentials: {
+      accessKeyId: '***REMOVED***',
+      secretAccessKey: '***REMOVED***'
+    }
+  });
+  const input = {
+    Message: message,
+    TopicArn: 'arn:aws:sns:us-east-1:253178317163:sports_radio_message_sns.fifo',
+    "MessageGroupId": "0"
+    }
+  const command = new PublishCommand(input); 
+  const response = await client.send(command);
+} 
+  

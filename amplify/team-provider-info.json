@@ -17,6 +17,27 @@
       },
       "api": {
         "botchat": {}
+      },
+      "function": {
+        "botchatboto3bedrock": {}
+      }
+    }
+  },
+  "amplifyenv": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-botchat-amplifyenv-200846-authRole",
+      "UnauthRoleArn": "arn:aws:iam::253178317163:role/amplify-botchat-amplifyenv-200846-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::253178317163:role/amplify-botchat-amplifyenv-200846-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-botchat-amplifyenv-200846-deployment",
+      "UnauthRoleName": "amplify-botchat-amplifyenv-200846-unauthRole",
+      "StackName": "amplify-botchat-amplifyenv-200846",
+      "StackId": "arn:aws:cloudformation:us-east-1:253178317163:stack/amplify-botchat-amplifyenv-200846/5570d0d0-9a1d-11ee-af5d-0abb070c336b",
+      "AmplifyAppId": "d3bo8xtge7s7fh"
+    },
+    "categories": {
+      "auth": {
+        "botchat15158084": {}
       }
     }
   }
