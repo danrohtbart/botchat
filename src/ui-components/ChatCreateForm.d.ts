@@ -24,16 +24,19 @@ export declare type ValidationFunction<T> = (value: T, validationResponse: Valid
 export declare type ChatCreateFormInputValues = {
     text?: string;
     email?: string;
+    message_in_thread?: number;
 };
 export declare type ChatCreateFormValidationValues = {
     text?: ValidationFunction<string>;
     email?: ValidationFunction<string>;
+    message_in_thread?: ValidationFunction<number>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ChatCreateFormOverridesProps = {
     ChatCreateFormGrid?: PrimitiveOverrideProps<GridProps>;
     text?: PrimitiveOverrideProps<TextFieldProps>;
     email?: PrimitiveOverrideProps<TextFieldProps>;
+    message_in_thread?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type ChatCreateFormProps = React.PropsWithChildren<{
     overrides?: ChatCreateFormOverridesProps | undefined | null;

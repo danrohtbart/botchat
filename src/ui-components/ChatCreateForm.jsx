@@ -25,18 +25,24 @@ export default function ChatCreateForm(props) {
   const initialValues = {
     text: "",
     email: "",
+    message_in_thread: "",
   };
   const [text, setText] = React.useState(initialValues.text);
   const [email, setEmail] = React.useState(initialValues.email);
+  const [message_in_thread, setMessage_in_thread] = React.useState(
+    initialValues.message_in_thread
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setText(initialValues.text);
     setEmail(initialValues.email);
+    setMessage_in_thread(initialValues.message_in_thread);
     setErrors({});
   };
   const validations = {
     text: [{ type: "Required" }],
     email: [],
+    message_in_thread: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -66,6 +72,7 @@ export default function ChatCreateForm(props) {
         let modelFields = {
           text,
           email,
+          message_in_thread,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -130,6 +137,7 @@ export default function ChatCreateForm(props) {
             const modelFields = {
               text: value,
               email,
+              message_in_thread,
             };
             const result = onChange(modelFields);
             value = result?.text ?? value;
@@ -155,6 +163,7 @@ export default function ChatCreateForm(props) {
             const modelFields = {
               text,
               email: value,
+              message_in_thread,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -168,6 +177,38 @@ export default function ChatCreateForm(props) {
         errorMessage={errors.email?.errorMessage}
         hasError={errors.email?.hasError}
         {...getOverrideProps(overrides, "email")}
+      ></TextField>
+      <TextField
+        label="Message in thread"
+        isRequired={false}
+        isReadOnly={false}
+        type="number"
+        step="any"
+        value={message_in_thread}
+        onChange={(e) => {
+          let value = isNaN(parseInt(e.target.value))
+            ? e.target.value
+            : parseInt(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              text,
+              email,
+              message_in_thread: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.message_in_thread ?? value;
+          }
+          if (errors.message_in_thread?.hasError) {
+            runValidationTasks("message_in_thread", value);
+          }
+          setMessage_in_thread(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("message_in_thread", message_in_thread)
+        }
+        errorMessage={errors.message_in_thread?.errorMessage}
+        hasError={errors.message_in_thread?.hasError}
+        {...getOverrideProps(overrides, "message_in_thread")}
       ></TextField>
       <Flex
         justifyContent="space-between"

@@ -97,10 +97,10 @@ export default function Home() {
                     input: {
                       text: e.target.value,
                       email: 'User', /*obviously fix this in the future*/
+                      message_in_thread: 0
                     },
                   },
                 });
-                console.log(e.target.value);
                 WriteToSNS(e.target.value);
                 e.target.value = "";
               }
