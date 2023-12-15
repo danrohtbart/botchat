@@ -63,5 +63,30 @@
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
     }
+  },
+  "function": {
+    "botchatgeneratechat": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_botchatgeneratechat_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchatgeneratechat"
+        }
+      ]
+    },
+    "AMPLIFY_function_botchatgeneratechat_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchatgeneratechat"
+        }
+      ]
+    }
   }
 }
