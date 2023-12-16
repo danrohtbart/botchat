@@ -5,10 +5,13 @@ export const getChat = /* GraphQL */ `
   query GetChat($id: ID!) {
     getChat(id: $id) {
       id
-      text
-      email
+      message
+      message_in_thread
+      user_email
+      speaker_name
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -22,10 +25,13 @@ export const listChats = /* GraphQL */ `
     listChats(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        text
-        email
+        message
+        message_in_thread
+        user_email
+        speaker_name
         createdAt
         updatedAt
+        owner
         __typename
       }
       nextToken

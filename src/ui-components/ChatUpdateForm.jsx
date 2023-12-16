@@ -25,23 +25,28 @@ export default function ChatUpdateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    text: "",
-    email: "",
+    message: "",
     message_in_thread: "",
+    user_email: "",
+    speaker_name: "",
   };
-  const [text, setText] = React.useState(initialValues.text);
-  const [email, setEmail] = React.useState(initialValues.email);
+  const [message, setMessage] = React.useState(initialValues.message);
   const [message_in_thread, setMessage_in_thread] = React.useState(
     initialValues.message_in_thread
+  );
+  const [user_email, setUser_email] = React.useState(initialValues.user_email);
+  const [speaker_name, setSpeaker_name] = React.useState(
+    initialValues.speaker_name
   );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = chatRecord
       ? { ...initialValues, ...chatRecord }
       : initialValues;
-    setText(cleanValues.text);
-    setEmail(cleanValues.email);
+    setMessage(cleanValues.message);
     setMessage_in_thread(cleanValues.message_in_thread);
+    setUser_email(cleanValues.user_email);
+    setSpeaker_name(cleanValues.speaker_name);
     setErrors({});
   };
   const [chatRecord, setChatRecord] = React.useState(chatModelProp);
@@ -61,9 +66,10 @@ export default function ChatUpdateForm(props) {
   }, [idProp, chatModelProp]);
   React.useEffect(resetStateValues, [chatRecord]);
   const validations = {
-    text: [{ type: "Required" }],
-    email: [],
+    message: [{ type: "Required" }],
     message_in_thread: [],
+    user_email: [],
+    speaker_name: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -91,9 +97,10 @@ export default function ChatUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          text,
-          email: email ?? null,
+          message,
           message_in_thread: message_in_thread ?? null,
+          user_email: user_email ?? null,
+          speaker_name: speaker_name ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -146,56 +153,31 @@ export default function ChatUpdateForm(props) {
       {...rest}
     >
       <TextField
-        label="Text"
+        label="Message"
         isRequired={true}
         isReadOnly={false}
-        value={text}
+        value={message}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              text: value,
-              email,
+              message: value,
               message_in_thread,
+              user_email,
+              speaker_name,
             };
             const result = onChange(modelFields);
-            value = result?.text ?? value;
+            value = result?.message ?? value;
           }
-          if (errors.text?.hasError) {
-            runValidationTasks("text", value);
+          if (errors.message?.hasError) {
+            runValidationTasks("message", value);
           }
-          setText(value);
+          setMessage(value);
         }}
-        onBlur={() => runValidationTasks("text", text)}
-        errorMessage={errors.text?.errorMessage}
-        hasError={errors.text?.hasError}
-        {...getOverrideProps(overrides, "text")}
-      ></TextField>
-      <TextField
-        label="Email"
-        isRequired={false}
-        isReadOnly={false}
-        value={email}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              text,
-              email: value,
-              message_in_thread,
-            };
-            const result = onChange(modelFields);
-            value = result?.email ?? value;
-          }
-          if (errors.email?.hasError) {
-            runValidationTasks("email", value);
-          }
-          setEmail(value);
-        }}
-        onBlur={() => runValidationTasks("email", email)}
-        errorMessage={errors.email?.errorMessage}
-        hasError={errors.email?.hasError}
-        {...getOverrideProps(overrides, "email")}
+        onBlur={() => runValidationTasks("message", message)}
+        errorMessage={errors.message?.errorMessage}
+        hasError={errors.message?.hasError}
+        {...getOverrideProps(overrides, "message")}
       ></TextField>
       <TextField
         label="Message in thread"
@@ -210,9 +192,10 @@ export default function ChatUpdateForm(props) {
             : parseInt(e.target.value);
           if (onChange) {
             const modelFields = {
-              text,
-              email,
+              message,
               message_in_thread: value,
+              user_email,
+              speaker_name,
             };
             const result = onChange(modelFields);
             value = result?.message_in_thread ?? value;
@@ -228,6 +211,60 @@ export default function ChatUpdateForm(props) {
         errorMessage={errors.message_in_thread?.errorMessage}
         hasError={errors.message_in_thread?.hasError}
         {...getOverrideProps(overrides, "message_in_thread")}
+      ></TextField>
+      <TextField
+        label="User email"
+        isRequired={false}
+        isReadOnly={false}
+        value={user_email}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              message,
+              message_in_thread,
+              user_email: value,
+              speaker_name,
+            };
+            const result = onChange(modelFields);
+            value = result?.user_email ?? value;
+          }
+          if (errors.user_email?.hasError) {
+            runValidationTasks("user_email", value);
+          }
+          setUser_email(value);
+        }}
+        onBlur={() => runValidationTasks("user_email", user_email)}
+        errorMessage={errors.user_email?.errorMessage}
+        hasError={errors.user_email?.hasError}
+        {...getOverrideProps(overrides, "user_email")}
+      ></TextField>
+      <TextField
+        label="Speaker name"
+        isRequired={false}
+        isReadOnly={false}
+        value={speaker_name}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              message,
+              message_in_thread,
+              user_email,
+              speaker_name: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.speaker_name ?? value;
+          }
+          if (errors.speaker_name?.hasError) {
+            runValidationTasks("speaker_name", value);
+          }
+          setSpeaker_name(value);
+        }}
+        onBlur={() => runValidationTasks("speaker_name", speaker_name)}
+        errorMessage={errors.speaker_name?.errorMessage}
+        hasError={errors.speaker_name?.hasError}
+        {...getOverrideProps(overrides, "speaker_name")}
       ></TextField>
       <Flex
         justifyContent="space-between"

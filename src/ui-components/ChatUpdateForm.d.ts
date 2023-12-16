@@ -22,21 +22,24 @@ export declare type ValidationResponse = {
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
 export declare type ChatUpdateFormInputValues = {
-    text?: string;
-    email?: string;
+    message?: string;
     message_in_thread?: number;
+    user_email?: string;
+    speaker_name?: string;
 };
 export declare type ChatUpdateFormValidationValues = {
-    text?: ValidationFunction<string>;
-    email?: ValidationFunction<string>;
+    message?: ValidationFunction<string>;
     message_in_thread?: ValidationFunction<number>;
+    user_email?: ValidationFunction<string>;
+    speaker_name?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ChatUpdateFormOverridesProps = {
     ChatUpdateFormGrid?: PrimitiveOverrideProps<GridProps>;
-    text?: PrimitiveOverrideProps<TextFieldProps>;
-    email?: PrimitiveOverrideProps<TextFieldProps>;
+    message?: PrimitiveOverrideProps<TextFieldProps>;
     message_in_thread?: PrimitiveOverrideProps<TextFieldProps>;
+    user_email?: PrimitiveOverrideProps<TextFieldProps>;
+    speaker_name?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type ChatUpdateFormProps = React.PropsWithChildren<{
     overrides?: ChatUpdateFormOverridesProps | undefined | null;

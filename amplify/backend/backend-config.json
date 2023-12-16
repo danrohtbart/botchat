@@ -69,6 +69,11 @@
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
+    },
+    "botchatlambdajs": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
     }
   },
   "parameters": {
@@ -85,6 +90,22 @@
         {
           "category": "function",
           "resourceName": "botchatgeneratechat"
+        }
+      ]
+    },
+    "AMPLIFY_function_botchatlambdajs_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchatlambdajs"
+        }
+      ]
+    },
+    "AMPLIFY_function_botchatlambdajs_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchatlambdajs"
         }
       ]
     }

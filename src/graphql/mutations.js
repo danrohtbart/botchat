@@ -8,10 +8,13 @@ export const createChat = /* GraphQL */ `
   ) {
     createChat(input: $input, condition: $condition) {
       id
-      text
-      email
+      message
+      message_in_thread
+      user_email
+      speaker_name
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -23,10 +26,13 @@ export const updateChat = /* GraphQL */ `
   ) {
     updateChat(input: $input, condition: $condition) {
       id
-      text
-      email
+      message
+      message_in_thread
+      user_email
+      speaker_name
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -38,10 +44,13 @@ export const deleteChat = /* GraphQL */ `
   ) {
     deleteChat(input: $input, condition: $condition) {
       id
-      text
-      email
+      message
+      message_in_thread
+      user_email
+      speaker_name
       createdAt
       updatedAt
+      owner
       __typename
     }
   }

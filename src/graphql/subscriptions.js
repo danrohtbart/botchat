@@ -2,37 +2,55 @@
 // this is an auto generated file. This will be overwritten
 
 export const onCreateChat = /* GraphQL */ `
-  subscription OnCreateChat($filter: ModelSubscriptionChatFilterInput) {
-    onCreateChat(filter: $filter) {
+  subscription OnCreateChat(
+    $filter: ModelSubscriptionChatFilterInput
+    $owner: String
+  ) {
+    onCreateChat(filter: $filter, owner: $owner) {
       id
-      text
-      email
+      message
+      message_in_thread
+      user_email
+      speaker_name
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
 export const onUpdateChat = /* GraphQL */ `
-  subscription OnUpdateChat($filter: ModelSubscriptionChatFilterInput) {
-    onUpdateChat(filter: $filter) {
+  subscription OnUpdateChat(
+    $filter: ModelSubscriptionChatFilterInput
+    $owner: String
+  ) {
+    onUpdateChat(filter: $filter, owner: $owner) {
       id
-      text
-      email
+      message
+      message_in_thread
+      user_email
+      speaker_name
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
 export const onDeleteChat = /* GraphQL */ `
-  subscription OnDeleteChat($filter: ModelSubscriptionChatFilterInput) {
-    onDeleteChat(filter: $filter) {
+  subscription OnDeleteChat(
+    $filter: ModelSubscriptionChatFilterInput
+    $owner: String
+  ) {
+    onDeleteChat(filter: $filter, owner: $owner) {
       id
-      text
-      email
+      message
+      message_in_thread
+      user_email
+      speaker_name
       createdAt
       updatedAt
+      owner
       __typename
     }
   }

@@ -1,7 +1,7 @@
 'use client'
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
-import awsconfig from '../aws-exports';
+import awsmobile from '../aws-exports';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React from "react";
@@ -10,9 +10,10 @@ import * as queries from "../graphql/queries";
 import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 Amplify.configure({
-  ...awsconfig,
+  ...awsmobile,
   // this lets you run Amplify code on the server-side in Next.js
   ssr: true
 });
@@ -30,11 +31,16 @@ export default function Home() {
 
   React.useEffect(() => {
     async function fetchChats() {
-      const allChats = await amplifyClient.graphql({
-        query: queries.listChats,
-      });
-      setChats(allChats.data.listChats.items);
-    }
+      try {
+        const allChats = await amplifyClient.graphql({
+          query: queries.listChats,
+        });
+        console.log(allChats);
+        setChats(allChats.data.listChats.items);
+        } catch (error) {
+          console.log("Error fetching chats: ", error);
+        }
+      }
     fetchChats();
   }, []);
 
@@ -50,6 +56,9 @@ export default function Home() {
     return () => sub.unsubscribe();
   }, []);
 
+  // retrieve the authenticated user's email address into the user_email variable
+  // not yet implemented
+  const user_email = 'dan@rohtbart.com';
     
   return (<Authenticator>
     <main className="flex min-h-screen max-h-screen flex-col items-center justify-between p-3">
@@ -68,7 +77,7 @@ export default function Home() {
                   <div className="flex justify-between gap-x-4">
                     <div className="py-0.5 text-xs leading-5 text-gray-500">
                       <span className="font-medium text-gray-900">
-                        {chat.email.split("@")[0]}
+                        {chat.user_email.split("@")[0]}
                       </span>{" "}
                     </div>
                     <time
@@ -78,7 +87,7 @@ export default function Home() {
                       {intlFormatDistance(new Date(chat.createdAt), new Date())}
                     </time>
                   </div>
-                  <p className="text-sm leading-6 text-gray-500">{chat.text}</p>
+                  <p className="text-sm leading-6 text-gray-500">{chat.message}</p>
                 </div>
               </div>
             ))}
@@ -91,17 +100,9 @@ export default function Home() {
             id="search"
             onKeyUp={async (e) => {
               if (e.key === "Enter") {
-                await amplifyClient.graphql({
-                  query: mutations.createChat,
-                  variables: {
-                    input: {
-                      text: e.target.value,
-                      email: 'User', /*obviously fix this in the future*/
-                      message_in_thread: 0
-                    },
-                  },
-                });
+                WriteToGraphQL (amplifyClient, e.target.value, user_email);
                 WriteToSNS(e.target.value);
+                //InvokeBotChatLambda(e.target.value, user_email);
                 e.target.value = "";
               }
             }}
@@ -133,3 +134,38 @@ async function WriteToSNS(message) {
   const response = await client.send(command);
 } 
   
+
+// Function called InvokeBotChatGenerateChat which takes a string parameter called message and a string parameter called user. The function sends the message and user to the Lambda function 
+async function InvokeBotChatLambda(message, user_email) {
+  const lambda_client = new LambdaClient({
+    region: 'us-east-1', 
+    credentials: {
+      accessKeyId: '***REMOVED***',
+      secretAccessKey: '***REMOVED***'
+    }
+  });
+  const params = {
+    FunctionName: 'botchatlambdajs-dev',
+    InvocationType: 'RequestResponse',
+    Payload: JSON.stringify({
+      message: message,
+      user_email: user_email
+    }
+    )
+  };  
+  const command = new InvokeCommand(params);
+  const response = await lambda_client.send(command);
+}
+
+async function WriteToGraphQL (amplifyClient, message, user_email) {
+  await amplifyClient.graphql({
+    query: mutations.createChat,
+    variables: {
+      input: {
+        message: message,
+        user_email: user_email, 
+        message_in_thread: 0
+      },
+    }
+  });
+}
