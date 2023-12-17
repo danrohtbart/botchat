@@ -1,5 +1,5 @@
 {
-  "key1": "value1",
-  "key2": "value2",
-  "key3": "value3"
+  "message": "This is a test message.",
+  "user_email": "dan@rohtbart.com",
+  "message_in_thread": 0
 }

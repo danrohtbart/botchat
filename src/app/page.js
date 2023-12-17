@@ -35,7 +35,6 @@ export default function Home() {
         const allChats = await amplifyClient.graphql({
           query: queries.listChats,
         });
-        console.log(allChats);
         setChats(allChats.data.listChats.items);
         } catch (error) {
           console.log("Error fetching chats: ", error);
@@ -51,7 +50,7 @@ export default function Home() {
     }).subscribe({
       next: ({ provider, data }) =>
         setChats((prev) => [...prev, data.onCreateChat]),
-      error: (err) => console.log(err),
+      error: (err) => console.log("Error fetching subscriptions: ", err),
     });
     return () => sub.unsubscribe();
   }, []);
@@ -101,8 +100,8 @@ export default function Home() {
             onKeyUp={async (e) => {
               if (e.key === "Enter") {
                 WriteToGraphQL (amplifyClient, e.target.value, user_email);
-                WriteToSNS(e.target.value);
-                //InvokeBotChatLambda(e.target.value, user_email);
+                //WriteToSNS(e.target.value);
+                InvokeBotChatLambda(e.target.value, user_email);
                 e.target.value = "";
               }
             }}
