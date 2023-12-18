@@ -156,6 +156,7 @@ async function InvokeBotChatLambda(message, user_email) {
   const response = await lambda_client.send(command);
 }
 
+// Same function is used in the Lambda function. Opportunity for refactoring. 
 async function WriteToGraphQL (amplifyClient, message, user_email) {
   await amplifyClient.graphql({
     query: mutations.createChat,

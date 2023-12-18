@@ -1,5 +1,6 @@
-//import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime"; // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/bedrock-runtime/command/InvokeModelCommand/
 const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
+const { Amplify } = require('aws-amplify');
+const { generateClient } = require('aws-amplify/api');
 
 const debug = true;
 
@@ -47,17 +48,18 @@ exports.handler = async (event) => {
             console.log("Instruction is", instruction);
         }
 
-        // const prompt = instruction + last_statement + "\nRespond to that opinion."
-        const prompt = "Tell me about llamas."
+        const prompt = instruction + last_statement + "\nRespond to that opinion."
 
         bedrock_request_body = {
-            body: prompt,
-            contentType: "STRING_VALUE",
-            accept: "STRING_VALUE",
-//            temperature: 0.9,
-//            top_p: 0.1, 
-//            max_gen_len: 255,
-            modelId: 'meta.llama2-70b-chat-v1',
+            body: JSON.stringify({
+                prompt: prompt,
+                temperature: 0.9,
+                top_p: 0.1,
+                max_gen_len: 255,
+            }),
+            contentType: "application/json",
+            accept: "application/json",
+            modelId: "meta.llama2-70b-chat-v1"
         }
         const bedrock_config = {
             region: 'us-east-1',
@@ -73,11 +75,52 @@ exports.handler = async (event) => {
 
         const bedrock_client = new BedrockRuntimeClient(bedrock_config);
         const bedrock_command = new InvokeModelCommand(bedrock_request_body);
-        const response = await bedrock_client.send(bedrock_command);
+        const bedrock_response = await bedrock_client.send(bedrock_command);
+        let message;
+        message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
+        if (debug) {
+            console.log("Message is ", message);
+        }
+
+        if (message == '') {
+            message = "I'm speechless. ";
+        }
+
+        // Start here - the error is "no credentials"
+        Amplify.configure(bedrock_config);
+        const amplifyClient = generateClient();
+        const createChat = /* GraphQL */ `
+        mutation CreateChat(
+          $input: CreateChatInput!
+          $condition: ModelChatConditionInput
+        ) {
+          createChat(input: $input, condition: $condition) {
+            id
+            message
+            message_in_thread
+            user_email
+            speaker_name
+            createdAt
+            updatedAt
+            owner
+            __typename
+          }
+        }
+      `;
+
+        // Same function is used in the React page. Opportunity for refactoring. Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
+        await amplifyClient.graphql({
+            query: createChat,
+            variables: {
+                input: {
+                    message: message,
+                    user_email: speaker_name,
+                    message_in_thread: message_in_thread + 1
+                }, 
+            }
+        });
+
     }
-
-    
-
 
     return {
         statusCode: 200,
