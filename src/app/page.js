@@ -69,14 +69,14 @@ export default function Home() {
               <div
                 key={chat.id}
                 className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${
-                  chat.email === 'User' && "self-end bg-gray-200"
+                  chat.user_email === user_email && "self-end bg-gray-200"
                 }`}
               >
                 <div>
                   <div className="flex justify-between gap-x-4">
                     <div className="py-0.5 text-xs leading-5 text-gray-500">
                       <span className="font-medium text-gray-900">
-                        {chat.user_email.split("@")[0]}
+                        {chat.speaker_name}
                       </span>{" "}
                     </div>
                     <time
@@ -163,8 +163,9 @@ async function WriteToGraphQL (amplifyClient, message, user_email) {
     variables: {
       input: {
         message: message,
+        message_in_thread: 0,
         user_email: user_email, 
-        message_in_thread: 0
+        speaker_name: 'Caller',
       },
     }
   });

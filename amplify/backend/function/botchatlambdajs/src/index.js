@@ -2,7 +2,8 @@ const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-b
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
-const debug = true;
+const debug = false;
+const mock_bedrock = false;
 
 if (debug) {
     console.log('Loading botchatlambdajs.');
@@ -48,7 +49,7 @@ exports.handler = async (event) => {
             console.log("Instruction is", instruction);
         }
 
-        const prompt = instruction + last_statement + "\nRespond to that opinion."
+        const prompt = instruction + last_speaker + ": " + last_statement + "\nRespond to that opinion."
 
         bedrock_request_body = {
             body: JSON.stringify({
@@ -74,10 +75,18 @@ exports.handler = async (event) => {
         }        
 
         let message = '';
-        const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
-        const bedrock_command = new InvokeModelCommand(bedrock_request_body);
-        const bedrock_response = await bedrock_client.send(bedrock_command);
-        message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
+        if(mock_bedrock) {
+            message = "Yo, what's up folks? It's Jim Hoagies here, and I gotta say, that game last night was a freakin' joke. The Ravens? They're a real team, they know how to get the job done. But the Jaguars? They're a bunch of scrubs, they don't belong on the same field as the Ravens. I mean, come on, they got shut out ";
+        } else {
+            const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
+            const bedrock_command = new InvokeModelCommand(bedrock_request_body);
+            const bedrock_response = await bedrock_client.send(bedrock_command);
+            message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
+        }
+        // Keep only the content to the left of the last . in message
+        message = message.substring(0, message.lastIndexOf(".")+1);
+
+
         if (debug) {
             console.log("Message is ", message);
         }
