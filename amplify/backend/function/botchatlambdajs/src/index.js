@@ -9,8 +9,8 @@ if (debug) {
 }
 
 const personalities = {
-    "Jim": "[INST]You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments. Do not repeat the prompt.[/INST]\n\n", 
-    "Mark": "[INST]You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments. Do not repeat the prompt.[/INST]\n\n"
+    "Jim": "[INST]You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n", 
+    "Mark": "[INST]You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n"
 }
 
 /**
@@ -55,13 +55,13 @@ exports.handler = async (event) => {
                 prompt: prompt,
                 temperature: 0.9,
                 top_p: 0.1,
-                max_gen_len: 255,
+                max_gen_len: 200,
             }),
             contentType: "application/json",
             accept: "application/json",
             modelId: "meta.llama2-70b-chat-v1"
         }
-        const bedrock_config = {
+        const aws_sdk_config = {
             region: 'us-east-1',
             credentials: {
                 accessKeyId: '***REMOVED***',
@@ -69,25 +69,57 @@ exports.handler = async (event) => {
             }
         }
         if (debug) {
-            console.log("Bedrock config is", bedrock_config);
+            console.log("Bedrock config is", aws_sdk_config);
             console.log("Bedrock request body is", bedrock_request_body);
         }        
 
-        const bedrock_client = new BedrockRuntimeClient(bedrock_config);
+        let message = '';
+        const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
         const bedrock_command = new InvokeModelCommand(bedrock_request_body);
         const bedrock_response = await bedrock_client.send(bedrock_command);
-        let message;
         message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
         if (debug) {
             console.log("Message is ", message);
         }
-
         if (message == '') {
             message = "I'm speechless. ";
         }
 
-        // Start here - the error is "no credentials"
-        Amplify.configure(bedrock_config);
+        const amplify_config = {
+            "aws_project_region": "us-east-1",
+            "aws_appsync_graphqlEndpoint": "https://isjrfishhffyvkjvf63huj5wm4.appsync-api.us-east-1.amazonaws.com/graphql",
+            "aws_appsync_region": "us-east-1",
+            "aws_appsync_authenticationType": "API_KEY",
+            "aws_appsync_apiKey": "da2-nx6urtyn4nekbef6osiwlkoec4",
+            "aws_cognito_identity_pool_id": "us-east-1:6ac7fc59-ae90-4578-b5fb-fd8b528547f4",
+            "aws_cognito_region": "us-east-1",
+            "aws_user_pools_id": "us-east-1_AYMzkIGAz",
+            "aws_user_pools_web_client_id": "6q6isgm1ohotk12v5rojoi7uj1",
+            "oauth": {},
+            "aws_cognito_username_attributes": [
+              "EMAIL"
+            ],
+            "aws_cognito_social_providers": [],
+            "aws_cognito_signup_attributes": [
+              "EMAIL"
+            ],
+            "aws_cognito_mfa_configuration": "OFF",
+            "aws_cognito_mfa_types": [
+              "SMS"
+            ],
+            "aws_cognito_password_protection_settings": {
+              "passwordPolicyMinLength": 8,
+              "passwordPolicyCharacters": []
+            },
+            "aws_cognito_verification_mechanisms": [
+              "EMAIL"
+            ]
+          }
+
+        Amplify.configure({
+            ...amplify_config,
+        });
+
         const amplifyClient = generateClient();
         const createChat = /* GraphQL */ `
         mutation CreateChat(
@@ -107,18 +139,31 @@ exports.handler = async (event) => {
           }
         }
       `;
+        if (debug) {
+            console.log("CreateChat is", createChat);
+            console.log("Message is", message);
+        }
 
-        // Same function is used in the React page. Opportunity for refactoring. Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
-        await amplifyClient.graphql({
-            query: createChat,
-            variables: {
-                input: {
-                    message: message,
-                    user_email: speaker_name,
-                    message_in_thread: message_in_thread + 1
-                }, 
+      
+        // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
+        try {
+            const amplify_result = await amplifyClient.graphql({
+                query: createChat,
+                variables: {
+                    input: {
+                        message: message,
+                        message_in_thread: message_in_thread + 1,
+                        user_email: 'dan@rohtbart.com',
+                        speaker_name: speaker_name,
+                    }, 
+                }
+            });
+            if (debug) {
+                console.log("Amplify result is", amplify_result);
             }
-        });
+        } catch (error) {
+            console.log("Amplify GraphQL error is", JSON.stringify(error));
+        }
 
     }
 
