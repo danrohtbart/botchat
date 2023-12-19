@@ -3,7 +3,8 @@ const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
 const debug = true;
-const mock_bedrock = true;
+const mock_bedrock = false;
+const drain_queue = true;
 
 if (debug) {
     console.log('Loading botchatlambdajs.');
@@ -21,11 +22,25 @@ exports.handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
     const incoming_message = JSON.parse(event.Records[0].body);
 
+
     if (debug) {
         console.log("Incoming message is", incoming_message);
         console.log("Type of incoming_message.Message is", typeof incoming_message.Message);
-        console.log("Incoming message.Message is", JSON.parse(Buffer.from(incoming_message.Message)));
+        console.log("Incoming message.Message is", incoming_message.Message);
+        if(typeof incoming_message.Message == "[object Object]") {
+            console.log("Buffer.from(Incoming message.Message)) is", Buffer.from(incoming_message.Message));
+            console.log("JSON.parse(Buffer.from(Incoming message.Message)) is", JSON.parse(Buffer.from(incoming_message.Message)));
+        }
     }
+    if (drain_queue){
+        console.log("Drain queue is true. Draining queue of this event.");
+        return {
+            statusCode: 200
+        }
+    }
+
+    /* Next action 12/19/2023 - parse the incoming_message. It's working now that I'm stringifying from the client */
+
 
     const last_statement = event['message'] || '';
     const last_speaker = event['speaker_name'] || '';

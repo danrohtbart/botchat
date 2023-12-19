@@ -133,7 +133,7 @@ async function WriteToSNS(output) {
     }
   });
   const input = {
-    Message: output,
+    Message: JSON.stringify(output),
     TopicArn: 'arn:aws:sns:us-east-1:253178317163:sports_radio_message_sns.fifo',
     "MessageGroupId": "0"
     }
