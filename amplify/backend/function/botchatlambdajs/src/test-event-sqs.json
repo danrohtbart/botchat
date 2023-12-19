@@ -1,0 +1,23 @@
+{
+    "Records": [
+        {
+            "messageId": "4e57953e-921c-4e94-86ac-3117c16ed473",
+            "receiptHandle": "AQEBe4NQxhk9hhCBrzJEs3WgoD0zJz3bt2REz8wMyKmC2Wuyoc+J2NVbOKtqsaPjVfCGI4A8ASJeqDRc0GszhZ6R9iCUtCKse1exTiJFtJTzvRMMsnJWrPqqC2IPkfuRp/DSa5EDZ5VYBVY4uUfVK6vidiDxAPCJx/NNciUyBG690ZOExab7PNz9yQrpYz4puWkSvkBWlPh+ySpF/uPfdnRXIGkmc3sfbmPKK09T2aB9sl01+ocS+2M07Tl/hc2zDA2h/FKtaa9um9HzlYi5DgQTWQWjjK1DGkn6hnZxZI1SkXk=",
+            "body": "{\n  \"Type\" : \"Notification\",\n  \"MessageId\" : \"642005bc-aacf-5636-986c-5847bf81154f\",\n  \"SequenceNumber\" : \"10000000000000381000\",\n  \"TopicArn\" : \"arn:aws:sns:us-east-1:253178317163:sports_radio_message_sns.fifo\",\n  \"Message\" : \"[object Object]\",\n  \"Timestamp\" : \"2023-12-19T03:50:38.007Z\",\n  \"UnsubscribeURL\" : \"https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:253178317163:sports_radio_message_sns.fifo:9e3c6d6d-5b62-4381-b596-5d4742b5ac4c\"\n}",
+            "attributes": {
+                "ApproximateReceiveCount": "1",
+                "SentTimestamp": "1702957838275",
+                "SequenceNumber": "18882701280307951616",
+                "MessageGroupId": "0",
+                "SenderId": "AIDAYRRVD2ENU4DSO2WBX",
+                "MessageDeduplicationId": "b28c94b2195c8ed259f0b415aaee3f39b0b2920a4537611499fa044956917a21",
+                "ApproximateFirstReceiveTimestamp": "1702957838275"
+            },
+            "messageAttributes": {},
+            "md5OfBody": "1afd7fb1e48510a8c6359b8944ddcf95",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:us-east-1:253178317163:sports_radio_message.fifo",
+            "awsRegion": "us-east-1"
+        }
+    ]
+}

@@ -26,7 +26,7 @@
         },
         "botchatlambdajs": {
           "deploymentBucketName": "amplify-botchat-dev-135408-deployment",
-          "s3Key": "amplify-builds/botchatlambdajs-704e786864704c4b5838-build.zip"
+          "s3Key": "amplify-builds/botchatlambdajs-312f6d69467544496262-build.zip"
         }
       }
     }

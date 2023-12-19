@@ -99,9 +99,17 @@ export default function Home() {
             id="search"
             onKeyUp={async (e) => {
               if (e.key === "Enter") {
-                WriteToGraphQL (amplifyClient, e.target.value, user_email);
-                //WriteToSNS(e.target.value);
-                InvokeBotChatLambda(e.target.value, user_email);
+                const output = {
+                  message: e.target.value,
+                  message_in_thread: 1,
+                  user_email: user_email, 
+                  speaker_name: 'Caller',
+                };
+                WriteToGraphQL (amplifyClient, output);
+                WriteToSNS(output);
+                
+                // Replaced InvokeBotChatLambda by having the lambda write to SNS (to be done!)
+                //InvokeBotChatLambda(output);
                 e.target.value = "";
               }
             }}
@@ -115,8 +123,8 @@ export default function Home() {
 }
 
 
-// Function named WriteToSNS which takes a string parameter called message, then writes the message to an SNS topic named sports_radio_message_sns.fifo
-async function WriteToSNS(message) {
+// Function named WriteToSNS which takes a string parameter called message, then writes the message to an SNS topic named sports_radio_message_sns.fifo, so the lambda can pick it up and generate a response.
+async function WriteToSNS(output) {
   const client = new SNSClient({
     region: 'us-east-1', 
     credentials: {
@@ -125,7 +133,7 @@ async function WriteToSNS(message) {
     }
   });
   const input = {
-    Message: message,
+    Message: output,
     TopicArn: 'arn:aws:sns:us-east-1:253178317163:sports_radio_message_sns.fifo',
     "MessageGroupId": "0"
     }
@@ -133,9 +141,9 @@ async function WriteToSNS(message) {
   const response = await client.send(command);
 } 
   
-
+/* to be removed
 // Function called InvokeBotChatGenerateChat which takes a string parameter called message and a string parameter called user. The function sends the message and user to the Lambda function 
-async function InvokeBotChatLambda(message, user_email) {
+async function InvokeBotChatLambda(output) {
   const lambda_client = new LambdaClient({
     region: 'us-east-1', 
     credentials: {
@@ -146,27 +154,19 @@ async function InvokeBotChatLambda(message, user_email) {
   const params = {
     FunctionName: 'botchatlambdajs-dev',
     InvocationType: 'RequestResponse',
-    Payload: JSON.stringify({
-      message: message,
-      user_email: user_email
-    }
-    )
+    Payload: output
   };  
   const command = new InvokeCommand(params);
   const response = await lambda_client.send(command);
 }
+*/
 
 // Same function is used in the Lambda function. Opportunity for refactoring. 
-async function WriteToGraphQL (amplifyClient, message, user_email) {
+async function WriteToGraphQL (amplifyClient, output) {
   await amplifyClient.graphql({
     query: mutations.createChat,
     variables: {
-      input: {
-        message: message,
-        message_in_thread: 0,
-        user_email: user_email, 
-        speaker_name: 'Caller',
-      },
+      input: output,
     }
   });
 }

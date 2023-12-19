@@ -2,8 +2,8 @@ const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-b
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
-const debug = false;
-const mock_bedrock = false;
+const debug = true;
+const mock_bedrock = true;
 
 if (debug) {
     console.log('Loading botchatlambdajs.');
@@ -19,6 +19,13 @@ const personalities = {
  */
 exports.handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
+    const incoming_message = JSON.parse(event.Records[0].body);
+
+    if (debug) {
+        console.log("Incoming message is", incoming_message);
+        console.log("Type of incoming_message.Message is", typeof incoming_message.Message);
+        console.log("Incoming message.Message is", JSON.parse(Buffer.from(incoming_message.Message)));
+    }
 
     const last_statement = event['message'] || '';
     const last_speaker = event['speaker_name'] || '';
@@ -54,7 +61,7 @@ exports.handler = async (event) => {
         bedrock_request_body = {
             body: JSON.stringify({
                 prompt: prompt,
-                temperature: 0.9,
+                temperature: 0.8,
                 top_p: 0.1,
                 max_gen_len: 200,
             }),
