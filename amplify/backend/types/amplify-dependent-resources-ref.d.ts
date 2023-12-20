@@ -18,13 +18,6 @@ export type AmplifyDependentResourcesAttributes = {
     }
   },
   "function": {
-    "botchatgeneratechat": {
-      "Arn": "string",
-      "LambdaExecutionRole": "string",
-      "LambdaExecutionRoleArn": "string",
-      "Name": "string",
-      "Region": "string"
-    },
     "botchatlambdajs": {
       "Arn": "string",
       "LambdaExecutionRole": "string",

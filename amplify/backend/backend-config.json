@@ -65,11 +65,6 @@
     }
   },
   "function": {
-    "botchatgeneratechat": {
-      "build": true,
-      "providerPlugin": "awscloudformation",
-      "service": "Lambda"
-    },
     "botchatlambdajs": {
       "build": true,
       "providerPlugin": "awscloudformation",
@@ -77,22 +72,6 @@
     }
   },
   "parameters": {
-    "AMPLIFY_function_botchatgeneratechat_deploymentBucketName": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "botchatgeneratechat"
-        }
-      ]
-    },
-    "AMPLIFY_function_botchatgeneratechat_s3Key": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "botchatgeneratechat"
-        }
-      ]
-    },
     "AMPLIFY_function_botchatlambdajs_deploymentBucketName": {
       "usedBy": [
         {
