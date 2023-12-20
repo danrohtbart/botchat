@@ -10,7 +10,6 @@ import * as queries from "../graphql/queries";
 import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
-import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 Amplify.configure({
   ...awsmobile,
@@ -121,6 +120,7 @@ export default function Home() {
 
 
 // Function named WriteToSNS which takes a string parameter called message, then writes the message to an SNS topic named sports_radio_message_sns.fifo, so the lambda can pick it up and generate a response.
+// Same function is used in the Lambda function. Opportunity for refactoring. 
 async function WriteToSNS(output) {
   const client = new SNSClient({
     region: 'us-east-1', 

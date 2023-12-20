@@ -1,6 +1,8 @@
 const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
+const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+
 
 const debug = false;
 const mock_bedrock = false;
@@ -164,6 +166,15 @@ exports.handler = async (event) => {
           }
         }
       `;
+
+
+        const output = {
+            message: message,
+            message_in_thread: message_in_thread + 1,
+            user_email: 'dan@rohtbart.com',
+            speaker_name: speaker_name,
+          };
+
         if (debug) {
             console.log("CreateChat is", createChat);
             console.log("Message is", message);
@@ -174,12 +185,7 @@ exports.handler = async (event) => {
             const amplify_result = await amplifyClient.graphql({
                 query: createChat,
                 variables: {
-                    input: {
-                        message: message,
-                        message_in_thread: message_in_thread + 1,
-                        user_email: 'dan@rohtbart.com',
-                        speaker_name: speaker_name,
-                    }, 
+                    input: output, 
                 }
             });
             if (debug) {
@@ -189,6 +195,25 @@ exports.handler = async (event) => {
             console.log("Amplify GraphQL error is", JSON.stringify(error));
         }
 
+        try {
+            const sns_client = new SNSClient({
+                region: 'us-east-1', 
+                credentials: {
+                accessKeyId: '***REMOVED***',
+                secretAccessKey: '***REMOVED***'
+                }
+            });
+            const input = {
+                Message: JSON.stringify(output),
+                TopicArn: 'arn:aws:sns:us-east-1:253178317163:sports_radio_message_sns.fifo',
+                "MessageGroupId": "0"
+                }
+            const sns_command = new PublishCommand(input); 
+            const sns_response = await sns_client.send(sns_command);
+        } catch (error) {
+            console.log("SNS error is", JSON.stringify(error));
+        }
+        console.log(`OUTPUT: ${JSON.stringify(output)}`);
     }
 
     return {
