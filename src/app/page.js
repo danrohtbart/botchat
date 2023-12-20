@@ -10,6 +10,7 @@ import * as queries from "../graphql/queries";
 import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
+import { getCurrentUser } from 'aws-amplify/auth';
 
 Amplify.configure({
   ...awsmobile,
@@ -56,10 +57,10 @@ export default function Home() {
 
   // retrieve the authenticated user's email address into the user_email variable
   // not yet implemented
-  const user_email = 'dan@rohtbart.com';
+  const user_email = 'User email not set';
     
-  return (<Authenticator>
-    <main className="flex min-h-screen max-h-screen flex-col items-center justify-between p-3">
+  return (<Authenticator>{({ signOut, user }) => (
+    <main className="flex min-h-screen max-h-screen flex-col items-center justify-between p-1">
       <div className="flex justify-center items-left h-screen w-3/4 flex-col">
         <div className={`h-3/4 flex flex-col overflow-y-scroll`}>
           {chats
@@ -112,9 +113,12 @@ export default function Home() {
             className="block w-full rounded-md border-0 py-1.5 pr-14 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
           />
         </div>
+        <div className="h-1/6 flex items-center">
+          <button onClick={signOut}>Sign out</button>
+        </div>
       </div>
     </main>
-    </Authenticator>
+    )}</Authenticator>
   )
 }
 
@@ -122,6 +126,13 @@ export default function Home() {
 // Function named WriteToSNS which takes a string parameter called message, then writes the message to an SNS topic named sports_radio_message_sns.fifo, so the lambda can pick it up and generate a response.
 // Same function is used in the Lambda function. Opportunity for refactoring. 
 async function WriteToSNS(output) {
+  try {
+    const { signInDetails } = await getCurrentUser();
+    output.user_email = signInDetails.loginId;
+  } catch (err) {
+    console.log(err);
+  }
+  
   const client = new SNSClient({
     region: 'us-east-1', 
     credentials: {
@@ -141,6 +152,13 @@ async function WriteToSNS(output) {
 
 // Same function is used in the Lambda function. Opportunity for refactoring. 
 async function WriteToGraphQL (amplifyClient, output) {
+  try {
+    const { signInDetails } = await getCurrentUser();
+    output.user_email = signInDetails.loginId;
+  } catch (err) {
+    console.log(err);
+  }
+
   await amplifyClient.graphql({
     query: mutations.createChat,
     variables: {
