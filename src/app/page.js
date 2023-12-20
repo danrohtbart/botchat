@@ -91,7 +91,7 @@ export default function Home() {
               </div>
             ))}
         </div>
-        <div className="h-1/6 flex items-center">
+        <div className="h-1/8 flex items-center">
           Enter&nbsp;message:&nbsp;  
           <input
             type="text"
@@ -112,9 +112,7 @@ export default function Home() {
             }}
             className="block w-full rounded-md border-0 py-1.5 pr-14 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
           />
-        </div>
-        <div className="h-1/6 flex items-center">
-          <button onClick={signOut}>Sign out</button>
+          <button onClick={signOut}>&nbsp;Sign&nbsp;out</button>
         </div>
       </div>
     </main>
