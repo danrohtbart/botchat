@@ -169,7 +169,6 @@ exports.handler = async (event) => {
             console.log("Message is", message);
         }
 
-      
         // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
         try {
             const amplify_result = await amplifyClient.graphql({

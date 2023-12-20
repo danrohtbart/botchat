@@ -107,9 +107,6 @@ export default function Home() {
                 };
                 WriteToGraphQL (amplifyClient, output);
                 WriteToSNS(output);
-                
-                // Replaced InvokeBotChatLambda by having the lambda write to SNS (to be done!)
-                //InvokeBotChatLambda(output);
                 e.target.value = "";
               }
             }}
@@ -141,25 +138,6 @@ async function WriteToSNS(output) {
   const response = await client.send(command);
 } 
   
-/* to be removed
-// Function called InvokeBotChatGenerateChat which takes a string parameter called message and a string parameter called user. The function sends the message and user to the Lambda function 
-async function InvokeBotChatLambda(output) {
-  const lambda_client = new LambdaClient({
-    region: 'us-east-1', 
-    credentials: {
-      accessKeyId: '***REMOVED***',
-      secretAccessKey: '***REMOVED***'
-    }
-  });
-  const params = {
-    FunctionName: 'botchatlambdajs-dev',
-    InvocationType: 'RequestResponse',
-    Payload: output
-  };  
-  const command = new InvokeCommand(params);
-  const response = await lambda_client.send(command);
-}
-*/
 
 // Same function is used in the Lambda function. Opportunity for refactoring. 
 async function WriteToGraphQL (amplifyClient, output) {
