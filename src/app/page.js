@@ -4,7 +4,7 @@ import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
 import * as queries from "../graphql/queries";
 import * as subscriptions from "../graphql/subscriptions";
@@ -90,6 +90,7 @@ export default function Home() {
                 </div>
               </div>
             ))}
+            <AlwaysScrollToBottom />
         </div>
         <div className="h-1/8 flex items-center">
           Enter&nbsp;message:&nbsp;  
@@ -164,3 +165,9 @@ async function WriteToGraphQL (amplifyClient, output) {
     }
   });
 }
+
+const AlwaysScrollToBottom = () => {
+  const elementRef = useRef();
+  useEffect(() => elementRef.current.scrollIntoView());
+  return <div ref={elementRef} />;
+};
