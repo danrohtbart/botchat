@@ -2,9 +2,9 @@ const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-b
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
-const debug = true;
+const debug = false;
 const mock_bedrock = false;
-const drain_queue = true;
+const drain_queue = false;
 
 if (debug) {
     console.log('Loading botchatlambdajs.');
@@ -21,16 +21,12 @@ const personalities = {
 exports.handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
     const incoming_message = JSON.parse(event.Records[0].body);
-
+    const incoming_content = JSON.parse(incoming_message.Message);
 
     if (debug) {
         console.log("Incoming message is", incoming_message);
         console.log("Type of incoming_message.Message is", typeof incoming_message.Message);
         console.log("Incoming message.Message is", incoming_message.Message);
-        if(typeof incoming_message.Message == "[object Object]") {
-            console.log("Buffer.from(Incoming message.Message)) is", Buffer.from(incoming_message.Message));
-            console.log("JSON.parse(Buffer.from(Incoming message.Message)) is", JSON.parse(Buffer.from(incoming_message.Message)));
-        }
     }
     if (drain_queue){
         console.log("Drain queue is true. Draining queue of this event.");
@@ -40,11 +36,9 @@ exports.handler = async (event) => {
     }
 
     /* Next action 12/19/2023 - parse the incoming_message. It's working now that I'm stringifying from the client */
-
-
-    const last_statement = event['message'] || '';
-    const last_speaker = event['speaker_name'] || '';
-    const message_in_thread = event['message_in_thread'] || 0;
+    const last_statement = incoming_content.message || '';
+    const last_speaker = incoming_content.speaker_name || '';
+    const message_in_thread = incoming_content.message_in_thread || 0;
 
     if(debug) {
         console.log("Last speaker " + last_speaker);
