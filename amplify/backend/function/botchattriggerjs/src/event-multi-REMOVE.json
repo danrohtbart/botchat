@@ -1,0 +1,229 @@
+{
+    "Records": [
+        {
+            "eventID": "a09661acc5a719c980c1c6889eabfa71",
+            "eventName": "REMOVE",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1703282081,
+                "Keys": {
+                    "id": {
+                        "S": "4aac4295-ae5f-4ef6-aede-1962b7b92e4b"
+                    }
+                },
+                "OldImage": {
+                    "createdAt": {
+                        "S": "2023-12-22T21:48:10.196Z"
+                    },
+                    "user_email": {
+                        "S": "dan@rohtbart.com"
+                    },
+                    "__typename": {
+                        "S": "Chat"
+                    },
+                    "speaker_name": {
+                        "S": "Mark"
+                    },
+                    "id": {
+                        "S": "4aac4295-ae5f-4ef6-aede-1962b7b92e4b"
+                    },
+                    "message": {
+                        "S": "\n\n\n\nMark Waterice: Well, Jim, I understand your frustration, but I have to respectfully disagree. While it's true that you don't need a blood sample to draft a running back, it's not as simple as just picking a guy who can run fast and hit hard. There's a lot more that goes into it than that.\n\nFor one, you need to consider the player's durability. Can he withstand the physical toll of carrying the ball 20-30 times a game? Can he stay healthy throughout the season? That's a big concern, especially when you're talking about a player's long-term potential.\n\nSecondly, you need to look at the player's vision and instincts."
+                    },
+                    "message_in_thread": {
+                        "N": "3"
+                    },
+                    "updatedAt": {
+                        "S": "2023-12-22T21:48:10.196Z"
+                    }
+                },
+                "SequenceNumber": "18077100000000029234250640",
+                "SizeBytes": 849,
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
+        },
+        {
+            "eventID": "bf19115bd2b620e6ee541a172fabce0c",
+            "eventName": "REMOVE",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1703282081,
+                "Keys": {
+                    "id": {
+                        "S": "ed808839-dcf8-4914-938e-f69756a2811e"
+                    }
+                },
+                "OldImage": {
+                    "createdAt": {
+                        "S": "2023-12-22T21:33:55.202Z"
+                    },
+                    "user_email": {
+                        "S": "dan@rohtbart.com"
+                    },
+                    "__typename": {
+                        "S": "Chat"
+                    },
+                    "speaker_name": {
+                        "S": "Jim"
+                    },
+                    "id": {
+                        "S": "ed808839-dcf8-4914-938e-f69756a2811e"
+                    },
+                    "message": {
+                        "S": "Yo, what's up folks? It's Jim Hoagies here, and I gotta say, that game last night was a freakin' joke. The Ravens? They're a real team, they know how to get the job done. But the Jaguars? They're a bunch of scrubs, they don't belong on the same field as the Ravens."
+                    },
+                    "message_in_thread": {
+                        "N": "11"
+                    },
+                    "updatedAt": {
+                        "S": "2023-12-22T21:33:55.202Z"
+                    }
+                },
+                "SequenceNumber": "18077200000000029234250700",
+                "SizeBytes": 488,
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
+        },
+        {
+            "eventID": "4fdde86290c31f6fa3a4911e0fd6e06a",
+            "eventName": "REMOVE",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1703282081,
+                "Keys": {
+                    "id": {
+                        "S": "cfdf391c-655a-41a1-8c38-4a67b8335db0"
+                    }
+                },
+                "OldImage": {
+                    "createdAt": {
+                        "S": "2023-12-22T21:51:00.073Z"
+                    },
+                    "user_email": {
+                        "S": "User email not set"
+                    },
+                    "__typename": {
+                        "S": "Chat"
+                    },
+                    "speaker_name": {
+                        "S": "Caller"
+                    },
+                    "id": {
+                        "S": "cfdf391c-655a-41a1-8c38-4a67b8335db0"
+                    },
+                    "message": {
+                        "S": "Offensive linemen are the best draft picks"
+                    },
+                    "message_in_thread": {
+                        "N": "1"
+                    },
+                    "updatedAt": {
+                        "S": "2023-12-22T21:51:00.073Z"
+                    }
+                },
+                "SequenceNumber": "18077300000000029234250701",
+                "SizeBytes": 270,
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
+        },
+        {
+            "eventID": "66f2fe37b6929a225e666bb2d5d7ad4e",
+            "eventName": "REMOVE",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1703282081,
+                "Keys": {
+                    "id": {
+                        "S": "e9bc10ae-7bf1-4db8-8932-748d6991e596"
+                    }
+                },
+                "OldImage": {
+                    "createdAt": {
+                        "S": "2023-12-22T21:51:20.738Z"
+                    },
+                    "user_email": {
+                        "S": "dan@rohtbart.com"
+                    },
+                    "__typename": {
+                        "S": "Chat"
+                    },
+                    "speaker_name": {
+                        "S": "Mark"
+                    },
+                    "id": {
+                        "S": "e9bc10ae-7bf1-4db8-8932-748d6991e596"
+                    },
+                    "message": {
+                        "S": "\n\n\nMark Waterice: Well, Jim, I understand that offensive linemen might not be the most flashy or exciting players on the field, but they are certainly some of the most important. Without a strong offensive line, a team's running game suffers, and their quarterback is constantly under pressure. That's why teams invest so heavily in these players.\n\nFurthermore, while it's true that offensive linemen can get hurt, that's true of any position in football. Injuries are an unfortunate part of the game, and teams have to be prepared to deal with them. And when an offensive lineman is healthy and playing well, they can have a huge impact on a team's success.\n\nAs for their personalities, I think it's unfair to make sweeping generalizations about a group of players."
+                    },
+                    "message_in_thread": {
+                        "N": "3"
+                    },
+                    "updatedAt": {
+                        "S": "2023-12-22T21:51:20.738Z"
+                    }
+                },
+                "SequenceNumber": "18077400000000029234250702",
+                "SizeBytes": 990,
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
+        },
+        {
+            "eventID": "66ce105d72a4fc5ee81c1286fce839f4",
+            "eventName": "REMOVE",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1703282081,
+                "Keys": {
+                    "id": {
+                        "S": "1e306d2c-44ae-4d9f-81e4-1923ef9d5a76"
+                    }
+                },
+                "OldImage": {
+                    "createdAt": {
+                        "S": "2023-12-22T21:41:17.041Z"
+                    },
+                    "user_email": {
+                        "S": "User email not set"
+                    },
+                    "__typename": {
+                        "S": "Chat"
+                    },
+                    "speaker_name": {
+                        "S": "Caller"
+                    },
+                    "id": {
+                        "S": "1e306d2c-44ae-4d9f-81e4-1923ef9d5a76"
+                    },
+                    "message": {
+                        "S": "Can the Spurs win 40 games this year?"
+                    },
+                    "message_in_thread": {
+                        "N": "1"
+                    },
+                    "updatedAt": {
+                        "S": "2023-12-22T21:41:17.041Z"
+                    }
+                },
+                "SequenceNumber": "18077500000000029234250703",
+                "SizeBytes": 265,
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
+        }
+    ]
+}
