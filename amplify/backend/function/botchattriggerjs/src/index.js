@@ -13,8 +13,6 @@ Amplify Params - DO NOT EDIT */
 const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
-const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
-
 
 const debug = false;
 const mock_bedrock = false;
