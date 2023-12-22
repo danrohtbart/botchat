@@ -1,0 +1,49 @@
+{
+  "Records": [
+      {
+          "eventID": "2cadc86835eaf65532c35651344a5a46",
+          "eventName": "INSERT",
+          "eventVersion": "1.1",
+          "eventSource": "aws:dynamodb",
+          "awsRegion": "us-east-1",
+          "dynamodb": {
+              "ApproximateCreationDateTime": 1703267364,
+              "Keys": {
+                  "id": {
+                      "S": "6f36548d-2ce5-4995-9ace-c1900cbeb297"
+                  }
+              },
+              "NewImage": {
+                  "createdAt": {
+                      "S": "2023-12-22T17:49:23.705Z"
+                  },
+                  "user_email": {
+                      "S": "User email not set"
+                  },
+                  "__typename": {
+                      "S": "Chat"
+                  },
+                  "speaker_name": {
+                      "S": "Caller"
+                  },
+                  "id": {
+                      "S": "6f36548d-2ce5-4995-9ace-c1900cbeb297"
+                  },
+                  "message": {
+                      "S": "Why are the Mets cursed?"
+                  },
+                  "message_in_thread": {
+                      "N": "1"
+                  },
+                  "updatedAt": {
+                      "S": "2023-12-22T17:49:23.705Z"
+                  }
+              },
+              "SequenceNumber": "17584600000000044655128186",
+              "SizeBytes": 252,
+              "StreamViewType": "NEW_AND_OLD_IMAGES"
+          },
+          "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
+      }
+  ]
+}

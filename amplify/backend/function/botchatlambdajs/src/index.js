@@ -1,3 +1,7 @@
+/* Amplify Params - DO NOT EDIT
+	ENV
+	REGION
+Amplify Params - DO NOT EDIT */
 const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
@@ -7,6 +11,7 @@ const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
 const debug = false;
 const mock_bedrock = false;
 const drain_queue = false;
+const deactivate = true;
 
 if (debug) {
     console.log('Loading botchatlambdajs.');
@@ -22,6 +27,7 @@ const personalities = {
  */
 exports.handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
+    if (!deactivate) {
     const incoming_message = JSON.parse(event.Records[0].body);
     const incoming_content = JSON.parse(incoming_message.Message);
 
@@ -98,7 +104,7 @@ exports.handler = async (event) => {
         } else {
             const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
             const bedrock_command = new InvokeModelCommand(bedrock_request_body);
-            const bedrock_response = await bedrock_client.send(bedrock_command);
+            const bedrock_response = /*await*/ bedrock_client.send(bedrock_command);
             message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
         }
         // Keep only the content to the left of the last . in message
@@ -182,7 +188,7 @@ exports.handler = async (event) => {
 
         // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
         try {
-            const amplify_result = await amplifyClient.graphql({
+            const amplify_result = /*await*/ amplifyClient.graphql({
                 query: createChat,
                 variables: {
                     input: output, 
@@ -215,6 +221,7 @@ exports.handler = async (event) => {
         }
         console.log(`OUTPUT: ${JSON.stringify(output)}`);
     }
+    } // if (!deactivate)
 
     return {
         statusCode: 200,

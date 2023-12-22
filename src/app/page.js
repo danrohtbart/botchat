@@ -107,7 +107,7 @@ export default function Home() {
                   speaker_name: 'Caller',
                 };
                 WriteToGraphQL (amplifyClient, output);
-                WriteToSNS(output);
+                //WriteToSNS(output);
                 e.target.value = "";
               }
             }}

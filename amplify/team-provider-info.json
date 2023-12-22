@@ -22,7 +22,11 @@
         "botchatboto3bedrock": {},
         "botchatlambdajs": {
           "deploymentBucketName": "amplify-botchat-dev-135408-deployment",
-          "s3Key": "amplify-builds/botchatlambdajs-4c724b49424f475a7570-build.zip"
+          "s3Key": "amplify-builds/botchatlambdajs-58744a386d5248623163-build.zip"
+        },
+        "botchattriggerjs": {
+          "deploymentBucketName": "amplify-botchat-dev-135408-deployment",
+          "s3Key": "amplify-builds/botchattriggerjs-42582f614c7754417636-build.zip"
         }
       }
     }

@@ -67,6 +67,23 @@
   "function": {
     "botchatlambdajs": {
       "build": true,
+      "dependsOn": [],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "botchattriggerjs": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput",
+            "GraphQLAPIKeyOutput"
+          ],
+          "category": "api",
+          "resourceName": "botchat"
+        }
+      ],
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     }
@@ -85,6 +102,22 @@
         {
           "category": "function",
           "resourceName": "botchatlambdajs"
+        }
+      ]
+    },
+    "AMPLIFY_function_botchattriggerjs_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchattriggerjs"
+        }
+      ]
+    },
+    "AMPLIFY_function_botchattriggerjs_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchattriggerjs"
         }
       ]
     }
