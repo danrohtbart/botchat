@@ -9,7 +9,6 @@ import * as mutations from '../graphql/mutations';
 import * as queries from "../graphql/queries";
 import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 import { getCurrentUser } from 'aws-amplify/auth';
 
 Amplify.configure({
@@ -56,8 +55,7 @@ export default function Home() {
   }, []);
 
   // retrieve the authenticated user's email address into the user_email variable
-  // not yet implemented
-  const user_email = 'User email not set';
+  let user_email = 'User email not set';
     
   return (<Authenticator>{({ signOut, user }) => (
     <main className="flex min-h-screen max-h-screen flex-col items-center justify-between p-1">
@@ -107,7 +105,6 @@ export default function Home() {
                   speaker_name: 'Caller',
                 };
                 WriteToGraphQL (amplifyClient, output);
-                //WriteToSNS(output);
                 e.target.value = "";
               }
             }}
@@ -120,35 +117,7 @@ export default function Home() {
     )}</Authenticator>
   )
 }
-
-
-// Function named WriteToSNS which takes a string parameter called message, then writes the message to an SNS topic named sports_radio_message_sns.fifo, so the lambda can pick it up and generate a response.
-// Same function is used in the Lambda function. Opportunity for refactoring. 
-async function WriteToSNS(output) {
-  try {
-    const { signInDetails } = await getCurrentUser();
-    output.user_email = signInDetails.loginId;
-  } catch (err) {
-    console.log(err);
-  }
-  
-  const client = new SNSClient({
-    region: 'us-east-1', 
-    credentials: {
-      accessKeyId: '***REMOVED***',
-      secretAccessKey: '***REMOVED***'
-    }
-  });
-  const input = {
-    Message: JSON.stringify(output),
-    TopicArn: 'arn:aws:sns:us-east-1:253178317163:sports_radio_message_sns.fifo',
-    "MessageGroupId": "0"
-    }
-  const command = new PublishCommand(input); 
-  const response = await client.send(command);
-} 
-  
-
+ 
 // Same function is used in the Lambda function. Opportunity for refactoring. 
 async function WriteToGraphQL (amplifyClient, output) {
   try {
