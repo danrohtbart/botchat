@@ -45,6 +45,13 @@ if (debug) {
     console.log("Incoming message is", incoming_message);
 }
 
+if (incoming_message.eventName == "REMOVE") {
+    console.log("This is a REMOVE event. Ignoring it.");
+    return {
+        statusCode: 200
+    };
+}
+
 const incoming_content = incoming_message.NewImage;
 
 if (debug) {
