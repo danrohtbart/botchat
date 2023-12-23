@@ -22,6 +22,7 @@ if (debug) {
     console.log('Loading botchatlambdajs.');
 }
 
+const length = 100;
 const personalities = {
     "Jim": "[INST]You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n", 
     "Mark": "[INST]You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n"
@@ -106,7 +107,7 @@ exports.handler = async (event) => {
                 prompt: prompt,
                 temperature: 0.8,
                 top_p: 0.1,
-                max_gen_len: 200,
+                max_gen_len: length,
             }),
             contentType: "application/json",
             accept: "application/json",
