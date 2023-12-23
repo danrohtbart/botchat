@@ -136,7 +136,6 @@ exports.handler = async (event) => {
         // Trim off any sentence fragments. Keep only the content to the left of the last . in message
         message = message.substring(0, message.lastIndexOf(".")+1);
 
-
         if (debug) {
             console.log("Message is ", message);
         }
@@ -145,34 +144,11 @@ exports.handler = async (event) => {
         }
 
         const amplify_config = {
-            "aws_project_region": "us-east-1",
-            "aws_appsync_graphqlEndpoint": "https://isjrfishhffyvkjvf63huj5wm4.appsync-api.us-east-1.amazonaws.com/graphql",
-            "aws_appsync_region": "us-east-1",
+            "aws_project_region": process.env.REGION,
+            "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
+            "aws_appsync_region": process.env.REGION,
             "aws_appsync_authenticationType": "API_KEY",
-            "aws_appsync_apiKey": "da2-nx6urtyn4nekbef6osiwlkoec4",
-            "aws_cognito_identity_pool_id": "us-east-1:6ac7fc59-ae90-4578-b5fb-fd8b528547f4",
-            "aws_cognito_region": "us-east-1",
-            "aws_user_pools_id": "us-east-1_AYMzkIGAz",
-            "aws_user_pools_web_client_id": "6q6isgm1ohotk12v5rojoi7uj1",
-            "oauth": {},
-            "aws_cognito_username_attributes": [
-            "EMAIL"
-            ],
-            "aws_cognito_social_providers": [],
-            "aws_cognito_signup_attributes": [
-            "EMAIL"
-            ],
-            "aws_cognito_mfa_configuration": "OFF",
-            "aws_cognito_mfa_types": [
-            "SMS"
-            ],
-            "aws_cognito_password_protection_settings": {
-            "passwordPolicyMinLength": 8,
-            "passwordPolicyCharacters": []
-            },
-            "aws_cognito_verification_mechanisms": [
-            "EMAIL"
-            ]
+            "aws_appsync_apiKey": process.env.API_BOTCHAT_GRAPHQLAPIKEYOUTPUT,
         }
 
         Amplify.configure({
