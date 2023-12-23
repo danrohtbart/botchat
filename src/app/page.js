@@ -2,7 +2,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
-import { Authenticator } from '@aws-amplify/ui-react';
+import { Authenticator, Divider } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
@@ -57,9 +57,9 @@ export default function Home() {
   // retrieve the authenticated user's email address into the user_email variable
   let user_email = 'User email not set';
     
-  return (<Authenticator>{({ signOut, user }) => (
-    <main className="flex min-h-screen max-h-screen flex-col items-center justify-between p-1">
-      <div className="flex justify-center items-left h-screen w-3/4 flex-col">
+  return (<Authenticator hideSignUp={true} >{({ signOut, user }) => (
+    <main className="flex min-h-screen flex-col items-center justify-between p-1 bg-white">
+      <div className="flex justify-center items-left h-screen w-5/6 flex-col">
         <div className={`h-3/4 flex flex-col overflow-y-scroll`}>
           {chats
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
@@ -67,31 +67,31 @@ export default function Home() {
               <div
                 key={chat.id}
                 className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${
-                  chat.user_email === user_email && "self-end bg-gray-200"
+                  chat.user_email === user_email && "self-end bg-blue-600" || "bg-slate-200"
                 }`}
               >
-                <div>
+                <div className="text-gray-500">
                   <div className="flex justify-between gap-x-4">
-                    <div className="py-0.5 text-xs leading-5 text-gray-500">
-                      <span className="font-medium text-gray-900">
+                    <div className="py-0.5 text-xs leading-5">
+                      <span className={`font-medium ${chat.user_email === user_email && "text-slate-50"}`}>
                         {chat.speaker_name}
                       </span>{" "}
                     </div>
                     <time
                       dateTime="2023-01-23T15:56"
-                      className="flex-none py-0.5 text-xs leading-5 text-gray-500"
+                      className={`flex-none py-0.5 text-xs leading-5 ${chat.user_email === user_email && "text-slate-50"}`}
                     >
                       {intlFormatDistance(new Date(chat.createdAt), new Date())}
                     </time>
                   </div>
-                  <p className="text-sm leading-6 text-gray-500">{chat.message}</p>
+                  <p className={`text-sm leading-6 ${chat.user_email === user_email && "text-slate-50"}`}>{chat.message}</p>
                 </div>
               </div>
-            ))}
-            <AlwaysScrollToBottom />
+          ))}
+          <AlwaysScrollToBottom />
         </div>
         <div className="h-1/8 flex items-center">
-          Enter&nbsp;message:&nbsp;  
+          Call&nbsp;in:&nbsp;  
           <input
             type="text"
             name="search"
@@ -110,6 +110,11 @@ export default function Home() {
             }}
             className="block w-full rounded-md border-0 py-1.5 pr-14 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
           />
+        </div>
+        <div className="h-1/8 flex items-center">
+          <Divider orientation="horizontal" />
+        </div>
+        <div className="h-1/8 flex items-center">
           <button onClick={signOut}>&nbsp;Sign&nbsp;out</button>
         </div>
       </div>
