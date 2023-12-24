@@ -24,6 +24,8 @@ if (debug) {
 
 const length = 100;
 const max_thread = 6;
+const temperature = 0.9;
+const top_p = 0.1;
 const personalities = {
     "Jim": "[INST]You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n", 
     "Mark": "[INST]You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n"
@@ -106,8 +108,8 @@ exports.handler = async (event) => {
         bedrock_request_body = {
             body: JSON.stringify({
                 prompt: prompt,
-                temperature: 0.8,
-                top_p: 0.1,
+                temperature: temperature,
+                top_p: top_p,
                 max_gen_len: length,
             }),
             contentType: "application/json",
