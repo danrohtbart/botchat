@@ -11,7 +11,7 @@ import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { getCurrentUser } from 'aws-amplify/auth';
 
-const debug = true;
+const debug = false;
 
 Amplify.configure({
   ...awsmobile,
@@ -58,7 +58,6 @@ export default function Home() {
 
   // Initialize the user's cast of personalities if needed. 
   React.useEffect(() => {
-    //checkBots();
     InitializePersonalities();
   }, [ ]); 
 
@@ -252,154 +251,3 @@ async function InitializePersonalities () {
     console.log("Error cleaning up duplicate personalities: ", error);
   }
 } 
-
-async function checkBots() {
-  if (debug) {
-    console.log("Checking whether the user's bots need initializing.");
-  }
-
-  let bots = null; 
-  let bot1 = false;
-  let bot2 = false;
-  
-  try {
-    bots = await amplifyClient.graphql({
-      query: queries.listBots,
-    });
-    if (debug) {
-      console.log("Bots: ", bots);
-    }
-    // iterate through the bots. bots might be null. look at the bot_order of each bot. 
-    for (let i = 0; i < bots.data.listBots.items.length; i++) {
-      let bot = bots.data.listBots.items[i];
-      if (bot.bot_order == 1) {
-        bot1 = true;
-      } else if (bot.bot_order == 2) {
-        bot2 = true;
-      }
-    }
-
-    if (debug) {
-      console.log("Bot 1: ", bot1);
-      console.log("Bot 2: ", bot2);
-    }
-
-    if (!bot1) {
-      try {
-        await amplifyClient.graphql({
-          query: mutations.createBot,
-          variables: {
-            input: {
-              bot_order: 1,
-              bot_name: "Jim",
-              bot_personality: "You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments.",
-            }
-          }
-        });
-        console.log("Bot 1 initialized.");
-      } catch (error) {
-        console.log("Error creating bot1: ", error);
-      }
-    }
-    if (!bot2) {
-      try {
-        await amplifyClient.graphql({
-          query: mutations.createBot,
-          variables: {
-            input: {
-              bot_order: 2,
-              bot_name: "Mark",
-              bot_personality: "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.",
-            }
-          }
-        });
-        console.log("Bot 2 initialized.");
-      } catch (error) {
-        console.log("Error creating bot2: ", error);
-      }
-    }
-    // Clean up
-    let bot = null
-    let best_bot1 = null;
-    let best_bot2 = null;
-    bots = await amplifyClient.graphql({
-      query: queries.listBots,
-    });
-    if (debug) {
-      console.log("Clean up bots: ", bots);
-    }
-    // iterate through the bots. bots might be null. look at the bot_order of each bot. 
-    for (let i = 0; i < bots.data.listBots.items.length; i++) {
-      if (debug) {
-        console.log("i: ", i);
-        console.log("Bot: ", bots.data.listBots.items[i]);
-      }
-      bot = bots.data.listBots.items[i];
-
-      if (bot) {
-        if (bot.bot_order == 1) {
-          if (!best_bot1) {
-            if (debug) {
-              console.log("There was no best_bot1. Setting best_bot1 to bot: ", bot);
-            }
-            best_bot1 = bot;
-          } else {
-            // delete the bot with the oldest updatedAt
-            if (bot.updatedAt < best_bot1.updatedAt) {
-              await amplifyClient.graphql({
-                query: mutations.deleteBot,
-                variables: {
-                  input: {
-                    id: bot.id,
-                  }
-                }
-              });
-            } else {
-              await amplifyClient.graphql({
-                query: mutations.deleteBot,
-                variables: {
-                  input: {
-                    id: best_bot1.id,
-                  }
-                }
-              });
-              best_bot1 = bot;
-            }
-          }
-        } else if (bot.bot_order == 2) {
-          if (!best_bot2) {
-            if (debug) {
-              console.log("There was no best_bot2. Setting best_bot2 to bot: ", bot);
-            }
-            best_bot2 = bot;
-          } else {
-            // delete the bot with the oldest updatedAt
-            if (bot.updatedAt < best_bot2.updatedAt) {
-              await amplifyClient.graphql({
-                query: mutations.deleteBot,
-                variables: {
-                  input: {
-                    id: bot.id,
-                  }
-                }
-              });
-            } else {
-              await amplifyClient.graphql({
-                query: mutations.deleteBot,
-                variables: {
-                  input: {
-                    id: best_bot2.id,
-                  }
-                }
-              });
-              best_bot2 = bot;
-            }
-          }
-        }
-      }
-    }
-
-  } catch (error) {
-    console.log("Error fetching bots: ", error);
-  } 
-};
