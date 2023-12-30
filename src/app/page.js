@@ -11,7 +11,7 @@ import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { getCurrentUser } from 'aws-amplify/auth';
 
-const debug = true;
+const debug = false;
 
 Amplify.configure({
   ...awsmobile,
