@@ -28,14 +28,6 @@ const max_thread = 6;
 const temperature = 0.9;
 const top_p = 0.1;
 
-// This is being replaced with a GraphQL call
-/*
-const personalities = {
-    "Jim": "[INST]You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n", 
-    "Mark": "[INST]You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n"
-}
-*/
-
 // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations and queries
 const createChat = /* GraphQL */ `
         mutation CreateChat(
@@ -184,15 +176,6 @@ exports.handler = async (event) => {
         console.log("Message in thread " + message_in_thread);
     }
 
-    /* This logic is out of date. 
-    if (last_speaker == "Jim" && parseInt(message_in_thread) == 1) {
-        console.log("Jim should never speak first. Stopping the conversation after", message_in_thread, "statements. He said", last_statement);
-        return {
-            statusCode: 204
-        };
-    };
-    */
-
     if (message_in_thread > max_thread) {
         console.log("Stopping the conversation after", message_in_thread, "statements.");
         return {
@@ -200,14 +183,6 @@ exports.handler = async (event) => {
         }
     } else {
         let speaker_name, instruction, speaker_personality;
-        // replace this with logic based on GraphQL 
-/*        if (last_speaker == "Jim") {
-            speaker_name = "Mark";
-        } else {
-            speaker_name = "Jim";
-        }
-        instruction = personalities[speaker_name];*/
-
         // Using the last_speaker, determine who will speak. 
         if (last_speaker != name_1) {
             // Bot 1 will speak by default - the only time they don't speak is if they just spoke. 
