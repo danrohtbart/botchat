@@ -1,6 +1,60 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const createCast = /* GraphQL */ `
+  mutation CreateCast(
+    $input: CreateCastInput!
+    $condition: ModelCastConditionInput
+  ) {
+    createCast(input: $input, condition: $condition) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateCast = /* GraphQL */ `
+  mutation UpdateCast(
+    $input: UpdateCastInput!
+    $condition: ModelCastConditionInput
+  ) {
+    updateCast(input: $input, condition: $condition) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteCast = /* GraphQL */ `
+  mutation DeleteCast(
+    $input: DeleteCastInput!
+    $condition: ModelCastConditionInput
+  ) {
+    deleteCast(input: $input, condition: $condition) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
 export const createChat = /* GraphQL */ `
   mutation CreateChat(
     $input: CreateChatInput!

@@ -1,6 +1,44 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const getCast = /* GraphQL */ `
+  query GetCast($id: ID!) {
+    getCast(id: $id) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listCasts = /* GraphQL */ `
+  query ListCasts(
+    $filter: ModelCastFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listCasts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        name_1
+        personality_1
+        name_2
+        personality_2
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getChat = /* GraphQL */ `
   query GetChat($id: ID!) {
     getChat(id: $id) {
