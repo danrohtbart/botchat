@@ -17,6 +17,7 @@ const { generateClient } = require('aws-amplify/api');
 const debug = false;
 const mock_bedrock = false;
 const drain_queue = false;
+const prevent_write = false;
 
 if (debug) {
     console.log('Loading botchattriggerjs.');
@@ -27,11 +28,57 @@ const max_thread = 6;
 const temperature = 0.9;
 const top_p = 0.1;
 
+// This is being replaced with a GraphQL call
+/*
 const personalities = {
     "Jim": "[INST]You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n", 
     "Mark": "[INST]You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n"
 }
+*/
 
+// Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations and queries
+const createChat = /* GraphQL */ `
+        mutation CreateChat(
+        $input: CreateChatInput!
+        $condition: ModelChatConditionInput
+        ) {
+        createChat(input: $input, condition: $condition) {
+            id
+            message
+            message_in_thread
+            user_email
+            speaker_name
+            createdAt
+            updatedAt
+            owner
+            __typename
+        }
+        }
+    `;
+    
+const listPersonalities = /* GraphQL */ `
+  query ListPersonalities(
+    $filter: ModelPersonalitiesFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listPersonalities(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        name_1
+        personality_1
+        name_2
+        personality_2
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 
 /**
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
@@ -49,12 +96,11 @@ exports.handler = async (event) => {
                 statusCode: 200
             };
     }
-
+        
     const incoming_message = event.Records[0].dynamodb; 
     if (debug) {
         console.log("Incoming message is", incoming_message);
     }
-
 
     const incoming_content = incoming_message.NewImage;
 
@@ -68,6 +114,66 @@ exports.handler = async (event) => {
         };
     }
 
+    // Retrieve personalities using GraphQL
+    const amplify_config = {
+        "aws_project_region": process.env.REGION,
+        "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
+        "aws_appsync_region": process.env.REGION,
+        "aws_appsync_authenticationType": "API_KEY",
+        "aws_appsync_apiKey": process.env.API_BOTCHAT_GRAPHQLAPIKEYOUTPUT,
+    }
+
+    Amplify.configure({
+        ...amplify_config,
+    });
+
+    const amplifyClient = generateClient();
+
+    let name_1 = "Jim";
+    let personality_1 = "You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments.";
+    let name_2 = "Mark";
+    let personality_2 = "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.";
+    try {
+        const allPersonalities = await amplifyClient.graphql({
+            query: listPersonalities,
+        });
+        if (debug) {
+            console.log ("All personalities are", allPersonalities.data.listPersonalities.items);
+        }
+        if (allPersonalities) {
+            if (allPersonalities.data.listPersonalities.items.length == 1) {
+                if (debug) {
+                    console.log("Good. Only one personality found.");
+                }
+                // use the values of the only record
+                name_1 = allPersonalities.data.listPersonalities.items[0].name_1;
+                personality_1 = allPersonalities.data.listPersonalities.items[0].personality_1;
+                name_2 = allPersonalities.data.listPersonalities.items[0].name_2;
+                personality_2 = allPersonalities.data.listPersonalities.items[0].personality_2;
+            } else {
+                if (debug) {
+                    console.log("Number of personalities found is", allPersonalities.data.listPersonalities.items.length);
+                }
+                // in future use the newest record
+                // in future also clean up the older records (once you've proven this works with multiple users)
+                // for now, just use the first record
+                name_1 = allPersonalities.data.listPersonalities.items[0].name_1;
+                personality_1 = allPersonalities.data.listPersonalities.items[0].personality_1;
+                name_2 = allPersonalities.data.listPersonalities.items[0].name_2;
+                personality_2 = allPersonalities.data.listPersonalities.items[0].personality_2;
+            }
+        }
+    } catch (error) {
+        console.log("Error retrieving personalities", error);
+    };
+    if (debug) {
+        console.log("Name 1 is", name_1);
+        console.log("Personality 1 is", personality_1);
+        console.log("Name 2 is", name_2);
+        console.log("Personality 2 is", personality_2);
+    }
+    
+
     const last_statement = incoming_content.message.S || '';
     const last_speaker = incoming_content.speaker_name.S || '';
     const message_in_thread = parseInt(incoming_content.message_in_thread.N) || 0;
@@ -78,12 +184,14 @@ exports.handler = async (event) => {
         console.log("Message in thread " + message_in_thread);
     }
 
+    /* This logic is out of date. 
     if (last_speaker == "Jim" && parseInt(message_in_thread) == 1) {
         console.log("Jim should never speak first. Stopping the conversation after", message_in_thread, "statements. He said", last_statement);
         return {
             statusCode: 204
         };
     };
+    */
 
     if (message_in_thread > max_thread) {
         console.log("Stopping the conversation after", message_in_thread, "statements.");
@@ -91,20 +199,32 @@ exports.handler = async (event) => {
             statusCode: 204
         }
     } else {
-        let speaker_name;
-        if (last_speaker == "Jim") {
+        let speaker_name, instruction, speaker_personality;
+        // replace this with logic based on GraphQL 
+/*        if (last_speaker == "Jim") {
             speaker_name = "Mark";
         } else {
             speaker_name = "Jim";
         }
-        const instruction = personalities[speaker_name];
+        instruction = personalities[speaker_name];*/
+
+        // Using the last_speaker, determine who will speak. 
+        if (last_speaker != name_1) {
+            // Bot 1 will speak by default - the only time they don't speak is if they just spoke. 
+            speaker_name = name_1;
+            speaker_personality = personality_1;
+        } else {
+            speaker_name = name_2;
+            speaker_personality = personality_2;
+        }
+        instruction = "[INST]" + speaker_personality + "Do not mention specific players. Do not repeat the prompt.[/INST]\n\n";
 
         if(debug) {
             console.log("Speaker name is", speaker_name);
             console.log("Instruction is", instruction);
         }
 
-        const prompt = instruction + '\n\n' + last_speaker + ": " + last_statement + "\nRespond to that opinion."
+        const prompt = instruction + last_speaker + ": " + last_statement + "\nRespond to that opinion."
 
         bedrock_request_body = {
             body: JSON.stringify({
@@ -148,40 +268,6 @@ exports.handler = async (event) => {
             message = "I'm speechless. ";
         }
 
-        const amplify_config = {
-            "aws_project_region": process.env.REGION,
-            "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
-            "aws_appsync_region": process.env.REGION,
-            "aws_appsync_authenticationType": "API_KEY",
-            "aws_appsync_apiKey": process.env.API_BOTCHAT_GRAPHQLAPIKEYOUTPUT,
-        }
-
-        Amplify.configure({
-            ...amplify_config,
-        });
-
-        const amplifyClient = generateClient();
-
-        // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
-        const createChat = /* GraphQL */ `
-        mutation CreateChat(
-        $input: CreateChatInput!
-        $condition: ModelChatConditionInput
-        ) {
-        createChat(input: $input, condition: $condition) {
-            id
-            message
-            message_in_thread
-            user_email
-            speaker_name
-            createdAt
-            updatedAt
-            owner
-            __typename
-        }
-        }
-    `;
-
 
     const output = {
         message: message,
@@ -195,18 +281,20 @@ exports.handler = async (event) => {
         console.log("Message is", message);
     }
 
-    try {
-        const amplify_result = await amplifyClient.graphql({
-            query: createChat,
-            variables: {
-                input: output, 
+    if (!prevent_write) {
+        try {
+            const amplify_result = await amplifyClient.graphql({
+                query: createChat,
+                variables: {
+                    input: output, 
+                }
+            });
+            if (debug) {
+                console.log("Amplify result is", amplify_result);
             }
-        });
-        if (debug) {
-            console.log("Amplify result is", amplify_result);
+        } catch (error) {
+            console.log("Amplify GraphQL error is", JSON.stringify(error));
         }
-    } catch (error) {
-        console.log("Amplify GraphQL error is", JSON.stringify(error));
     }
 
       console.log(`OUTPUT: ${JSON.stringify(output)}`);
