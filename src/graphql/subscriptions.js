@@ -1,6 +1,60 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const onCreatePersonalities = /* GraphQL */ `
+  subscription OnCreatePersonalities(
+    $filter: ModelSubscriptionPersonalitiesFilterInput
+    $owner: String
+  ) {
+    onCreatePersonalities(filter: $filter, owner: $owner) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdatePersonalities = /* GraphQL */ `
+  subscription OnUpdatePersonalities(
+    $filter: ModelSubscriptionPersonalitiesFilterInput
+    $owner: String
+  ) {
+    onUpdatePersonalities(filter: $filter, owner: $owner) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeletePersonalities = /* GraphQL */ `
+  subscription OnDeletePersonalities(
+    $filter: ModelSubscriptionPersonalitiesFilterInput
+    $owner: String
+  ) {
+    onDeletePersonalities(filter: $filter, owner: $owner) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
 export const onCreateChat = /* GraphQL */ `
   subscription OnCreateChat(
     $filter: ModelSubscriptionChatFilterInput

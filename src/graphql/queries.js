@@ -1,6 +1,44 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const getPersonalities = /* GraphQL */ `
+  query GetPersonalities($id: ID!) {
+    getPersonalities(id: $id) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listPersonalities = /* GraphQL */ `
+  query ListPersonalities(
+    $filter: ModelPersonalitiesFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listPersonalities(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        name_1
+        personality_1
+        name_2
+        personality_2
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getChat = /* GraphQL */ `
   query GetChat($id: ID!) {
     getChat(id: $id) {

@@ -1,6 +1,60 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const createPersonalities = /* GraphQL */ `
+  mutation CreatePersonalities(
+    $input: CreatePersonalitiesInput!
+    $condition: ModelPersonalitiesConditionInput
+  ) {
+    createPersonalities(input: $input, condition: $condition) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updatePersonalities = /* GraphQL */ `
+  mutation UpdatePersonalities(
+    $input: UpdatePersonalitiesInput!
+    $condition: ModelPersonalitiesConditionInput
+  ) {
+    updatePersonalities(input: $input, condition: $condition) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deletePersonalities = /* GraphQL */ `
+  mutation DeletePersonalities(
+    $input: DeletePersonalitiesInput!
+    $condition: ModelPersonalitiesConditionInput
+  ) {
+    deletePersonalities(input: $input, condition: $condition) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
 export const createChat = /* GraphQL */ `
   mutation CreateChat(
     $input: CreateChatInput!
