@@ -11,7 +11,7 @@ import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { getCurrentUser } from 'aws-amplify/auth';
 
-const debug = false;
+const debug = true;
 
 Amplify.configure({
   ...awsmobile,
@@ -59,7 +59,7 @@ export default function Home() {
   // UseEffect hook that checks whether the user has Bot 1 and Bot 2. If either is missing, it creates the bot with the default personalities. 
   React.useEffect(() => {
     checkBots();
-  }, []); 
+  }, [ ]); 
 
   // retrieve the authenticated user's email address into the user_email variable
   let user_email = 'User email not set';
@@ -216,6 +216,86 @@ async function checkBots() {
         console.log("Bot 2 initialized.");
       } catch (error) {
         console.log("Error creating bot2: ", error);
+      }
+    }
+    // Clean up
+    let bot = null
+    let best_bot1 = null;
+    let best_bot2 = null;
+    bots = await amplifyClient.graphql({
+      query: queries.listBots,
+    });
+    if (debug) {
+      console.log("Clean up bots: ", bots);
+    }
+    // iterate through the bots. bots might be null. look at the bot_order of each bot. 
+    for (let i = 0; i < bots.data.listBots.items.length; i++) {
+      if (debug) {
+        console.log("i: ", i);
+        console.log("Bot: ", bots.data.listBots.items[i]);
+      }
+      bot = bots.data.listBots.items[i];
+
+      if (bot) {
+        if (bot.bot_order == 1) {
+          if (!best_bot1) {
+            if (debug) {
+              console.log("There was no best_bot1. Setting best_bot1 to bot: ", bot);
+            }
+            best_bot1 = bot;
+          } else {
+            // delete the bot with the oldest updatedAt
+            if (bot.updatedAt < best_bot1.updatedAt) {
+              await amplifyClient.graphql({
+                query: mutations.deleteBot,
+                variables: {
+                  input: {
+                    id: bot.id,
+                  }
+                }
+              });
+            } else {
+              await amplifyClient.graphql({
+                query: mutations.deleteBot,
+                variables: {
+                  input: {
+                    id: best_bot1.id,
+                  }
+                }
+              });
+              best_bot1 = bot;
+            }
+          }
+        } else if (bot.bot_order == 2) {
+          if (!best_bot2) {
+            if (debug) {
+              console.log("There was no best_bot2. Setting best_bot2 to bot: ", bot);
+            }
+            best_bot2 = bot;
+          } else {
+            // delete the bot with the oldest updatedAt
+            if (bot.updatedAt < best_bot2.updatedAt) {
+              await amplifyClient.graphql({
+                query: mutations.deleteBot,
+                variables: {
+                  input: {
+                    id: bot.id,
+                  }
+                }
+              });
+            } else {
+              await amplifyClient.graphql({
+                query: mutations.deleteBot,
+                variables: {
+                  input: {
+                    id: best_bot2.id,
+                  }
+                }
+              });
+              best_bot2 = bot;
+            }
+          }
+        }
       }
     }
 
