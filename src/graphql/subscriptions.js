@@ -1,60 +1,6 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const onCreateCast = /* GraphQL */ `
-  subscription OnCreateCast(
-    $filter: ModelSubscriptionCastFilterInput
-    $owner: String
-  ) {
-    onCreateCast(filter: $filter, owner: $owner) {
-      id
-      name_1
-      personality_1
-      name_2
-      personality_2
-      createdAt
-      updatedAt
-      owner
-      __typename
-    }
-  }
-`;
-export const onUpdateCast = /* GraphQL */ `
-  subscription OnUpdateCast(
-    $filter: ModelSubscriptionCastFilterInput
-    $owner: String
-  ) {
-    onUpdateCast(filter: $filter, owner: $owner) {
-      id
-      name_1
-      personality_1
-      name_2
-      personality_2
-      createdAt
-      updatedAt
-      owner
-      __typename
-    }
-  }
-`;
-export const onDeleteCast = /* GraphQL */ `
-  subscription OnDeleteCast(
-    $filter: ModelSubscriptionCastFilterInput
-    $owner: String
-  ) {
-    onDeleteCast(filter: $filter, owner: $owner) {
-      id
-      name_1
-      personality_1
-      name_2
-      personality_2
-      createdAt
-      updatedAt
-      owner
-      __typename
-    }
-  }
-`;
 export const onCreateChat = /* GraphQL */ `
   subscription OnCreateChat(
     $filter: ModelSubscriptionChatFilterInput

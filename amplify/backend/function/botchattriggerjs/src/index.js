@@ -126,14 +126,14 @@ exports.handler = async (event) => {
 
         let message = '';
         if(mock_bedrock) {
-            message = "Yo, what's up folks? It's Jim Hoagies here, and I gotta say, that game last night was a freakin' joke.";
+            message = "Yo, what's up folks? It's Jim Hoagies here, and I gotta say, that game last night was a freakin' joke. The Ravens? They're a real team, they know how to get the job done. But the Jaguars? They're a bunch of scrubs, they don't belong on the same field as the Ravens. I mean, come on, they got shut out ";
         } else {
             const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
             const bedrock_command = new InvokeModelCommand(bedrock_request_body);
             const bedrock_response = await bedrock_client.send(bedrock_command);
             message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
         }
-        // Trim off any sentence fragments. Keep only the content to the left of the last "." in message
+        // Trim off any sentence fragments. Keep only the content to the left of the last . in message
         message = message.substring(0, message.lastIndexOf(".")+1);
 
         if (debug) {
@@ -156,9 +156,6 @@ exports.handler = async (event) => {
         });
 
         const amplifyClient = generateClient();
-
-
-        // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
         const createChat = /* GraphQL */ `
         mutation CreateChat(
         $input: CreateChatInput!
@@ -191,6 +188,7 @@ exports.handler = async (event) => {
         console.log("Message is", message);
     }
 
+    // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
     try {
         const amplify_result = await amplifyClient.graphql({
             query: createChat,

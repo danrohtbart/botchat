@@ -6,8 +6,6 @@
 
 export { default as BotCreateForm } from "./BotCreateForm";
 export { default as BotUpdateForm } from "./BotUpdateForm";
-export { default as CastCreateForm } from "./CastCreateForm";
-export { default as CastUpdateForm } from "./CastUpdateForm";
 export { default as ChatCreateForm } from "./ChatCreateForm";
 export { default as ChatUpdateForm } from "./ChatUpdateForm";
 export { default as studioTheme } from "./studioTheme";
