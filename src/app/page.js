@@ -11,7 +11,7 @@ import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { getCurrentUser } from 'aws-amplify/auth';
 
-const debug = false;
+const debug = true;
 
 Amplify.configure({
   ...awsmobile,
@@ -56,9 +56,10 @@ export default function Home() {
     return () => sub.unsubscribe();
   }, []);
 
-  // UseEffect hook that checks whether the user has Bot 1 and Bot 2. If either is missing, it creates the bot with the default personalities. 
+  // Initialize the user's cast of personalities if needed. 
   React.useEffect(() => {
-    checkBots();
+    //checkBots();
+    InitializePersonalities();
   }, [ ]); 
 
   // retrieve the authenticated user's email address into the user_email variable
@@ -152,6 +153,105 @@ const AlwaysScrollToBottom = () => {
   useEffect(() => elementRef.current.scrollIntoView());
   return <div ref={elementRef} />;
 };
+
+// Create a function that initializes the Personalities object for this owner, if it is null. The logic is very similar to CheckBots, but the data is Personalities. 
+async function InitializePersonalities () {
+  if (debug) {
+    console.log("Checking whether to initialize personalities.");
+  }
+
+  let personalities = null;
+  let must_initialize_personalities = false;
+
+  try {
+    personalities = await amplifyClient.graphql({
+      query: queries.listPersonalities,
+    });
+    if (debug) {
+      console.log("Personalities: ", personalities);
+    }
+
+    if (!personalities) {
+      must_initialize_personalities = true;
+    } else if (personalities.data.listPersonalities.items.length == 0) {
+      must_initialize_personalities = true;
+    };
+
+    if (must_initialize_personalities) {
+      const default_personalities = {
+        name_1: "Jim",
+        personality_1: "You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments.",
+        name_2: "Mark",
+        personality_2: "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.",
+      };
+      try {
+        await amplifyClient.graphql({
+          query: mutations.createPersonalities,
+          variables: {
+            input: default_personalities,
+          }
+        });
+        console.log("Personalities initialized.");
+      } catch (error) {
+        console.log("Error creating personalities: ", error);
+      };
+    }
+  } catch (error) {
+    console.log("Error fetching personalities: ", error);
+  }
+
+  // Clean up. There must be one-and-only-one Personalities record for this user
+  try {
+    let cleanup_personalities = null;
+    let most_recent_personality = null;
+    let personality_id_to_delete = null;
+
+    cleanup_personalities = await amplifyClient.graphql({
+      query: queries.listPersonalities,
+    });
+    if (debug) {
+      console.log("Number of Personalities records: ", cleanup_personalities.data.listPersonalities.items.length);
+      console.log("Personalities: ", cleanup_personalities);
+    }
+    // iterate through the personalities. personalities might be null. look at the bot_order of each bot.
+    for (let i = 0; i < cleanup_personalities.data.listPersonalities.items.length; i++) {
+      let personality = cleanup_personalities.data.listPersonalities.items[i];
+      if (most_recent_personality == null) {
+        // If this is the first personality, it is the most recent personality.
+        most_recent_personality = personality;
+      } else if (personality.createdAt > most_recent_personality.createdAt) {
+        // If this personality is more recent than the most recent personality, it is the most recent personality. Delete the previous most_recent_personality. 
+        personality_id_to_delete = most_recent_personality.id;
+        most_recent_personality = personality;
+      } else {
+        // If this personality is not more recent than the most recent personality, it is not the most recent personality. Delete it. 
+        personality_id_to_delete = personality.id;
+      }
+      if (debug) {
+        console.log("Most recent personality: ", most_recent_personality);
+        console.log("Personality to delete: ", personality_id_to_delete);
+      }
+      if (personality_id_to_delete) {
+        try {
+          await amplifyClient.graphql({
+            query: mutations.deletePersonalities,
+            variables: {
+              input: {
+                id: personality_id_to_delete,
+              }
+            }
+          });
+          personality_id_to_delete = null;
+          console.log("Personalities cleaned up.");
+        } catch (error) {
+          console.log("Error deleting personalities: ", error);
+        }
+      }
+    }
+  } catch (error) {
+    console.log("Error cleaning up duplicate personalities: ", error);
+  }
+} 
 
 async function checkBots() {
   if (debug) {
