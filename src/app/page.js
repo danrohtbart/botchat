@@ -11,6 +11,8 @@ import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { getCurrentUser } from 'aws-amplify/auth';
 
+const debug = true;
+
 Amplify.configure({
   ...awsmobile,
   // this lets you run Amplify code on the server-side in Next.js
@@ -53,6 +55,79 @@ export default function Home() {
     });
     return () => sub.unsubscribe();
   }, []);
+
+  // UseEffect hook that checks whether the user has Bot 1 and Bot 2. If either is missing, it creates the bot with the default personalities. 
+  React.useEffect(() => {
+    async function checkBots() {
+      console.log("Checking for bots...");
+      
+      let bots = null; 
+      let bot1 = false;
+      let bot2 = false;
+      
+      try {
+        bots = await amplifyClient.graphql({
+          query: queries.listBots,
+        });
+        if (debug) {
+          console.log("Bots: ", bots);
+        }
+        // iterate through the bots. bots might be null. look at the bot_order of each bot. 
+        for (let i = 0; i < bots.data.listBots.items.length; i++) {
+          let bot = bots.data.listBots.items[i];
+          if (bot.bot_order == 1) {
+            bot1 = true;
+          } else if (bot.bot_order == 2) {
+            bot2 = true;
+          }
+        }
+
+        if (debug) {
+          console.log("Bot 1: ", bot1);
+          console.log("Bot 2: ", bot2);
+        }
+
+        if (!bot1) {
+          try {
+            await amplifyClient.graphql({
+              query: mutations.createBot,
+              variables: {
+                input: {
+                  bot_order: 1,
+                  bot_name: "Jim",
+                  bot_personality: "You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments.",
+                }
+              }
+            });
+            console.log("Bot 1 initialized.");
+          } catch (error) {
+            console.log("Error creating bot1: ", error);
+          }
+        }
+        if (!bot2) {
+          try {
+            await amplifyClient.graphql({
+              query: mutations.createBot,
+              variables: {
+                input: {
+                  bot_order: 2,
+                  bot_name: "Mark",
+                  bot_personality: "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.",
+                }
+              }
+            });
+            console.log("Bot 2 initialized.");
+          } catch (error) {
+            console.log("Error creating bot2: ", error);
+          }
+        }
+
+      } catch (error) {
+        console.log("Error fetching bots: ", error);
+      } 
+    }
+    checkBots();
+  }, []); 
 
   // retrieve the authenticated user's email address into the user_email variable
   let user_email = 'User email not set';

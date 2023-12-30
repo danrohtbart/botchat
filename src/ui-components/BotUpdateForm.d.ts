@@ -22,21 +22,21 @@ export declare type ValidationResponse = {
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
 export declare type BotUpdateFormInputValues = {
+    bot_order?: number;
     bot_name?: string;
     bot_personality?: string;
-    bot_url?: string;
 };
 export declare type BotUpdateFormValidationValues = {
+    bot_order?: ValidationFunction<number>;
     bot_name?: ValidationFunction<string>;
     bot_personality?: ValidationFunction<string>;
-    bot_url?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type BotUpdateFormOverridesProps = {
     BotUpdateFormGrid?: PrimitiveOverrideProps<GridProps>;
+    bot_order?: PrimitiveOverrideProps<TextFieldProps>;
     bot_name?: PrimitiveOverrideProps<TextFieldProps>;
     bot_personality?: PrimitiveOverrideProps<TextAreaFieldProps>;
-    bot_url?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type BotUpdateFormProps = React.PropsWithChildren<{
     overrides?: BotUpdateFormOverridesProps | undefined | null;

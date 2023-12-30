@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createBot } from "../graphql/mutations";
@@ -23,26 +29,33 @@ export default function BotCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
+    bot_order: "",
     bot_name: "",
     bot_personality: "",
-    bot_url: "",
   };
+  const [bot_order, setBot_order] = React.useState(initialValues.bot_order);
   const [bot_name, setBot_name] = React.useState(initialValues.bot_name);
   const [bot_personality, setBot_personality] = React.useState(
     initialValues.bot_personality
   );
-  const [bot_url, setBot_url] = React.useState(initialValues.bot_url);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
+    setBot_order(initialValues.bot_order);
     setBot_name(initialValues.bot_name);
     setBot_personality(initialValues.bot_personality);
-    setBot_url(initialValues.bot_url);
     setErrors({});
   };
   const validations = {
+    bot_order: [
+      { type: "Required" },
+      {
+        type: "EqualTo",
+        numValues: [1, 2],
+        validationMessage: 'The value must be equal to "1" or "2"',
+      },
+    ],
     bot_name: [],
     bot_personality: [],
-    bot_url: [{ type: "URL" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -70,9 +83,9 @@ export default function BotCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
+          bot_order,
           bot_name,
           bot_personality,
-          bot_url,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -127,17 +140,49 @@ export default function BotCreateForm(props) {
       {...rest}
     >
       <TextField
+        label="Bot order"
+        isRequired={true}
+        isReadOnly={false}
+        placeholder="1"
+        type="number"
+        step="any"
+        value={bot_order}
+        onChange={(e) => {
+          let value = isNaN(parseInt(e.target.value))
+            ? e.target.value
+            : parseInt(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              bot_order: value,
+              bot_name,
+              bot_personality,
+            };
+            const result = onChange(modelFields);
+            value = result?.bot_order ?? value;
+          }
+          if (errors.bot_order?.hasError) {
+            runValidationTasks("bot_order", value);
+          }
+          setBot_order(value);
+        }}
+        onBlur={() => runValidationTasks("bot_order", bot_order)}
+        errorMessage={errors.bot_order?.errorMessage}
+        hasError={errors.bot_order?.hasError}
+        {...getOverrideProps(overrides, "bot_order")}
+      ></TextField>
+      <TextField
         label="Bot name"
         isRequired={false}
         isReadOnly={false}
+        placeholder="Jim"
         value={bot_name}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              bot_order,
               bot_name: value,
               bot_personality,
-              bot_url,
             };
             const result = onChange(modelFields);
             value = result?.bot_name ?? value;
@@ -152,18 +197,18 @@ export default function BotCreateForm(props) {
         hasError={errors.bot_name?.hasError}
         {...getOverrideProps(overrides, "bot_name")}
       ></TextField>
-      <TextField
+      <TextAreaField
         label="Bot personality"
         isRequired={false}
         isReadOnly={false}
-        value={bot_personality}
+        placeholder="You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments."
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              bot_order,
               bot_name,
               bot_personality: value,
-              bot_url,
             };
             const result = onChange(modelFields);
             value = result?.bot_personality ?? value;
@@ -177,33 +222,7 @@ export default function BotCreateForm(props) {
         errorMessage={errors.bot_personality?.errorMessage}
         hasError={errors.bot_personality?.hasError}
         {...getOverrideProps(overrides, "bot_personality")}
-      ></TextField>
-      <TextField
-        label="Bot url"
-        isRequired={false}
-        isReadOnly={false}
-        value={bot_url}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              bot_name,
-              bot_personality,
-              bot_url: value,
-            };
-            const result = onChange(modelFields);
-            value = result?.bot_url ?? value;
-          }
-          if (errors.bot_url?.hasError) {
-            runValidationTasks("bot_url", value);
-          }
-          setBot_url(value);
-        }}
-        onBlur={() => runValidationTasks("bot_url", bot_url)}
-        errorMessage={errors.bot_url?.errorMessage}
-        hasError={errors.bot_url?.hasError}
-        {...getOverrideProps(overrides, "bot_url")}
-      ></TextField>
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

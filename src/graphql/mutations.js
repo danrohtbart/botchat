@@ -62,9 +62,9 @@ export const createBot = /* GraphQL */ `
   ) {
     createBot(input: $input, condition: $condition) {
       id
+      bot_order
       bot_name
       bot_personality
-      bot_url
       createdAt
       updatedAt
       owner
@@ -79,9 +79,9 @@ export const updateBot = /* GraphQL */ `
   ) {
     updateBot(input: $input, condition: $condition) {
       id
+      bot_order
       bot_name
       bot_personality
-      bot_url
       createdAt
       updatedAt
       owner
@@ -96,9 +96,9 @@ export const deleteBot = /* GraphQL */ `
   ) {
     deleteBot(input: $input, condition: $condition) {
       id
+      bot_order
       bot_name
       bot_personality
-      bot_url
       createdAt
       updatedAt
       owner

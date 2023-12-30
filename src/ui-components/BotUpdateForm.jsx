@@ -31,23 +31,23 @@ export default function BotUpdateForm(props) {
     ...rest
   } = props;
   const initialValues = {
+    bot_order: "",
     bot_name: "",
     bot_personality: "",
-    bot_url: "",
   };
+  const [bot_order, setBot_order] = React.useState(initialValues.bot_order);
   const [bot_name, setBot_name] = React.useState(initialValues.bot_name);
   const [bot_personality, setBot_personality] = React.useState(
     initialValues.bot_personality
   );
-  const [bot_url, setBot_url] = React.useState(initialValues.bot_url);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = botRecord
       ? { ...initialValues, ...botRecord }
       : initialValues;
+    setBot_order(cleanValues.bot_order);
     setBot_name(cleanValues.bot_name);
     setBot_personality(cleanValues.bot_personality);
-    setBot_url(cleanValues.bot_url);
     setErrors({});
   };
   const [botRecord, setBotRecord] = React.useState(botModelProp);
@@ -67,9 +67,9 @@ export default function BotUpdateForm(props) {
   }, [idProp, botModelProp]);
   React.useEffect(resetStateValues, [botRecord]);
   const validations = {
+    bot_order: [{ type: "Required" }],
     bot_name: [],
     bot_personality: [],
-    bot_url: [{ type: "URL" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -97,9 +97,9 @@ export default function BotUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
+          bot_order,
           bot_name: bot_name ?? null,
           bot_personality: bot_personality ?? null,
-          bot_url: bot_url ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -152,6 +152,36 @@ export default function BotUpdateForm(props) {
       {...rest}
     >
       <TextField
+        label="Bot order"
+        isRequired={true}
+        isReadOnly={false}
+        type="number"
+        step="any"
+        value={bot_order}
+        onChange={(e) => {
+          let value = isNaN(parseInt(e.target.value))
+            ? e.target.value
+            : parseInt(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              bot_order: value,
+              bot_name,
+              bot_personality,
+            };
+            const result = onChange(modelFields);
+            value = result?.bot_order ?? value;
+          }
+          if (errors.bot_order?.hasError) {
+            runValidationTasks("bot_order", value);
+          }
+          setBot_order(value);
+        }}
+        onBlur={() => runValidationTasks("bot_order", bot_order)}
+        errorMessage={errors.bot_order?.errorMessage}
+        hasError={errors.bot_order?.hasError}
+        {...getOverrideProps(overrides, "bot_order")}
+      ></TextField>
+      <TextField
         label="Bot name"
         isRequired={false}
         isReadOnly={false}
@@ -160,9 +190,9 @@ export default function BotUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              bot_order,
               bot_name: value,
               bot_personality,
-              bot_url,
             };
             const result = onChange(modelFields);
             value = result?.bot_name ?? value;
@@ -187,9 +217,9 @@ export default function BotUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              bot_order,
               bot_name,
               bot_personality: value,
-              bot_url,
             };
             const result = onChange(modelFields);
             value = result?.bot_personality ?? value;
@@ -204,32 +234,6 @@ export default function BotUpdateForm(props) {
         hasError={errors.bot_personality?.hasError}
         {...getOverrideProps(overrides, "bot_personality")}
       ></TextAreaField>
-      <TextField
-        label="Bot url"
-        isRequired={false}
-        isReadOnly={false}
-        value={bot_url}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              bot_name,
-              bot_personality,
-              bot_url: value,
-            };
-            const result = onChange(modelFields);
-            value = result?.bot_url ?? value;
-          }
-          if (errors.bot_url?.hasError) {
-            runValidationTasks("bot_url", value);
-          }
-          setBot_url(value);
-        }}
-        onBlur={() => runValidationTasks("bot_url", bot_url)}
-        errorMessage={errors.bot_url?.errorMessage}
-        hasError={errors.bot_url?.hasError}
-        {...getOverrideProps(overrides, "bot_url")}
-      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

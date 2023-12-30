@@ -43,9 +43,9 @@ export const getBot = /* GraphQL */ `
   query GetBot($id: ID!) {
     getBot(id: $id) {
       id
+      bot_order
       bot_name
       bot_personality
-      bot_url
       createdAt
       updatedAt
       owner
@@ -62,9 +62,9 @@ export const listBots = /* GraphQL */ `
     listBots(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
+        bot_order
         bot_name
         bot_personality
-        bot_url
         createdAt
         updatedAt
         owner
