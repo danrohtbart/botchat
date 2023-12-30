@@ -19,8 +19,13 @@ const mock_bedrock = false;
 const drain_queue = false;
 
 if (debug) {
-    console.log('Loading botchatlambdajs.');
+    console.log('Loading botchattriggerjs.');
 }
+
+const length = 100;
+const max_thread = 6;
+const temperature = 0.9;
+const top_p = 0.1;
 
 const personalities = {
     "Jim": "[INST]You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments. Do not mention specific players. Do not repeat the prompt.[/INST]\n\n", 
@@ -80,7 +85,7 @@ exports.handler = async (event) => {
         };
     };
 
-    if (message_in_thread > 3) {
+    if (message_in_thread > max_thread) {
         console.log("Stopping the conversation after", message_in_thread, "statements.");
         return {
             statusCode: 204
@@ -104,9 +109,9 @@ exports.handler = async (event) => {
         bedrock_request_body = {
             body: JSON.stringify({
                 prompt: prompt,
-                temperature: 0.8,
-                top_p: 0.1,
-                max_gen_len: 200,
+                temperature: temperature,
+                top_p: top_p,
+                max_gen_len: length,
             }),
             contentType: "application/json",
             accept: "application/json",
@@ -133,7 +138,7 @@ exports.handler = async (event) => {
             const bedrock_response = await bedrock_client.send(bedrock_command);
             message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
         }
-        // Trim off any sentence fragments. Keep only the content to the left of the last . in message
+        // Trim off any sentence fragments. Keep only the content to the left of the last "." in message
         message = message.substring(0, message.lastIndexOf(".")+1);
 
         if (debug) {
@@ -156,6 +161,8 @@ exports.handler = async (event) => {
         });
 
         const amplifyClient = generateClient();
+
+        // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
         const createChat = /* GraphQL */ `
         mutation CreateChat(
         $input: CreateChatInput!
@@ -188,7 +195,6 @@ exports.handler = async (event) => {
         console.log("Message is", message);
     }
 
-    // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations
     try {
         const amplify_result = await amplifyClient.graphql({
             query: createChat,
