@@ -107,7 +107,7 @@ export default function Home() {
               if (e.key === "Enter") {
                 const output = {
                   message: e.target.value,
-                  message_in_thread: 1,
+                  message_in_thread: 0,
                   user_email: user_email, 
                   speaker_name: 'Caller',
                 };
