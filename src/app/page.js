@@ -2,7 +2,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
-import { Authenticator, Divider } from '@aws-amplify/ui-react';
+import { Authenticator, Divider, useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
@@ -14,7 +14,7 @@ import {
   PersonalitiesUpdateForm 
  } from '../ui-components';
 
-const debug = false;
+const debug = true;
 
 Amplify.configure({
   ...awsmobile,
@@ -59,13 +59,14 @@ export default function Home() {
     return () => sub.unsubscribe();
   }, []);
 
+  // retrieve the authenticated user's email address into the user_email variable
+  let user_email = 'User email not set';
+
   // Initialize the user's cast of personalities if needed. 
   React.useEffect(() => {
     InitializePersonalities();
   }, [ ]); 
 
-  // retrieve the authenticated user's email address into the user_email variable
-  let user_email = 'User email not set';
     
   return (<Authenticator hideSignUp={true} >{({ signOut, user }) => (
     <main className="flex min-h-screen flex-col items-center justify-between p-1 bg-white">
@@ -159,7 +160,7 @@ const AlwaysScrollToBottom = () => {
   return <div ref={elementRef} />;
 };
 
-// Create a function that initializes the Personalities object for this owner, if it is null. The logic is very similar to CheckBots, but the data is Personalities. 
+// Create a function that initializes the Personalities object for this owner in the GraphQL database, if it is null. The logic is very similar to CheckBots, but the data is Personalities. 
 async function InitializePersonalities () {
   if (debug) {
     console.log("Checking whether to initialize personalities.");
