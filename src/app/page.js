@@ -32,6 +32,7 @@ https://docs.amplify.aws/javascript/build-a-backend/graphqlapi/set-up-graphql-ap
 
 export default function Home() {
   const [chats, setChats] = React.useState([]);
+  const [personalities, setPersonalities] = React.useState([]);
 
   React.useEffect(() => {
     async function fetchChats() {
@@ -59,12 +60,13 @@ export default function Home() {
     return () => sub.unsubscribe();
   }, []);
 
-  // retrieve the authenticated user's email address into the user_email variable
+  // in the future, retrieve the authenticated user's email address into the user_email variable
   let user_email = 'User email not set';
 
-  // Initialize the user's cast of personalities if needed. 
+  // On load, initialize the personalities variable from GraphQL storage into the personalities React state
+  // NOT YET WORKING
   React.useEffect(() => {
-    InitializePersonalities();
+    setPersonalities(InitializePersonalities());
   }, [ ]); 
 
     
@@ -129,7 +131,7 @@ export default function Home() {
           <button onClick={signOut}>&nbsp;Sign&nbsp;out</button>
         </div>
         <div className="h-1/8 flex items-center">
-          <PersonalitiesUpdateForm/>
+          <PersonalitiesUpdateForm Personalities={personalities}/>
         </div>
       </div>
     </main>
@@ -163,23 +165,23 @@ const AlwaysScrollToBottom = () => {
 // Create a function that initializes the Personalities object for this owner in the GraphQL database, if it is null. The logic is very similar to CheckBots, but the data is Personalities. 
 async function InitializePersonalities () {
   if (debug) {
-    console.log("Checking whether to initialize personalities.");
+    console.log("Beginning to initialize personalities.");
   }
 
-  let personalities = null;
+  let graphql_personalities = null;
   let must_initialize_personalities = false;
 
   try {
-    personalities = await amplifyClient.graphql({
+    graphql_personalities = await amplifyClient.graphql({
       query: queries.listPersonalities,
     });
     if (debug) {
-      console.log("Personalities: ", personalities);
+      console.log("Personalities: ", graphql_personalities);
     }
 
-    if (!personalities) {
+    if (!graphql_personalities) {
       must_initialize_personalities = true;
-    } else if (personalities.data.listPersonalities.items.length == 0) {
+    } else if (graphql_personalities.data.listPersonalities.items.length == 0) {
       must_initialize_personalities = true;
     };
 
@@ -190,6 +192,7 @@ async function InitializePersonalities () {
         name_2: "Mark",
         personality_2: "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.",
       };
+      // Initialization into the database will be removed, once the form is handling submissions properly
       try {
         await amplifyClient.graphql({
           query: mutations.createPersonalities,
@@ -197,9 +200,9 @@ async function InitializePersonalities () {
             input: default_personalities,
           }
         });
-        console.log("Personalities initialized.");
+        console.log("Personalities initialized in database.");
       } catch (error) {
-        console.log("Error creating personalities: ", error);
+        console.log("Error creating personalities in database: ", error);
       };
     }
   } catch (error) {
@@ -207,11 +210,10 @@ async function InitializePersonalities () {
   }
 
   // Clean up. There must be one-and-only-one Personalities record for this user
+  let cleanup_personalities = null;
+  let most_recent_personality = null;
+  let personality_id_to_delete = null;
   try {
-    let cleanup_personalities = null;
-    let most_recent_personality = null;
-    let personality_id_to_delete = null;
-
     cleanup_personalities = await amplifyClient.graphql({
       query: queries.listPersonalities,
     });
@@ -221,17 +223,17 @@ async function InitializePersonalities () {
     }
     // iterate through the personalities. personalities might be null. look at the bot_order of each bot.
     for (let i = 0; i < cleanup_personalities.data.listPersonalities.items.length; i++) {
-      let personality = cleanup_personalities.data.listPersonalities.items[i];
+      let cleanup_personality = cleanup_personalities.data.listPersonalities.items[i];
       if (most_recent_personality == null) {
         // If this is the first personality, it is the most recent personality.
-        most_recent_personality = personality;
-      } else if (personality.createdAt > most_recent_personality.createdAt) {
+        most_recent_personality = cleanup_personality;
+      } else if (cleanup_personality.createdAt > most_recent_personality.createdAt) {
         // If this personality is more recent than the most recent personality, it is the most recent personality. Delete the previous most_recent_personality. 
         personality_id_to_delete = most_recent_personality.id;
-        most_recent_personality = personality;
+        most_recent_personality = cleanup_personality;
       } else {
         // If this personality is not more recent than the most recent personality, it is not the most recent personality. Delete it. 
-        personality_id_to_delete = personality.id;
+        personality_id_to_delete = cleanup_personality.id;
       }
       if (debug) {
         console.log("Most recent personality: ", most_recent_personality);
@@ -257,4 +259,5 @@ async function InitializePersonalities () {
   } catch (error) {
     console.log("Error cleaning up duplicate personalities: ", error);
   }
+  return(most_recent_personality); 
 } 
