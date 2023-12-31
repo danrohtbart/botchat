@@ -6,7 +6,14 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Divider,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getPersonalities } from "../graphql/queries";
@@ -181,7 +188,7 @@ export default function PersonalitiesUpdateForm(props) {
         hasError={errors.name_1?.hasError}
         {...getOverrideProps(overrides, "name_1")}
       ></TextField>
-      <TextField
+      <TextAreaField
         label="Personality 1"
         isRequired={false}
         isReadOnly={false}
@@ -207,7 +214,11 @@ export default function PersonalitiesUpdateForm(props) {
         errorMessage={errors.personality_1?.errorMessage}
         hasError={errors.personality_1?.hasError}
         {...getOverrideProps(overrides, "personality_1")}
-      ></TextField>
+      ></TextAreaField>
+      <Divider
+        orientation="horizontal"
+        {...getOverrideProps(overrides, "SectionalElement0")}
+      ></Divider>
       <TextField
         label="Name 2"
         isRequired={false}
@@ -235,7 +246,7 @@ export default function PersonalitiesUpdateForm(props) {
         hasError={errors.name_2?.hasError}
         {...getOverrideProps(overrides, "name_2")}
       ></TextField>
-      <TextField
+      <TextAreaField
         label="Personality 2"
         isRequired={false}
         isReadOnly={false}
@@ -261,7 +272,7 @@ export default function PersonalitiesUpdateForm(props) {
         errorMessage={errors.personality_2?.errorMessage}
         hasError={errors.personality_2?.hasError}
         {...getOverrideProps(overrides, "personality_2")}
-      ></TextField>
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

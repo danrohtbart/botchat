@@ -22,7 +22,7 @@
         "botchatboto3bedrock": {},
         "botchattriggerjs": {
           "deploymentBucketName": "amplify-botchat-dev-135408-deployment",
-          "s3Key": "amplify-builds/botchattriggerjs-35644c3674632f746446-build.zip"
+          "s3Key": "amplify-builds/botchattriggerjs-474f2f334f4734375345-build.zip"
         }
       }
     }

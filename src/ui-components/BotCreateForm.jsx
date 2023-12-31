@@ -6,13 +6,7 @@
 
 /* eslint-disable */
 import * as React from "react";
-import {
-  Button,
-  Flex,
-  Grid,
-  TextAreaField,
-  TextField,
-} from "@aws-amplify/ui-react";
+import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createBot } from "../graphql/mutations";
@@ -46,14 +40,7 @@ export default function BotCreateForm(props) {
     setErrors({});
   };
   const validations = {
-    bot_order: [
-      { type: "Required" },
-      {
-        type: "EqualTo",
-        numValues: [1, 2],
-        validationMessage: 'The value must be equal to "1" or "2"',
-      },
-    ],
+    bot_order: [{ type: "Required" }],
     bot_name: [],
     bot_personality: [],
   };
@@ -143,7 +130,6 @@ export default function BotCreateForm(props) {
         label="Bot order"
         isRequired={true}
         isReadOnly={false}
-        placeholder="1"
         type="number"
         step="any"
         value={bot_order}
@@ -174,7 +160,6 @@ export default function BotCreateForm(props) {
         label="Bot name"
         isRequired={false}
         isReadOnly={false}
-        placeholder="Jim"
         value={bot_name}
         onChange={(e) => {
           let { value } = e.target;
@@ -197,11 +182,11 @@ export default function BotCreateForm(props) {
         hasError={errors.bot_name?.hasError}
         {...getOverrideProps(overrides, "bot_name")}
       ></TextField>
-      <TextAreaField
+      <TextField
         label="Bot personality"
         isRequired={false}
         isReadOnly={false}
-        placeholder="You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments."
+        value={bot_personality}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -222,7 +207,7 @@ export default function BotCreateForm(props) {
         errorMessage={errors.bot_personality?.errorMessage}
         hasError={errors.bot_personality?.hasError}
         {...getOverrideProps(overrides, "bot_personality")}
-      ></TextAreaField>
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

@@ -10,6 +10,9 @@ import * as queries from "../graphql/queries";
 import * as subscriptions from "../graphql/subscriptions";
 import intlFormatDistance from "date-fns/intlFormatDistance";
 import { getCurrentUser } from 'aws-amplify/auth';
+import {
+  PersonalitiesUpdateForm 
+ } from '../ui-components';
 
 const debug = false;
 
@@ -123,6 +126,9 @@ export default function Home() {
         </div>
         <div className="h-1/8 flex items-center">
           <button onClick={signOut}>&nbsp;Sign&nbsp;out</button>
+        </div>
+        <div className="h-1/8 flex items-center">
+          <PersonalitiesUpdateForm/>
         </div>
       </div>
     </main>

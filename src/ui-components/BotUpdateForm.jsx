@@ -6,13 +6,7 @@
 
 /* eslint-disable */
 import * as React from "react";
-import {
-  Button,
-  Flex,
-  Grid,
-  TextAreaField,
-  TextField,
-} from "@aws-amplify/ui-react";
+import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getBot } from "../graphql/queries";
@@ -207,11 +201,10 @@ export default function BotUpdateForm(props) {
         hasError={errors.bot_name?.hasError}
         {...getOverrideProps(overrides, "bot_name")}
       ></TextField>
-      <TextAreaField
+      <TextField
         label="Bot personality"
         isRequired={false}
         isReadOnly={false}
-        placeholder="You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk."
         value={bot_personality}
         onChange={(e) => {
           let { value } = e.target;
@@ -233,7 +226,7 @@ export default function BotUpdateForm(props) {
         errorMessage={errors.bot_personality?.errorMessage}
         hasError={errors.bot_personality?.hasError}
         {...getOverrideProps(overrides, "bot_personality")}
-      ></TextAreaField>
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

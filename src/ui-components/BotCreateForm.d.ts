@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -36,7 +36,7 @@ export declare type BotCreateFormOverridesProps = {
     BotCreateFormGrid?: PrimitiveOverrideProps<GridProps>;
     bot_order?: PrimitiveOverrideProps<TextFieldProps>;
     bot_name?: PrimitiveOverrideProps<TextFieldProps>;
-    bot_personality?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    bot_personality?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type BotCreateFormProps = React.PropsWithChildren<{
     overrides?: BotCreateFormOverridesProps | undefined | null;
