@@ -14,7 +14,7 @@ import {
   PersonalitiesUpdateForm 
  } from '../ui-components';
 
-const debug = false;
+const debug = true;
 
 Amplify.configure({
   ...awsmobile,
@@ -64,7 +64,6 @@ export default function Home() {
   let user_email = 'User email not set';
 
   // On load, initialize the personalities variable from GraphQL storage into the personalities React state
-  // NOT YET WORKING
   React.useEffect(() => {
     // Create a function that initializes the Personalities object for this owner in the GraphQL database, if it is null. The logic is very similar to CheckBots, but the data is Personalities. 
     async function InitializePersonalities () {
@@ -171,6 +170,24 @@ export default function Home() {
     InitializePersonalities();
   }, [ ]); 
 
+  async function DeleteChats () {
+    try {
+      for (let c in chats) {
+        // delete that chat using the GraphQL API
+        await amplifyClient.graphql({
+          query: mutations.deleteChat,
+          variables: {
+            input: {
+              id: chats[c].id,
+            }
+          }
+        });
+      }
+      setChats([]);
+    } catch (error) {
+      console.log("Error deleting chats: ", error);
+    }
+  }  
     
   return (<Authenticator hideSignUp={true} >{({ signOut, user }) => (
     <main className="flex min-h-screen flex-col items-center bg-white">
@@ -233,6 +250,9 @@ export default function Home() {
         </div>
         <div className="h-1/8 flex items-center">
           <Button onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
+        </div>
+        <div className="h-1/8 flex items-center">
+          <Button onClick={DeleteChats}>&nbsp;Delete&nbsp;Chats</Button>
         </div>
       </div>
     </main>
