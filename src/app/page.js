@@ -2,7 +2,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
-import { Authenticator, Divider, useAuthenticator } from '@aws-amplify/ui-react';
+import { Authenticator, Button } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
@@ -209,8 +209,8 @@ export default function Home() {
           <PersonalitiesUpdateForm personalities={personalities}/>
         </div>
       </div>
-      <div className="h-1/8 flex flex-row justify-evenly">
-        <div className="h-1/8 flex items-center">
+      <div className="flex h-1/8 w-full flex-row justify-evenly">
+        <div className="flex h-1/8 items-center">
           Call&nbsp;in:&nbsp;  
           <input
             type="text"
@@ -232,7 +232,7 @@ export default function Home() {
           />
         </div>
         <div className="h-1/8 flex items-center">
-          <button onClick={signOut}>&nbsp;Sign&nbsp;out</button>
+          <Button onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
         </div>
       </div>
     </main>
