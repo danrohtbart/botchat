@@ -11,6 +11,7 @@ import {
   Divider,
   Flex,
   Grid,
+  Heading,
   TextAreaField,
   TextField,
 } from "@aws-amplify/ui-react";
@@ -161,6 +162,10 @@ export default function PersonalitiesUpdateForm(props) {
       {...getOverrideProps(overrides, "PersonalitiesUpdateForm")}
       {...rest}
     >
+      <Heading
+        children="Bot Personality Controls"
+        {...getOverrideProps(overrides, "SectionalElement1")}
+      ></Heading>
       <TextField
         label="Name 1"
         isRequired={false}

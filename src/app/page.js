@@ -14,7 +14,7 @@ import {
   PersonalitiesUpdateForm 
  } from '../ui-components';
 
-const debug = true;
+const debug = false;
 
 Amplify.configure({
   ...awsmobile,
@@ -173,9 +173,9 @@ export default function Home() {
 
     
   return (<Authenticator hideSignUp={true} >{({ signOut, user }) => (
-    <main className="flex min-h-screen flex-col items-center justify-between p-1 bg-white">
-      <div className="flex justify-center items-left h-screen w-5/6 flex-col">
-        <div className={`h-3/4 flex flex-col overflow-y-scroll`}>
+    <main className="flex min-h-screen flex-col items-center bg-white">
+      <div className="flex items-start h-screen flex-row"> 
+        <div className="flex h-3/4 w-3/4 flex-col overflow-y-scroll">
           {chats
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
             .map((chat) => (
@@ -205,6 +205,11 @@ export default function Home() {
           ))}
           <AlwaysScrollToBottom />
         </div>
+        <div className="flex w-1/4 items-start bg-blue-100">
+          <PersonalitiesUpdateForm personalities={personalities}/>
+        </div>
+      </div>
+      <div className="h-1/8 flex flex-row justify-evenly">
         <div className="h-1/8 flex items-center">
           Call&nbsp;in:&nbsp;  
           <input
@@ -227,13 +232,7 @@ export default function Home() {
           />
         </div>
         <div className="h-1/8 flex items-center">
-          <Divider orientation="horizontal" />
-        </div>
-        <div className="h-1/8 flex items-center">
           <button onClick={signOut}>&nbsp;Sign&nbsp;out</button>
-        </div>
-        <div className="h-1/8 flex items-center">
-          <PersonalitiesUpdateForm personalities={personalities}/>
         </div>
       </div>
     </main>

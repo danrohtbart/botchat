@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { DividerProps, GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { DividerProps, GridProps, HeadingProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -36,6 +36,7 @@ export declare type PersonalitiesUpdateFormValidationValues = {
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PersonalitiesUpdateFormOverridesProps = {
     PersonalitiesUpdateFormGrid?: PrimitiveOverrideProps<GridProps>;
+    SectionalElement1?: PrimitiveOverrideProps<HeadingProps>;
     name_1?: PrimitiveOverrideProps<TextFieldProps>;
     personality_1?: PrimitiveOverrideProps<TextAreaFieldProps>;
     SectionalElement0?: PrimitiveOverrideProps<DividerProps>;
