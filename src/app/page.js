@@ -190,9 +190,9 @@ export default function Home() {
   }  
     
   return (<Authenticator hideSignUp={true} >{({ signOut, user }) => (
-    <main className="flex min-h-screen flex-col items-center bg-white">
-      <div className="flex items-start h-screen flex-row"> 
-        <div className="flex h-3/4 w-3/4 flex-col overflow-y-scroll">
+    <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
+      <div className="flex items-start h-3/4 flex-row bg-white"> 
+        <div className="flex h-3/4 w-3/4 shrink-0 flex-col items-start overflow-y-scroll bg-white">
           {chats
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
             .map((chat) => (
@@ -220,11 +220,14 @@ export default function Home() {
                 </div>
               </div>
           ))}
-          <AlwaysScrollToBottom />
+          &nbsp;<AlwaysScrollToBottom />
         </div>
-        <div className="flex w-1/4 items-start bg-blue-100">
+        <div className="flex min-w-1/4 flex-none items-start bg-blue-100">
           <PersonalitiesUpdateForm personalities={personalities}/>
         </div>
+      </div>
+      <div className="flex h-1/8 w-full flex-row justify-evenly">
+        &nbsp;
       </div>
       <div className="flex h-1/8 w-full flex-row justify-evenly">
         <div className="flex h-1/8 items-center">
