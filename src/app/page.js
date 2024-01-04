@@ -14,7 +14,7 @@ import {
   PersonalitiesUpdateForm 
  } from '../ui-components';
 
-const debug = true;
+const debug = false;
 
 Amplify.configure({
   ...awsmobile,
@@ -189,7 +189,7 @@ export default function Home() {
     }
   }  
     
-  return (<Authenticator hideSignUp={true} >{({ signOut, user }) => (
+  return (<Authenticator>{({ signOut, user }) => (
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
       <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-200">
         <div className="flex h-1/8 w-1/2 items-center">
