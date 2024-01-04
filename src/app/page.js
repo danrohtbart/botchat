@@ -191,6 +191,38 @@ export default function Home() {
     
   return (<Authenticator hideSignUp={true} >{({ signOut, user }) => (
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
+      <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-200">
+        <div className="flex h-1/8 w-1/2 items-center">
+          <b>Call&nbsp;in:&nbsp;</b>
+          <input
+            type="text"
+            name="search"
+            id="search"
+            onKeyUp={async (e) => {
+              if (e.key === "Enter") {
+                const output = {
+                  message: e.target.value,
+                  message_in_thread: 0,
+                  user_email: user_email, 
+                  speaker_name: 'Caller',
+                };
+                WriteToGraphQL (amplifyClient, output);
+                e.target.value = "";
+              }
+            }}
+            className="block w-full rounded-md border-0 py-1.5 pr-14 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          />
+        </div>
+        <div className="h-1/8 flex items-center">
+          <Button onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
+        </div>
+        <div className="h-1/8 flex items-center">
+          <Button onClick={DeleteChats}>&nbsp;Delete&nbsp;Chats</Button>
+        </div>
+      </div>
+      <div className="flex h-1/8 w-full flex-row justify-evenly">
+        &nbsp;
+      </div>
       <div className="flex items-start h-3/4 flex-row bg-white"> 
         <div className="flex h-3/4 w-3/4 shrink-0 flex-col items-start overflow-y-scroll bg-white">
           {chats
@@ -224,38 +256,6 @@ export default function Home() {
         </div>
         <div className="flex min-w-1/4 flex-none items-start bg-blue-100">
           <PersonalitiesUpdateForm personalities={personalities}/>
-        </div>
-      </div>
-      <div className="flex h-1/8 w-full flex-row justify-evenly">
-        &nbsp;
-      </div>
-      <div className="flex h-1/8 w-full flex-row justify-evenly">
-        <div className="flex h-1/8 items-center">
-          Call&nbsp;in:&nbsp;  
-          <input
-            type="text"
-            name="search"
-            id="search"
-            onKeyUp={async (e) => {
-              if (e.key === "Enter") {
-                const output = {
-                  message: e.target.value,
-                  message_in_thread: 0,
-                  user_email: user_email, 
-                  speaker_name: 'Caller',
-                };
-                WriteToGraphQL (amplifyClient, output);
-                e.target.value = "";
-              }
-            }}
-            className="block w-full rounded-md border-0 py-1.5 pr-14 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-          />
-        </div>
-        <div className="h-1/8 flex items-center">
-          <Button onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
-        </div>
-        <div className="h-1/8 flex items-center">
-          <Button onClick={DeleteChats}>&nbsp;Delete&nbsp;Chats</Button>
         </div>
       </div>
     </main>
