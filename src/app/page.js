@@ -42,11 +42,11 @@ export function Home({ signOut, user }) {
       try {
         const allChats = await amplifyClient.graphql({
           query: queries.listChats,
-          variables: {
+          /*variables: {
             filter: {
               user_email: { eq: user_email } // this is the authenticated user's email address
             }
-          }
+          }*/
         });
         setChats(allChats.data.listChats.items);
         } catch (error) {
