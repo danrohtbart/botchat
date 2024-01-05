@@ -40,13 +40,22 @@ export function Home({ signOut, user }) {
   React.useEffect(() => {
     async function fetchChats() {
       try {
+        const { signInDetails } = await getCurrentUser();
+        user_email = signInDetails.loginId;
+      } catch (err) {
+        console.log(err);
+      }
+      if (debug) {
+        console.log("Retrieving chats with user email: ", user_email);
+      }
+      try {
         const allChats = await amplifyClient.graphql({
           query: queries.listChats,
-          /*variables: {
+          variables: {
             filter: {
               user_email: { eq: user_email } // this is the authenticated user's email address
             }
-          }*/
+          }
         });
         setChats(allChats.data.listChats.items);
         } catch (error) {
