@@ -2,7 +2,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
-import { Authenticator, Button } from '@aws-amplify/ui-react';
+import { withAuthenticator, Button } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
@@ -14,7 +14,7 @@ import {
   PersonalitiesUpdateForm 
  } from '../ui-components';
 
-const debug = false;
+const debug = true;
 
 Amplify.configure({
   ...awsmobile,
@@ -30,15 +30,23 @@ but needed this article to get the GraphQL API working
 https://docs.amplify.aws/javascript/build-a-backend/graphqlapi/set-up-graphql-api/
 */ 
 
-export default function Home() {
+export function Home({ signOut, user }) {
   const [chats, setChats] = React.useState([]);
   const [personalities, setPersonalities] = React.useState([]);
+
+  // in the future, retrieve the authenticated user's email address into the user_email variable
+  let user_email = 'User email not set';
 
   React.useEffect(() => {
     async function fetchChats() {
       try {
         const allChats = await amplifyClient.graphql({
           query: queries.listChats,
+          variables: {
+            filter: {
+              user_email: { eq: user_email } // this is the authenticated user's email address
+            }
+          }
         });
         setChats(allChats.data.listChats.items);
         } catch (error) {
@@ -60,15 +68,13 @@ export default function Home() {
     return () => sub.unsubscribe();
   }, []);
 
-  // in the future, retrieve the authenticated user's email address into the user_email variable
-  let user_email = 'User email not set';
-
   // On load, initialize the personalities variable from GraphQL storage into the personalities React state
   React.useEffect(() => {
     // Create a function that initializes the Personalities object for this owner in the GraphQL database, if it is null. The logic is very similar to CheckBots, but the data is Personalities. 
     async function InitializePersonalities () {
       if (debug) {
         console.log("Beginning to initialize personalities.");
+        console.log("User: ", user);
       }
 
       let graphql_personalities = null;
@@ -77,6 +83,7 @@ export default function Home() {
       try {
         graphql_personalities = await amplifyClient.graphql({
           query: queries.listPersonalities,
+          authMode: 'userPool',
         });
         if (debug) {
           console.log("Personalities: ", graphql_personalities);
@@ -86,7 +93,13 @@ export default function Home() {
           must_initialize_personalities = true;
         } else if (graphql_personalities.data.listPersonalities.items.length == 0) {
           must_initialize_personalities = true;
+        } else if (debug) {
+          console.log("Number of personalities: ", graphql_personalities.data.listPersonalities.items.length);
         };
+
+        if (debug) {
+          console.log("Must initialize personalities: ", must_initialize_personalities);
+        }
 
         if (must_initialize_personalities) {
           const default_personalities = {
@@ -95,13 +108,14 @@ export default function Home() {
             name_2: "Mark",
             personality_2: "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.",
           };
-          // Initialization into the database will be removed, once the form is handling submissions properly
+          
           try {
             await amplifyClient.graphql({
               query: mutations.createPersonalities,
               variables: {
                 input: default_personalities,
-              }
+              },
+              authMode: 'userPool'
             });
             console.log("Personalities initialized in database.");
           } catch (error) {
@@ -119,6 +133,7 @@ export default function Home() {
       try {
         cleanup_personalities = await amplifyClient.graphql({
           query: queries.listPersonalities,
+          authMode: 'userPool',
         });
         if (debug) {
           console.log("Number of Personalities records: ", cleanup_personalities.data.listPersonalities.items.length);
@@ -150,7 +165,8 @@ export default function Home() {
                   input: {
                     id: personality_id_to_delete,
                   }
-                }
+                },
+                authMode: 'userPool',
               });
               personality_id_to_delete = null;
               console.log("Personalities cleaned up.");
@@ -179,8 +195,9 @@ export default function Home() {
           variables: {
             input: {
               id: chats[c].id,
-            }
-          }
+            },
+          },
+          authMode: 'userPool',
         });
       }
       setChats([]);
@@ -189,7 +206,7 @@ export default function Home() {
     }
   }  
     
-  return (<Authenticator>{({ signOut, user }) => (
+  return (/*<Authenticator>{({ signOut, user }) => (*/
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
       <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-200">
         <div className="flex h-1/8 w-1/2 items-center">
@@ -259,7 +276,7 @@ export default function Home() {
         </div>
       </div>
     </main>
-    )}</Authenticator>
+    /*)}</Authenticator>*/
   )
 }
  
@@ -276,7 +293,8 @@ async function WriteToGraphQL (amplifyClient, output) {
     query: mutations.createChat,
     variables: {
       input: output,
-    }
+    },
+    authMode: 'userPool',
   });
 }
 
@@ -287,3 +305,4 @@ const AlwaysScrollToBottom = () => {
 };
 
 
+export default withAuthenticator(Home);

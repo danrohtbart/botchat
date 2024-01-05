@@ -14,10 +14,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" title="Bot Chat">
-      <Authenticator.Provider hideSignUp={true}>
+{/*}      <Authenticator.Provider>*/}
         <body className={inter.className}>{children}
         </body>
-      </Authenticator.Provider>
+{/*}      </Authenticator.Provider>*/}
     </html>
   )
 }

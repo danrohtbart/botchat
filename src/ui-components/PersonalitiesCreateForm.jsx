@@ -6,7 +6,14 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  Heading,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createPersonalities } from "../graphql/mutations";
@@ -133,6 +140,10 @@ export default function PersonalitiesCreateForm(props) {
       {...getOverrideProps(overrides, "PersonalitiesCreateForm")}
       {...rest}
     >
+      <Heading
+        children="Create Bots"
+        {...getOverrideProps(overrides, "SectionalElement0")}
+      ></Heading>
       <TextField
         label="Name 1"
         isRequired={false}
@@ -160,11 +171,10 @@ export default function PersonalitiesCreateForm(props) {
         hasError={errors.name_1?.hasError}
         {...getOverrideProps(overrides, "name_1")}
       ></TextField>
-      <TextField
+      <TextAreaField
         label="Personality 1"
         isRequired={false}
         isReadOnly={false}
-        value={personality_1}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -186,7 +196,7 @@ export default function PersonalitiesCreateForm(props) {
         errorMessage={errors.personality_1?.errorMessage}
         hasError={errors.personality_1?.hasError}
         {...getOverrideProps(overrides, "personality_1")}
-      ></TextField>
+      ></TextAreaField>
       <TextField
         label="Name 2"
         isRequired={false}
@@ -214,11 +224,10 @@ export default function PersonalitiesCreateForm(props) {
         hasError={errors.name_2?.hasError}
         {...getOverrideProps(overrides, "name_2")}
       ></TextField>
-      <TextField
+      <TextAreaField
         label="Personality 2"
         isRequired={false}
         isReadOnly={false}
-        value={personality_2}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -240,7 +249,7 @@ export default function PersonalitiesCreateForm(props) {
         errorMessage={errors.personality_2?.errorMessage}
         hasError={errors.personality_2?.hasError}
         {...getOverrideProps(overrides, "personality_2")}
-      ></TextField>
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

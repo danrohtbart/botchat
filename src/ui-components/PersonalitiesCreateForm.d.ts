@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, HeadingProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -36,10 +36,11 @@ export declare type PersonalitiesCreateFormValidationValues = {
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PersonalitiesCreateFormOverridesProps = {
     PersonalitiesCreateFormGrid?: PrimitiveOverrideProps<GridProps>;
+    SectionalElement0?: PrimitiveOverrideProps<HeadingProps>;
     name_1?: PrimitiveOverrideProps<TextFieldProps>;
-    personality_1?: PrimitiveOverrideProps<TextFieldProps>;
+    personality_1?: PrimitiveOverrideProps<TextAreaFieldProps>;
     name_2?: PrimitiveOverrideProps<TextFieldProps>;
-    personality_2?: PrimitiveOverrideProps<TextFieldProps>;
+    personality_2?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type PersonalitiesCreateFormProps = React.PropsWithChildren<{
     overrides?: PersonalitiesCreateFormOverridesProps | undefined | null;
