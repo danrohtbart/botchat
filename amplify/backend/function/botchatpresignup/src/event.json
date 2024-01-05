@@ -1,0 +1,9 @@
+{
+  "request": {
+      "userAttributes": {
+          "email": "testuser@example.com",
+          "custom:domain": "example.com"
+      }
+  },
+  "response": {}
+}

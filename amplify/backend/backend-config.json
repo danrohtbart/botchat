@@ -65,6 +65,11 @@
     }
   },
   "function": {
+    "botchatpresignup": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "botchattriggerjs": {
       "build": true,
       "dependsOn": [
@@ -83,6 +88,22 @@
     }
   },
   "parameters": {
+    "AMPLIFY_function_botchatpresignup_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchatpresignup"
+        }
+      ]
+    },
+    "AMPLIFY_function_botchatpresignup_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchatpresignup"
+        }
+      ]
+    },
     "AMPLIFY_function_botchattriggerjs_deploymentBucketName": {
       "usedBy": [
         {

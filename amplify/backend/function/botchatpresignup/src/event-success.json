@@ -1,0 +1,8 @@
+{
+  "request": {
+      "userAttributes": {
+          "email": "testuser@rohtbart.com"
+      }
+  },
+  "response": {}
+}
