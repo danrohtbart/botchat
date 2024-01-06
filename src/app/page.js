@@ -138,6 +138,9 @@ export function Home({ signOut, user }) {
             personality_2: "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.",
             user_email: user_email,
           };
+          if (debug) {
+            console.log("Initializing with default personalities: ", default_personalities);
+          }
           
           try {
             await amplifyClient.graphql({
