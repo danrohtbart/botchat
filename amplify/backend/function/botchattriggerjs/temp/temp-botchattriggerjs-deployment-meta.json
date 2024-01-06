@@ -1,0 +1,18 @@
+{
+  "stackTemplatePathOrUrl": "amplify-cfn-templates/function/temp/temp-botchattriggerjs-cloudformation-template.json",
+  "parameters": {
+    "CloudWatchRule": "NONE",
+    "apibotchatGraphQLAPIKeyOutput": "da2-nx6urtyn4nekbef6osiwlkoec4",
+    "s3Key": "amplify-builds/botchattriggerjs-5236434376596a683377-build.zip",
+    "apibotchatGraphQLAPIIdOutput": "gry4nfp7dba2znnb63mvtoxaba",
+    "apibotchatGraphQLAPIEndpointOutput": "https://isjrfishhffyvkjvf63huj5wm4.appsync-api.us-east-1.amazonaws.com/graphql",
+    "deploymentBucketName": "amplify-botchat-dev-135408-deployment",
+    "env": "dev"
+  },
+  "stackName": "arn:aws:cloudformation:us-east-1:253178317163:stack/amplify-botchat-dev-135408-functionbotchattriggerjs-1PM5TRL48CYUU/af42df10-a0c9-11ee-9698-0a6b0c1c0b77",
+  "capabilities": [
+    "CAPABILITY_NAMED_IAM",
+    "CAPABILITY_AUTO_EXPAND"
+  ],
+  "tableNames": []
+}

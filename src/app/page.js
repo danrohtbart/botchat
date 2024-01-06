@@ -94,9 +94,24 @@ export function Home({ signOut, user }) {
       let graphql_personalities = null;
       let must_initialize_personalities = false;
 
+      // Replicated from FetchChats. Opportunity for future refactoring. 
+      try {
+        const { signInDetails } = await getCurrentUser();
+        user_email = signInDetails.loginId;
+      } catch (err) {
+        console.log(err);
+      }
+      if (debug) {
+        console.log("Retrieving chats with user email: ", user_email);
+      }
       try {
         graphql_personalities = await amplifyClient.graphql({
           query: queries.listPersonalities,
+          variables: {
+            filter: {
+              user_email: { eq: user_email } // this is the authenticated user's email address
+            }
+          },
           authMode: 'userPool',
         });
         if (debug) {
@@ -121,6 +136,7 @@ export function Home({ signOut, user }) {
             personality_1: "You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments.",
             name_2: "Mark",
             personality_2: "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.",
+            user_email: user_email,
           };
           
           try {
@@ -147,6 +163,11 @@ export function Home({ signOut, user }) {
       try {
         cleanup_personalities = await amplifyClient.graphql({
           query: queries.listPersonalities,
+          variables: {
+            filter: {
+              user_email: { eq: user_email } // this is the authenticated user's email address
+            }
+          },
           authMode: 'userPool',
         });
         if (debug) {

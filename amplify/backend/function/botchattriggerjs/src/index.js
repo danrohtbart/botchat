@@ -76,11 +76,7 @@ const listPersonalities = /* GraphQL */ `
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
 exports.handler = async (event) => {
-  console.log(`EVENT: ${JSON.stringify(event)}`);
-
-    /*
-    * Focusing only on Records[0] is losing messages. Future improvement: iterate here.
-    */
+    console.log(`EVENT: ${JSON.stringify(event)}`);
 
     if (event.Records[0].eventName == "REMOVE") {
             console.log("This is a REMOVE event. Ignoring it.");
@@ -89,6 +85,9 @@ exports.handler = async (event) => {
             };
     }
         
+    /*
+    * Focusing only on Records[0] is losing messages. Future improvement: iterate here.
+    */
     const incoming_message = event.Records[0].dynamodb; 
     if (debug) {
         console.log("Incoming message is", incoming_message);
@@ -125,32 +124,38 @@ exports.handler = async (event) => {
     let personality_1 = "You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments.";
     let name_2 = "Mark";
     let personality_2 = "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.";
+    const incoming_user_email = incoming_content.user_email.S || '';
+    if (debug) {
+        console.log("Incoming user email is", incoming_user_email);
+    }
+
     try {
-        const allPersonalities = await amplifyClient.graphql({
+        const all_personalities = await amplifyClient.graphql({
             query: listPersonalities,
+            variables: {
+                filter: {
+                  user_email: { eq: incoming_user_email } // this is the authenticated user's email address
+                }
+              },
         });
         if (debug) {
-            console.log ("All personalities are", allPersonalities.data.listPersonalities.items);
+            console.log ("all_personalities ", all_personalities.data.listPersonalities.items);
         }
-        // retrieve the item from allPersonalities whose owner matches incoming_content.owner.S 
-        const owner_id = incoming_content.owner.S.substring(0,36);
-        const owner_personality = allPersonalities.data.listPersonalities.items.filter(
-            (item) => item.owner == owner_id)
-        if (debug) {
-            console.log ("Owner personality is", owner_personality);
-        }
+
+        // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner.
+        const owner_personality = all_personalities.data.listPersonalities.items[0];
 
         if (owner_personality) {
             if (owner_personality.length > 1) {
                 console.log("Warning: user ", incoming_content.email_address, "has too many personalities: ", owner_personality.length)
             }
              // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner. 
-            name_1 = owner_personality[0].name_1;
-            personality_1 = owner_personality[0].personality_1;
-            name_2 = owner_personality[0].name_2;
-            personality_2 = owner_personality[0].personality_2;
+            name_1 = owner_personality.name_1;
+            personality_1 = owner_personality.personality_1;
+            name_2 = owner_personality.name_2;
+            personality_2 = owner_personality.personality_2;
         } else {
-            throw ("No personalities found for owner " + incoming_content.owner.S.split('::')[0]);
+            throw ("No personalities found for incoming_user_email " + incoming_user_email);
         }
     } catch (error) {
         console.log("Error retrieving personalities", error);
@@ -189,14 +194,18 @@ exports.handler = async (event) => {
             speaker_name = name_2;
             speaker_personality = personality_2;
         }
-        instruction = "[INST]" + speaker_personality + "Do not mention specific people. Do not repeat the prompt.[/INST]\n\n";
+
+        /*
+        * Prompt Engineering Section
+        */        
+        instruction = "[INST]" + speaker_personality + "Do not mention specific people. Do not repeat the prompt. You should argue against this opinion: [/INST]\n\n";
 
         if(debug) {
             console.log("Speaker name is", speaker_name);
             console.log("Instruction is", instruction);
         }
 
-        const prompt = instruction + last_speaker + ": " + last_statement + "\nRespond to that opinion."
+        const prompt = instruction + last_speaker + ": " + last_statement
 
         bedrock_request_body = {
             body: JSON.stringify({
@@ -244,7 +253,7 @@ exports.handler = async (event) => {
     const output = {
         message: message,
         message_in_thread: message_in_thread + 1,
-        user_email: 'dan@rohtbart.com',
+        user_email: incoming_user_email,
         speaker_name: speaker_name,
     };
 
