@@ -55,7 +55,8 @@ export function Home({ signOut, user }) {
             filter: {
               user_email: { eq: user_email } // this is the authenticated user's email address
             }
-          }
+          },
+          authMode: 'userPool',
         });
         if (debug) {
           console.log("All chats: ", allChats);
