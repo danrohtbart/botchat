@@ -14,7 +14,7 @@ import {
   PersonalitiesUpdateForm 
  } from '../ui-components';
 
-const debug = true;
+const debug = false;
 
 Amplify.configure({
   ...awsmobile,
