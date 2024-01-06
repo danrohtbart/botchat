@@ -133,8 +133,9 @@ exports.handler = async (event) => {
             console.log ("All personalities are", allPersonalities.data.listPersonalities.items);
         }
         // retrieve the item from allPersonalities whose owner matches incoming_content.owner.S 
+        const owner_id = incoming_content.owner.S.substring(0,36);
         const owner_personality = allPersonalities.data.listPersonalities.items.filter(
-            (item) => item.owner == incoming_content.owner.S.split('::')[0])
+            (item) => item.owner == owner_id)
         if (debug) {
             console.log ("Owner personality is", owner_personality);
         }
@@ -216,7 +217,7 @@ exports.handler = async (event) => {
             }
         }
         if (debug) {
-            console.log("Bedrock config is", aws_sdk_config);
+            // console.log("Bedrock config is", aws_sdk_config); // Prints credentials
             console.log("Bedrock request body is", bedrock_request_body);
         }        
 

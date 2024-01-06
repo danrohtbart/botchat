@@ -1,52 +1,49 @@
 {
     "Records": [
         {
-            "eventID": "565c043f607be0528a0ce5a82be2ec64",
+            "eventID": "fb103c583cf2b7965f2489f27b404490",
             "eventName": "INSERT",
             "eventVersion": "1.1",
             "eventSource": "aws:dynamodb",
             "awsRegion": "us-east-1",
             "dynamodb": {
-                "ApproximateCreationDateTime": 1704425766,
+                "ApproximateCreationDateTime": 1704573626,
                 "Keys": {
                     "id": {
-                        "S": "855c2ff1-c41f-4df9-8318-0fa0bce68479"
+                        "S": "5b7beb03-3799-4070-9d01-a46a7948c5b2"
                     }
                 },
                 "NewImage": {
-                    "owner": {
-                        "S": "87b0ad61-15c7-4497-8c10-fd7176b870a3::87b0ad61-15c7-4497-8c10-fd7176b870a3"
-                    },
                     "createdAt": {
-                        "S": "2024-01-05T03:36:05.994Z"
+                        "S": "2024-01-06T20:40:26.146Z"
                     },
                     "user_email": {
-                        "S": "dan+prodtest2@rohtbart.com"
+                        "S": "dan@rohtbart.com"
                     },
                     "__typename": {
                         "S": "Chat"
                     },
                     "speaker_name": {
-                        "S": "Caller"
+                        "S": "Iron Man"
                     },
                     "id": {
-                        "S": "855c2ff1-c41f-4df9-8318-0fa0bce68479"
+                        "S": "5b7beb03-3799-4070-9d01-a46a7948c5b2"
                     },
                     "message": {
-                        "S": "What is the weather?"
+                        "S": "\n\nIron Man: Well, well, well. Looks like we've got a real genius on our hands here. Let me tell you, pal, I've been dealing with bad guys for years, and I've learned a thing or two about how to take 'em down.\n\nFirst of all, you can't just go in there with guns blazing. That's a recipe for disaster. You need a plan, a strategy."
                     },
                     "message_in_thread": {
-                        "N": "0"
+                        "N": "1"
                     },
                     "updatedAt": {
-                        "S": "2024-01-05T03:36:05.994Z"
+                        "S": "2024-01-06T20:40:26.146Z"
                     }
                 },
-                "SequenceNumber": "62480200000000045005976824",
-                "SizeBytes": 334,
+                "SequenceNumber": "89268100000000029687364751",
+                "SizeBytes": 556,
                 "StreamViewType": "NEW_AND_OLD_IMAGES"
             },
-            "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-ibuxugjs25bqrc2imosybxgkhe-main/stream/2023-12-22T22:37:07.812"
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
         }
     ]
 }
