@@ -132,7 +132,7 @@ exports.handler = async (event) => {
         if (debug) {
             console.log ("All personalities are", allPersonalities.data.listPersonalities.items);
         }
-        // retrieve the item from allPersonalities whose owner matches incoming_content.owner.S
+        // retrieve the item from allPersonalities whose owner matches incoming_content.owner.S 
         const owner_personality = allPersonalities.data.listPersonalities.items.filter(
             (item) => item.owner == incoming_content.owner.S.split('::')[0])
         if (debug) {
@@ -140,10 +140,14 @@ exports.handler = async (event) => {
         }
 
         if (owner_personality) {
-            me_1 = owner_personality.name_1;
-            personality_1 = owner_personality.personality_1;
-            name_2 = owner_personality.name_2;
-            personality_2 = owner_personality.personality_2;
+            if (owner_personality.length > 1) {
+                console.log("Warning: user ", incoming_content.email_address, "has too many personalities: ", owner_personality.length)
+            }
+             // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner. 
+            name_1 = owner_personality[0].name_1;
+            personality_1 = owner_personality[0].personality_1;
+            name_2 = owner_personality[0].name_2;
+            personality_2 = owner_personality[0].personality_2;
         } else {
             throw ("No personalities found for owner " + incoming_content.owner.S.split('::')[0]);
         }
@@ -184,7 +188,7 @@ exports.handler = async (event) => {
             speaker_name = name_2;
             speaker_personality = personality_2;
         }
-        instruction = "[INST]" + speaker_personality + "Do not mention specific players. Do not repeat the prompt.[/INST]\n\n";
+        instruction = "[INST]" + speaker_personality + "Do not mention specific people. Do not repeat the prompt.[/INST]\n\n";
 
         if(debug) {
             console.log("Speaker name is", speaker_name);
