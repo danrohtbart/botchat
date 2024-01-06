@@ -4,23 +4,20 @@
     "apiName": "botchat",
     "serviceName": "AppSync",
     "defaultAuthType": {
-      "mode": "API_KEY",
-      "keyDescription": "api key description",
-      "expirationTime": 30
+      "mode": "AMAZON_COGNITO_USER_POOLS",
+      "cognitoUserPoolId": "authbotchat15158084"
     },
     "additionalAuthTypes": [
       {
-        "mode": "AWS_IAM"
+        "mode": "API_KEY",
+        "expirationTime": 365,
+        "apiKeyExpirationDate": "2025-01-05T18:31:45.351Z",
+        "keyDescription": "apiauthkey"
       },
       {
-        "mode": "AMAZON_COGNITO_USER_POOLS",
-        "cognitoUserPoolId": "authbotchat15158084"
+        "mode": "AWS_IAM"
       }
     ],
-    "conflictResolution": {
-      "defaultResolutionStrategy": {
-        "type": "NONE"
-      }
-    }
+    "conflictResolution": {}
   }
 }
