@@ -72,7 +72,8 @@ export function Home({ signOut, user }) {
   // Rewrote this section based on https://docs.amplify.aws/javascript/build-a-backend/graphqlapi/subscribe-data/
   React.useEffect(() => {
     const sub = amplifyClient.graphql({
-      query: subscriptions.onCreateChat
+      query: subscriptions.onCreateChat, 
+      authMode: 'userPool',
     }).subscribe({
       next: ({ provider, data }) =>
         setChats((prev) => [...prev, data.onCreateChat]),
