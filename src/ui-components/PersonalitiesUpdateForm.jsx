@@ -282,16 +282,6 @@ export default function PersonalitiesUpdateForm(props) {
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
       >
-        <Button
-          children="Reset"
-          type="reset"
-          onClick={(event) => {
-            event.preventDefault();
-            resetStateValues();
-          }}
-          isDisabled={!(idProp || personalitiesModelProp)}
-          {...getOverrideProps(overrides, "ResetButton")}
-        ></Button>
         <Flex
           gap="15px"
           {...getOverrideProps(overrides, "RightAlignCTASubFlex")}

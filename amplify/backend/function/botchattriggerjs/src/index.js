@@ -14,7 +14,7 @@ const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-b
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
-const debug = false;
+const debug = true;
 const mock_bedrock = false;
 const drain_queue = false;
 const prevent_write = false;
