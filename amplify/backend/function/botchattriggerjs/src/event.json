@@ -1,49 +1,52 @@
 {
-  "Records": [
-      {
-          "eventID": "2cadc86835eaf65532c35651344a5a46",
-          "eventName": "INSERT",
-          "eventVersion": "1.1",
-          "eventSource": "aws:dynamodb",
-          "awsRegion": "us-east-1",
-          "dynamodb": {
-              "ApproximateCreationDateTime": 1703267364,
-              "Keys": {
-                  "id": {
-                      "S": "6f36548d-2ce5-4995-9ace-c1900cbeb297"
-                  }
-              },
-              "NewImage": {
-                  "createdAt": {
-                      "S": "2023-12-22T17:49:23.705Z"
-                  },
-                  "user_email": {
-                      "S": "User email not set"
-                  },
-                  "__typename": {
-                      "S": "Chat"
-                  },
-                  "speaker_name": {
-                      "S": "Caller"
-                  },
-                  "id": {
-                      "S": "6f36548d-2ce5-4995-9ace-c1900cbeb297"
-                  },
-                  "message": {
-                      "S": "Why are the Mets cursed?"
-                  },
-                  "message_in_thread": {
-                      "N": "1"
-                  },
-                  "updatedAt": {
-                      "S": "2023-12-22T17:49:23.705Z"
-                  }
-              },
-              "SequenceNumber": "17584600000000044655128186",
-              "SizeBytes": 252,
-              "StreamViewType": "NEW_AND_OLD_IMAGES"
-          },
-          "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
-      }
-  ]
+    "Records": [
+        {
+            "eventID": "565c043f607be0528a0ce5a82be2ec64",
+            "eventName": "INSERT",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1704425766,
+                "Keys": {
+                    "id": {
+                        "S": "855c2ff1-c41f-4df9-8318-0fa0bce68479"
+                    }
+                },
+                "NewImage": {
+                    "owner": {
+                        "S": "87b0ad61-15c7-4497-8c10-fd7176b870a3::87b0ad61-15c7-4497-8c10-fd7176b870a3"
+                    },
+                    "createdAt": {
+                        "S": "2024-01-05T03:36:05.994Z"
+                    },
+                    "user_email": {
+                        "S": "dan+prodtest2@rohtbart.com"
+                    },
+                    "__typename": {
+                        "S": "Chat"
+                    },
+                    "speaker_name": {
+                        "S": "Caller"
+                    },
+                    "id": {
+                        "S": "855c2ff1-c41f-4df9-8318-0fa0bce68479"
+                    },
+                    "message": {
+                        "S": "What is the weather?"
+                    },
+                    "message_in_thread": {
+                        "N": "0"
+                    },
+                    "updatedAt": {
+                        "S": "2024-01-05T03:36:05.994Z"
+                    }
+                },
+                "SequenceNumber": "62480200000000045005976824",
+                "SizeBytes": 334,
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-ibuxugjs25bqrc2imosybxgkhe-main/stream/2023-12-22T22:37:07.812"
+        }
+    ]
 }

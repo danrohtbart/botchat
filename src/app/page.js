@@ -14,7 +14,7 @@ import {
   PersonalitiesUpdateForm 
  } from '../ui-components';
 
-const debug = false;
+const debug = true;
 
 Amplify.configure({
   ...awsmobile,
@@ -57,6 +57,9 @@ export function Home({ signOut, user }) {
             }
           }
         });
+        if (debug) {
+          console.log("All chats: ", allChats);
+        }
         setChats(allChats.data.listChats.items);
         } catch (error) {
           console.log("Error fetching chats: ", error);

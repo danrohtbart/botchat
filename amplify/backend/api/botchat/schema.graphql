@@ -1,4 +1,4 @@
-type Personalities @model @auth(rules: [{allow: owner}]) {
+type Personalities @model @auth(rules: [{allow: owner}, {allow: public, operations: [read]}]) {
   id: ID!
   name_1: String
   personality_1: String
@@ -6,7 +6,7 @@ type Personalities @model @auth(rules: [{allow: owner}]) {
   personality_2: String
 }
 
-type Chat @model @auth(rules: [{allow: public}, {allow: owner}]) {
+type Chat @model @auth(rules: [{allow: owner}, {allow: private}, {allow: public, operations: [create]}]) {
   id: ID!
   message: String!
   message_in_thread: Int

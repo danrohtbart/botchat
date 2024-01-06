@@ -14,7 +14,7 @@ const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-b
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
-const debug = false;
+const debug = true;
 const mock_bedrock = false;
 const drain_queue = false;
 const prevent_write = false;
@@ -132,28 +132,20 @@ exports.handler = async (event) => {
         if (debug) {
             console.log ("All personalities are", allPersonalities.data.listPersonalities.items);
         }
-        if (allPersonalities) {
-            if (allPersonalities.data.listPersonalities.items.length == 1) {
-                if (debug) {
-                    console.log("Good. Only one personality found.");
-                }
-                // use the values of the only record
-                name_1 = allPersonalities.data.listPersonalities.items[0].name_1;
-                personality_1 = allPersonalities.data.listPersonalities.items[0].personality_1;
-                name_2 = allPersonalities.data.listPersonalities.items[0].name_2;
-                personality_2 = allPersonalities.data.listPersonalities.items[0].personality_2;
-            } else {
-                if (debug) {
-                    console.log("Number of personalities found is", allPersonalities.data.listPersonalities.items.length);
-                }
-                // in future use the newest record
-                // in future also clean up the older records (once you've proven this works with multiple users)
-                // for now, just use the first record
-                name_1 = allPersonalities.data.listPersonalities.items[0].name_1;
-                personality_1 = allPersonalities.data.listPersonalities.items[0].personality_1;
-                name_2 = allPersonalities.data.listPersonalities.items[0].name_2;
-                personality_2 = allPersonalities.data.listPersonalities.items[0].personality_2;
-            }
+        // retrieve the item from allPersonalities whose owner matches incoming_content.owner.S
+        const owner_personality = allPersonalities.data.listPersonalities.items.filter(
+            (item) => item.owner == incoming_content.owner.S.split('::')[0])
+        if (debug) {
+            console.log ("Owner personality is", owner_personality);
+        }
+
+        if (owner_personality) {
+            me_1 = owner_personality.name_1;
+            personality_1 = owner_personality.personality_1;
+            name_2 = owner_personality.name_2;
+            personality_2 = owner_personality.personality_2;
+        } else {
+            throw ("No personalities found for owner " + incoming_content.owner.S.split('::')[0]);
         }
     } catch (error) {
         console.log("Error retrieving personalities", error);
