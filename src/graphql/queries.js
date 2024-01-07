@@ -9,6 +9,7 @@ export const getPersonalities = /* GraphQL */ `
       personality_1
       name_2
       personality_2
+      user_email
       createdAt
       updatedAt
       owner
@@ -29,6 +30,7 @@ export const listPersonalities = /* GraphQL */ `
         personality_1
         name_2
         personality_2
+        user_email
         createdAt
         updatedAt
         owner
@@ -47,6 +49,7 @@ export const getChat = /* GraphQL */ `
       message_in_thread
       user_email
       speaker_name
+      thread_id
       createdAt
       updatedAt
       owner
@@ -67,6 +70,7 @@ export const listChats = /* GraphQL */ `
         message_in_thread
         user_email
         speaker_name
+        thread_id
         createdAt
         updatedAt
         owner

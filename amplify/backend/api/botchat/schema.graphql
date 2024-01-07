@@ -7,12 +7,13 @@ type Personalities @model @auth(rules: [{allow: owner}, {allow: public, operatio
   user_email: String
 }
 
-type Chat @model @auth(rules: [{allow: owner}, {allow: private}, {allow: public, operations: [create]}]) {
+type Chat @model @auth(rules: [{allow: owner}, {allow: private}, {allow: public, operations: [create, read]}]) {
   id: ID!
   message: String!
   message_in_thread: Int
   user_email: String
   speaker_name: String
+  thread_id: ID
 }
 
 type Bot @model @auth(rules: [{allow: public}, {allow: owner}]) {

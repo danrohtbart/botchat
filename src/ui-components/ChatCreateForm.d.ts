@@ -26,12 +26,14 @@ export declare type ChatCreateFormInputValues = {
     message_in_thread?: number;
     user_email?: string;
     speaker_name?: string;
+    thread_id?: string;
 };
 export declare type ChatCreateFormValidationValues = {
     message?: ValidationFunction<string>;
     message_in_thread?: ValidationFunction<number>;
     user_email?: ValidationFunction<string>;
     speaker_name?: ValidationFunction<string>;
+    thread_id?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ChatCreateFormOverridesProps = {
@@ -40,6 +42,7 @@ export declare type ChatCreateFormOverridesProps = {
     message_in_thread?: PrimitiveOverrideProps<TextFieldProps>;
     user_email?: PrimitiveOverrideProps<TextFieldProps>;
     speaker_name?: PrimitiveOverrideProps<TextFieldProps>;
+    thread_id?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type ChatCreateFormProps = React.PropsWithChildren<{
     overrides?: ChatCreateFormOverridesProps | undefined | null;

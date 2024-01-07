@@ -29,6 +29,7 @@ export default function ChatUpdateForm(props) {
     message_in_thread: "",
     user_email: "",
     speaker_name: "",
+    thread_id: "",
   };
   const [message, setMessage] = React.useState(initialValues.message);
   const [message_in_thread, setMessage_in_thread] = React.useState(
@@ -38,6 +39,7 @@ export default function ChatUpdateForm(props) {
   const [speaker_name, setSpeaker_name] = React.useState(
     initialValues.speaker_name
   );
+  const [thread_id, setThread_id] = React.useState(initialValues.thread_id);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = chatRecord
@@ -47,6 +49,7 @@ export default function ChatUpdateForm(props) {
     setMessage_in_thread(cleanValues.message_in_thread);
     setUser_email(cleanValues.user_email);
     setSpeaker_name(cleanValues.speaker_name);
+    setThread_id(cleanValues.thread_id);
     setErrors({});
   };
   const [chatRecord, setChatRecord] = React.useState(chatModelProp);
@@ -70,6 +73,7 @@ export default function ChatUpdateForm(props) {
     message_in_thread: [],
     user_email: [],
     speaker_name: [],
+    thread_id: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -101,6 +105,7 @@ export default function ChatUpdateForm(props) {
           message_in_thread: message_in_thread ?? null,
           user_email: user_email ?? null,
           speaker_name: speaker_name ?? null,
+          thread_id: thread_id ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -165,6 +170,7 @@ export default function ChatUpdateForm(props) {
               message_in_thread,
               user_email,
               speaker_name,
+              thread_id,
             };
             const result = onChange(modelFields);
             value = result?.message ?? value;
@@ -196,6 +202,7 @@ export default function ChatUpdateForm(props) {
               message_in_thread: value,
               user_email,
               speaker_name,
+              thread_id,
             };
             const result = onChange(modelFields);
             value = result?.message_in_thread ?? value;
@@ -225,6 +232,7 @@ export default function ChatUpdateForm(props) {
               message_in_thread,
               user_email: value,
               speaker_name,
+              thread_id,
             };
             const result = onChange(modelFields);
             value = result?.user_email ?? value;
@@ -252,6 +260,7 @@ export default function ChatUpdateForm(props) {
               message_in_thread,
               user_email,
               speaker_name: value,
+              thread_id,
             };
             const result = onChange(modelFields);
             value = result?.speaker_name ?? value;
@@ -265,6 +274,34 @@ export default function ChatUpdateForm(props) {
         errorMessage={errors.speaker_name?.errorMessage}
         hasError={errors.speaker_name?.hasError}
         {...getOverrideProps(overrides, "speaker_name")}
+      ></TextField>
+      <TextField
+        label="Thread id"
+        isRequired={false}
+        isReadOnly={false}
+        value={thread_id}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              message,
+              message_in_thread,
+              user_email,
+              speaker_name,
+              thread_id: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.thread_id ?? value;
+          }
+          if (errors.thread_id?.hasError) {
+            runValidationTasks("thread_id", value);
+          }
+          setThread_id(value);
+        }}
+        onBlur={() => runValidationTasks("thread_id", thread_id)}
+        errorMessage={errors.thread_id?.errorMessage}
+        hasError={errors.thread_id?.hasError}
+        {...getOverrideProps(overrides, "thread_id")}
       ></TextField>
       <Flex
         justifyContent="space-between"

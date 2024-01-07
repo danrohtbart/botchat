@@ -257,7 +257,6 @@ export function Home({ signOut, user }) {
               if (e.key === "Enter") {
                 const output = {
                   message: e.target.value,
-                  message_in_thread: 0,
                   user_email: user_email, 
                   speaker_name: 'Caller',
                 };
@@ -325,6 +324,15 @@ async function WriteToGraphQL (amplifyClient, output) {
     output.user_email = signInDetails.loginId;
   } catch (err) {
     console.log(err);
+  }
+
+  // create a new variable called thread_id which is the concatenation of a datetime in YYYYMMDDZHH:MM:SS format, and a uuid
+  const thread_id = new Date().toISOString().replace(/:/g, '-') + '-' + self.crypto.randomUUID();
+
+  output = {
+    ...output,
+    message_in_thread: 0,
+    thread_id: thread_id
   }
 
   await amplifyClient.graphql({

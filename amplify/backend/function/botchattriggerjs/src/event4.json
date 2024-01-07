@@ -21,7 +21,7 @@
                         "S": "2024-01-07T03:24:46.892Z"
                     },
                     "thread_id": {
-                        "S": "2024-01-07T03-24-46.647Z-67e8d904-f8c7-4352-8d5b-36992af5d092"
+                        "S": "2024-01-07T03-39-50.813Z-a7639860-fee4-4767-be53-f8bcdaa645a5"
                     },
                     "user_email": {
                         "S": "dan@rohtbart.com"
@@ -30,16 +30,16 @@
                         "S": "Chat"
                     },
                     "speaker_name": {
-                        "S": "Caller"
+                        "S": "Alex"
                     },
                     "id": {
                         "S": "cf6a5b39-8b6e-42bd-9ece-c8fd012bb1a2"
                     },
                     "message": {
-                        "S": "America has just declared its independence"
+                        "S": " My apologies, my dear fellow, I must demur, Your words, they do not accurately convey, The beauty and power of calculus, I pray, It's a field that's vast and here to stay."
                     },
                     "message_in_thread": {
-                        "N": "0"
+                        "N": "4"
                     },
                     "updatedAt": {
                         "S": "2024-01-07T03:24:46.892Z"

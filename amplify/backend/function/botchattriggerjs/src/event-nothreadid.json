@@ -20,9 +20,6 @@
                     "createdAt": {
                         "S": "2024-01-07T03:24:46.892Z"
                     },
-                    "thread_id": {
-                        "S": "2024-01-07T03-24-46.647Z-67e8d904-f8c7-4352-8d5b-36992af5d092"
-                    },
                     "user_email": {
                         "S": "dan@rohtbart.com"
                     },

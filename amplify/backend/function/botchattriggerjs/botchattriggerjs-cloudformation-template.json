@@ -117,12 +117,12 @@
                 ]
               ]
             },
-            "API_BOTCHAT_BOTTABLE_NAME": {
+            "API_BOTCHAT_PERSONALITIESTABLE_NAME": {
               "Fn::ImportValue": {
-                "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:BotTable:Name"
+                "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:PersonalitiesTable:Name"
               }
             },
-            "API_BOTCHAT_BOTTABLE_ARN": {
+            "API_BOTCHAT_PERSONALITIESTABLE_ARN": {
               "Fn::Join": [
                 "",
                 [
@@ -137,7 +137,7 @@
                   ":table/",
                   {
                     "Fn::ImportValue": {
-                      "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:BotTable:Name"
+                      "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:PersonalitiesTable:Name"
                     }
                   }
                 ]
@@ -380,22 +380,13 @@
             {
               "Effect": "Allow",
               "Action": [
-                "dynamodb:Put*",
-                "dynamodb:Create*",
-                "dynamodb:BatchWriteItem",
-                "dynamodb:PartiQLInsert",
                 "dynamodb:Get*",
                 "dynamodb:BatchGetItem",
                 "dynamodb:List*",
                 "dynamodb:Describe*",
                 "dynamodb:Scan",
                 "dynamodb:Query",
-                "dynamodb:PartiQLSelect",
-                "dynamodb:Update*",
-                "dynamodb:RestoreTable*",
-                "dynamodb:PartiQLUpdate",
-                "dynamodb:Delete*",
-                "dynamodb:PartiQLDelete"
+                "dynamodb:PartiQLSelect"
               ],
               "Resource": [
                 {
@@ -413,7 +404,7 @@
                       ":table/",
                       {
                         "Fn::ImportValue": {
-                          "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:ChatTable:Name"
+                          "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:PersonalitiesTable:Name"
                         }
                       }
                     ]
@@ -434,7 +425,7 @@
                       ":table/",
                       {
                         "Fn::ImportValue": {
-                          "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:ChatTable:Name"
+                          "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:PersonalitiesTable:Name"
                         }
                       },
                       "/index/*"
@@ -459,9 +450,7 @@
                 "dynamodb:PartiQLSelect",
                 "dynamodb:Update*",
                 "dynamodb:RestoreTable*",
-                "dynamodb:PartiQLUpdate",
-                "dynamodb:Delete*",
-                "dynamodb:PartiQLDelete"
+                "dynamodb:PartiQLUpdate"
               ],
               "Resource": [
                 {
@@ -479,7 +468,7 @@
                       ":table/",
                       {
                         "Fn::ImportValue": {
-                          "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:BotTable:Name"
+                          "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:ChatTable:Name"
                         }
                       }
                     ]
@@ -500,7 +489,7 @@
                       ":table/",
                       {
                         "Fn::ImportValue": {
-                          "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:BotTable:Name"
+                          "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:ChatTable:Name"
                         }
                       },
                       "/index/*"

@@ -9,17 +9,13 @@
       ]
     },
     "storage": {
+      "Personalities:@model(appsync)": [
+        "read"
+      ],
       "Chat:@model(appsync)": [
         "create",
         "read",
-        "update",
-        "delete"
-      ],
-      "Bot:@model(appsync)": [
-        "create",
-        "read",
-        "update",
-        "delete"
+        "update"
       ]
     }
   }

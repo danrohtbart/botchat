@@ -1,11 +1,11 @@
 /* Amplify Params - DO NOT EDIT
-	API_BOTCHAT_BOTTABLE_ARN
-	API_BOTCHAT_BOTTABLE_NAME
 	API_BOTCHAT_CHATTABLE_ARN
 	API_BOTCHAT_CHATTABLE_NAME
 	API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT
 	API_BOTCHAT_GRAPHQLAPIIDOUTPUT
 	API_BOTCHAT_GRAPHQLAPIKEYOUTPUT
+	API_BOTCHAT_PERSONALITIESTABLE_ARN
+	API_BOTCHAT_PERSONALITIESTABLE_NAME
 	ENV
 	REGION
 Amplify Params - DO NOT EDIT */
@@ -14,10 +14,10 @@ const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-b
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
-const debug = false;
+const debug = true;
 const mock_bedrock = false;
 const drain_queue = false;
-const prevent_write = false;
+const prevent_write = true;
 
 if (debug) {
     console.log('Loading botchattriggerjs.');
@@ -30,24 +30,25 @@ const top_p = 0.1;
 
 // Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations and queries
 const createChat = /* GraphQL */ `
-        mutation CreateChat(
-        $input: CreateChatInput!
-        $condition: ModelChatConditionInput
-        ) {
-        createChat(input: $input, condition: $condition) {
-            id
-            message
-            message_in_thread
-            user_email
-            speaker_name
-            createdAt
-            updatedAt
-            owner
-            __typename
-        }
-        }
-    `;
-    
+  mutation CreateChat(
+    $input: CreateChatInput!
+    $condition: ModelChatConditionInput
+  ) {
+    createChat(input: $input, condition: $condition) {
+      id
+      message
+      message_in_thread
+      user_email
+      speaker_name
+      thread_id
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+
 const listPersonalities = /* GraphQL */ `
   query ListPersonalities(
     $filter: ModelPersonalitiesFilterInput
@@ -61,6 +62,32 @@ const listPersonalities = /* GraphQL */ `
         personality_1
         name_2
         personality_2
+        user_email
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;    
+
+const listChats = /* GraphQL */ `
+  query ListChats(
+    $filter: ModelChatFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listChats(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        message
+        message_in_thread
+        user_email
+        speaker_name
+        thread_id
         createdAt
         updatedAt
         owner
@@ -171,6 +198,10 @@ exports.handler = async (event) => {
     const last_statement = incoming_content.message.S || '';
     const last_speaker = incoming_content.speaker_name.S || '';
     const message_in_thread = parseInt(incoming_content.message_in_thread.N) || 0;
+    let thread_id = '';
+    if (incoming_content.thread_id) {
+        thread_id = incoming_content.thread_id.S;
+    } 
 
     if(debug) {
         console.log("Last speaker " + last_speaker);
@@ -218,8 +249,37 @@ exports.handler = async (event) => {
 
         prompt += instruction;
         
-        // Retrieve all chats in this thread, in order. Iterate through them, appropriately appending them to prompt. Remove any line breaks, just in case. 
-        /* TK */
+        // Retrieve all chats in this thread_id, sorted in order of message_in_thread. Iterate through them by message_in_thread,  appending them to prompt. Remove any line breaks, just in case.
+        try {
+            const all_chats = await amplifyClient.graphql({
+                query: listChats,
+                variables: {
+                    filter: {
+                        thread_id: { eq: thread_id }
+                        // user_email: { eq: incoming_user_email } // this is the authenticated user's email address
+                    },
+                },
+            });
+            if (debug) {
+                console.log ("all_chats ", all_chats.data.listChats.items);
+            }
+            let chat_messages = all_chats.data.listChats.items;
+            chat_messages.sort(function(a, b) {
+                return a.message_in_thread - b.message_in_thread;
+            });
+            if (debug) {
+                console.log ("Sorted chat_messages ", chat_messages);
+            }
+/*            chat_messages.forEach(function(chat_message) {
+                prompt += chat_message.message.replace(/\n/g, ' ') + "\n";
+            }
+            if (debug) {
+                console.log("Prompt is", prompt);
+            }*/
+        } catch (error) {
+            console.log("Error retrieving chats", error);
+        }
+        
         prompt += last_statement.replace(/\n/g, ' ') + "[/INST]";
 
         bedrock_request_body = {
@@ -267,12 +327,12 @@ exports.handler = async (event) => {
             message = "I'm speechless. ";
         }
 
-
     const output = {
         message: message,
         message_in_thread: message_in_thread + 1,
         user_email: incoming_user_email,
         speaker_name: speaker_name,
+        thread_id: thread_id,
     };
 
     if (debug) {
