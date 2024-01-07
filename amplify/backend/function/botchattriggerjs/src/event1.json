@@ -1,24 +1,21 @@
 {
     "Records": [
         {
-            "eventID": "80fdcbd9f0e9d3ff863310895961dd93",
+            "eventID": "9902a7dfdce6dc91026918f8a14b38e5",
             "eventName": "INSERT",
             "eventVersion": "1.1",
             "eventSource": "aws:dynamodb",
             "awsRegion": "us-east-1",
             "dynamodb": {
-                "ApproximateCreationDateTime": 1704650509,
+                "ApproximateCreationDateTime": 1704651755,
                 "Keys": {
                     "id": {
-                        "S": "8830e625-d846-44b8-90c4-f398d8483fb1"
+                        "S": "03c624c6-2b34-4100-858a-9537658db9da"
                     }
                 },
                 "NewImage": {
-                    "owner": {
-                        "S": "87b0ad61-15c7-4497-8c10-fd7176b870a3::87b0ad61-15c7-4497-8c10-fd7176b870a3"
-                    },
                     "createdAt": {
-                        "S": "2024-01-07T18:01:49.074Z"
+                        "S": "2024-01-07T18:22:35.510Z"
                     },
                     "thread_id": {
                         "S": "2024-01-07T18-01-48.965Z-21ea5bac-0821-4665-b669-d660b3005fc3"
@@ -30,23 +27,23 @@
                         "S": "Chat"
                     },
                     "speaker_name": {
-                        "S": "Caller"
+                        "S": "Ben"
                     },
                     "id": {
-                        "S": "8830e625-d846-44b8-90c4-f398d8483fb1"
+                        "S": "03c624c6-2b34-4100-858a-9537658db9da"
                     },
                     "message": {
-                        "S": "There are dark stormclouds surrounding the articles of confederation"
+                        "S": "Ah, my dear fellow, I must say that the state of our union is looking quite dire indeed. The articles of confederation, once hailed as a beacon of hope and unity, now seem to be shrouded in darkness and uncertainty. It is a stormy time, my friend, and I fear for the future of our young nation.\n\nBut fear not, for I have a plan. We must harness the power of electricity to light the way forward."
                     },
                     "message_in_thread": {
-                        "N": "0"
+                        "N": "1"
                     },
                     "updatedAt": {
-                        "S": "2024-01-07T18:01:49.074Z"
+                        "S": "2024-01-07T18:22:35.510Z"
                     }
                 },
-                "SequenceNumber": "93197400000000072784240686",
-                "SizeBytes": 444,
+                "SequenceNumber": "93142800000000055957450922",
+                "SizeBytes": 688,
                 "StreamViewType": "NEW_AND_OLD_IMAGES"
             },
             "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"

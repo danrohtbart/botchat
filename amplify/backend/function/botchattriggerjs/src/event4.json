@@ -1,27 +1,24 @@
 {
     "Records": [
         {
-            "eventID": "15647273fd953daae3b98083164e1696",
+            "eventID": "c40163ed2dd6567066d42fb765ef6724",
             "eventName": "INSERT",
             "eventVersion": "1.1",
             "eventSource": "aws:dynamodb",
             "awsRegion": "us-east-1",
             "dynamodb": {
-                "ApproximateCreationDateTime": 1704597887,
+                "ApproximateCreationDateTime": 1704651776,
                 "Keys": {
                     "id": {
-                        "S": "cf6a5b39-8b6e-42bd-9ece-c8fd012bb1a2"
+                        "S": "7553e490-1e82-4643-b4e2-23770807a38a"
                     }
                 },
                 "NewImage": {
-                    "owner": {
-                        "S": "87b0ad61-15c7-4497-8c10-fd7176b870a3::87b0ad61-15c7-4497-8c10-fd7176b870a3"
-                    },
                     "createdAt": {
-                        "S": "2024-01-07T03:24:46.892Z"
+                        "S": "2024-01-07T18:22:56.766Z"
                     },
                     "thread_id": {
-                        "S": "2024-01-07T03-39-50.813Z-a7639860-fee4-4767-be53-f8bcdaa645a5"
+                        "S": "2024-01-07T18-01-48.965Z-21ea5bac-0821-4665-b669-d660b3005fc3"
                     },
                     "user_email": {
                         "S": "dan@rohtbart.com"
@@ -33,20 +30,20 @@
                         "S": "Alex"
                     },
                     "id": {
-                        "S": "cf6a5b39-8b6e-42bd-9ece-c8fd012bb1a2"
+                        "S": "7553e490-1e82-4643-b4e2-23770807a38a"
                     },
                     "message": {
-                        "S": " My apologies, my dear fellow, I must demur, Your words, they do not accurately convey, The beauty and power of calculus, I pray, It's a field that's vast and here to stay."
+                        "S": "My dear friend, your words have pierced my soul,\nThe Articles of Confederation, a once noble goal,\nNow falter, and our nation's future's at stake,\nBut fear not, for I have a plan to make,\nA new system, one that's strong and just,\nTo guide us through the trials we must trust."
                     },
                     "message_in_thread": {
                         "N": "4"
                     },
                     "updatedAt": {
-                        "S": "2024-01-07T03:24:46.892Z"
+                        "S": "2024-01-07T18:22:56.766Z"
                     }
                 },
-                "SequenceNumber": "90900400000000079116159148",
-                "SizeBytes": 416,
+                "SequenceNumber": "93968900000000081462497152",
+                "SizeBytes": 569,
                 "StreamViewType": "NEW_AND_OLD_IMAGES"
             },
             "eventSourceARN": "arn:aws:dynamodb:us-east-1:253178317163:table/Chat-gry4nfp7dba2znnb63mvtoxaba-dev/stream/2023-12-19T00:51:51.132"
