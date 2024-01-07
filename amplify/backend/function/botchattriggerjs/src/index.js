@@ -184,7 +184,7 @@ exports.handler = async (event) => {
             statusCode: 204
         }
     } else {
-        let speaker_name, instruction, speaker_personality;
+        let speaker_name, speaker_personality;
         // Using the last_speaker, determine who will speak. 
         if (last_speaker != name_1) {
             // Bot 1 will speak by default - the only time they don't speak is if they just spoke. 
@@ -197,15 +197,30 @@ exports.handler = async (event) => {
 
         /*
         * Prompt Engineering Section
+        * https://huggingface.co/blog/llama2#how-to-prompt-llama-2
+        *  https://www.reddit.com/r/LocalLLaMA/comments/1561vn5/here_is_a_practical_multiturn_llama2chat_prompt/
+        * The desired grammar is:
+<s>[INST] <<SYS>>
+{{ system_prompt }}
+<</SYS>>
+
+{{ user_msg_1 }} [/INST] {{ model_answer_1 }} </s><s>[INST] {{ user_msg_2 }} [/INST]
+
         */        
-        instruction = "[INST]" + speaker_personality + "Do not mention specific people. Do not repeat the prompt. You should argue against this opinion: [/INST]\n\n";
+
+        let prompt = "<s>[INST]";
+        let instruction = " <<SYS>> \n" + speaker_personality + "\nDo not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking. You should respond to this opinion: <</SYS>>\n\n";
 
         if(debug) {
             console.log("Speaker name is", speaker_name);
             console.log("Instruction is", instruction);
         }
 
-        const prompt = instruction + last_speaker + ": " + last_statement
+        prompt += instruction;
+        
+        // Retrieve all chats in this thread, in order. Iterate through them, appropriately appending them to prompt. Remove any line breaks, just in case. 
+        /* TK */
+        prompt += last_statement.replace(/\n/g, ' ') + "[/INST]";
 
         bedrock_request_body = {
             body: JSON.stringify({
@@ -238,6 +253,9 @@ exports.handler = async (event) => {
             const bedrock_command = new InvokeModelCommand(bedrock_request_body);
             const bedrock_response = await bedrock_client.send(bedrock_command);
             message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
+        }
+        if (debug) {
+            console.log("Full message from Bedrock is:", message);
         }
         // Trim off any sentence fragments. Keep only the content to the left of the last "." in message
         message = message.substring(0, message.lastIndexOf(".")+1);
