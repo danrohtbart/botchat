@@ -15,7 +15,7 @@ const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
 // Set these 4 to false for normal production operation
-const debug = true;
+const debug = false;
 const mock_bedrock = false;
 const drain_queue = false;
 const prevent_write = false;
@@ -341,9 +341,7 @@ exports.handler = async (event) => {
             }
         }
 
-        if (debug) {
-            console.log("Prompt is", prompt);
-        }
+        console.log("INFO: Prompt is", prompt);
 
         /**
          * Configure the bot in Bedrock
@@ -423,7 +421,7 @@ exports.handler = async (event) => {
         }
     }
 
-      console.log(`OUTPUT: ${JSON.stringify(output)}`);
+      console.log("OUTPUT: ", output);
   }
 
   return Promise.resolve('Successfully processed DynamoDB record');
