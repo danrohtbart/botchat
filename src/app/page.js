@@ -2,7 +2,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
-import { withAuthenticator, Button, Menu } from '@aws-amplify/ui-react';
+import { withAuthenticator, Button, Menu, Input } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
@@ -43,7 +43,9 @@ export function Home({ signOut, user }) {
         const { signInDetails } = await getCurrentUser();
         user_email = signInDetails.loginId;
       } catch (err) {
+        alert("Could not retrieve your signInDetails. Logging you out.");
         console.log(err);
+        signOut();
       }
       if (debug) {
         console.log("Retrieving chats with user email: ", user_email);
@@ -99,10 +101,12 @@ export function Home({ signOut, user }) {
         const { signInDetails } = await getCurrentUser();
         user_email = signInDetails.loginId;
       } catch (err) {
+        alert("Could not retrieve your signInDetails. Logging you out.");
         console.log(err);
+        signOut();
       }
       if (debug) {
-        console.log("Retrieving chats with user email: ", user_email);
+        console.log(err);
       }
       try {
         graphql_personalities = await amplifyClient.graphql({
@@ -247,12 +251,12 @@ export function Home({ signOut, user }) {
   return (/*<Authenticator>{({ signOut, user }) => (*/
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
       <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100">
-      <Menu><div className="flex min-w-1/4 flex-none items-start bg-blue-100 border-8 border-white">
-          <PersonalitiesUpdateForm personalities={personalities}/>
-        </div></Menu>
+        <Menu>
+            <PersonalitiesUpdateForm personalities={personalities}/>
+        </Menu>
         <div className="flex h-1/8 w-1/2 items-center">
           <b>Call&nbsp;in:&nbsp;</b>
-          <input
+          <Input
             type="text"
             name="search"
             id="search"
@@ -323,7 +327,9 @@ async function WriteToGraphQL (amplifyClient, output) {
     const { signInDetails } = await getCurrentUser();
     output.user_email = signInDetails.loginId;
   } catch (err) {
+    alert("Could not retrieve your signInDetails. Logging you out.");
     console.log(err);
+    signOut();
   }
 
   // create a new variable called thread_id which is the concatenation of a datetime in YYYYMMDDZHH:MM:SS format, and a uuid
