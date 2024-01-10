@@ -246,7 +246,7 @@ export function Home({ signOut, user }) {
     
   return (/*<Authenticator>{({ signOut, user }) => (*/
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
-      <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-200">
+      <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100">
       <Menu><div className="flex min-w-1/4 flex-none items-start bg-blue-100 border-8 border-white">
           <PersonalitiesUpdateForm personalities={personalities}/>
         </div></Menu>
