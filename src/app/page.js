@@ -2,7 +2,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
-import { withAuthenticator, Button, Menu, Input } from '@aws-amplify/ui-react';
+import { withAuthenticator, Button, Menu, Input, ScrollView } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
@@ -284,38 +284,36 @@ export function Home({ signOut, user }) {
       <div className="flex h-1/8 w-full flex-row justify-evenly">
         &nbsp;
       </div>
-      <div className="flex items-start h-3/4 flex-row bg-white"> 
-        <div className="flex h-3/4 w-3/4 shrink-0 flex-col items-start overflow-y-scroll bg-white">
-          {chats
-            .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-            .map((chat) => (
-              <div
-                key={chat.id}
-                className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${
-                  chat.user_email === user_email && "self-end bg-blue-600" || "bg-slate-200"
-                }`}
-              >
-                <div className="text-gray-500">
-                  <div className="flex justify-between gap-x-4">
-                    <div className="py-0.5 text-xs leading-5">
-                      <span className={`font-medium ${chat.user_email === user_email && "text-slate-50"}`}>
-                        {chat.speaker_name}
-                      </span>{" "}
-                    </div>
-                    <time
-                      dateTime="2023-01-23T15:56"
-                      className={`flex-none py-0.5 text-xs leading-5 ${chat.user_email === user_email && "text-slate-50"}`}
-                    >
-                      {intlFormatDistance(new Date(chat.createdAt), new Date())}
-                    </time>
+      <ScrollView maxHeight="75%">
+        {chats
+          .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+          .map((chat) => (
+            <div
+              key={chat.id}
+              className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${
+                chat.user_email === user_email && "self-end bg-blue-600" || "bg-slate-200"
+              }`}
+            >
+              <div className="text-gray-500">
+                <div className="flex justify-between gap-x-4">
+                  <div className="py-0.5 text-xs leading-5">
+                    <span className={`font-medium ${chat.user_email === user_email && "text-slate-50"}`}>
+                      {chat.speaker_name}
+                    </span>{" "}
                   </div>
-                  <p className={`text-sm leading-6 ${chat.user_email === user_email && "text-slate-50"}`}>{chat.message}</p>
+                  <time
+                    dateTime="2023-01-23T15:56"
+                    className={`flex-none py-0.5 text-xs leading-5 ${chat.user_email === user_email && "text-slate-50"}`}
+                  >
+                    {intlFormatDistance(new Date(chat.createdAt), new Date())}
+                  </time>
                 </div>
+                <p className={`text-sm leading-6 ${chat.user_email === user_email && "text-slate-50"}`}>{chat.message}</p>
               </div>
-          ))}
-          &nbsp;<AlwaysScrollToBottom />
-        </div>
-      </div>
+            </div>
+        ))}
+        &nbsp;<AlwaysScrollToBottom />
+      </ScrollView>
     </main>
     /*)}</Authenticator>*/
   )
