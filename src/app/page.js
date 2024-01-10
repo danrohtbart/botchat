@@ -2,7 +2,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
-import { withAuthenticator, Button } from '@aws-amplify/ui-react';
+import { withAuthenticator, Button, Menu } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
@@ -247,6 +247,9 @@ export function Home({ signOut, user }) {
   return (/*<Authenticator>{({ signOut, user }) => (*/
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
       <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-200">
+      <Menu><div className="flex min-w-1/4 flex-none items-start bg-blue-100 border-8 border-white">
+          <PersonalitiesUpdateForm personalities={personalities}/>
+        </div></Menu>
         <div className="flex h-1/8 w-1/2 items-center">
           <b>Call&nbsp;in:&nbsp;</b>
           <input
@@ -307,9 +310,6 @@ export function Home({ signOut, user }) {
               </div>
           ))}
           &nbsp;<AlwaysScrollToBottom />
-        </div>
-        <div className="flex min-w-1/4 flex-none items-start bg-blue-100">
-          <PersonalitiesUpdateForm personalities={personalities}/>
         </div>
       </div>
     </main>
