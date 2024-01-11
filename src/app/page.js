@@ -250,7 +250,7 @@ export function Home({ signOut, user }) {
     
   return (/*<Authenticator>{({ signOut, user }) => (*/
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
-      <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100">
+      <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100 fixed top-0 left-0 right-0">
         <Menu>
             <PersonalitiesUpdateForm personalities={personalities}/>
         </Menu>
@@ -285,6 +285,7 @@ export function Home({ signOut, user }) {
         &nbsp;
       </div>
       <ScrollView maxHeight="75%">
+        <br/>
         {chats
           .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
           .map((chat) => (
