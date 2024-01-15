@@ -251,11 +251,8 @@ export function Home({ signOut, user }) {
   return (/*<Authenticator>{({ signOut, user }) => (*/
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
       <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100 fixed top-0 left-0 right-0">
-        <Menu>
-            <PersonalitiesUpdateForm personalities={personalities}/>
-        </Menu>
         <div className="flex h-1/8 w-1/2 items-center">
-          <b>Call&nbsp;in:&nbsp;</b>
+          <b>Talk:&nbsp;</b>
           <Input
             type="text"
             name="search"
@@ -265,7 +262,7 @@ export function Home({ signOut, user }) {
                 const output = {
                   message: e.target.value,
                   user_email: user_email, 
-                  speaker_name: 'Caller',
+                  speaker_name: 'You',
                 };
                 WriteToGraphQL (amplifyClient, output);
                 e.target.value = "";
@@ -281,40 +278,51 @@ export function Home({ signOut, user }) {
           <Button onClick={DeleteChats}>&nbsp;Delete&nbsp;Chats</Button>
         </div>
       </div>
-      <div className="flex h-1/8 w-full flex-row justify-evenly">
-        &nbsp;
+      <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100">
+          &nbsp;
       </div>
-      <ScrollView maxHeight="75%">
-        <br/>
-        {chats
-          .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-          .map((chat) => (
-            <div
-              key={chat.id}
-              className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${
-                chat.user_email === user_email && "self-end bg-blue-600" || "bg-slate-200"
-              }`}
-            >
-              <div className="text-gray-500">
-                <div className="flex justify-between gap-x-4">
-                  <div className="py-0.5 text-xs leading-5">
-                    <span className={`font-medium ${chat.user_email === user_email && "text-slate-50"}`}>
-                      {chat.speaker_name}
-                    </span>{" "}
+      <div className="flex h-1/8 w-full flex-row">
+        <div className="w-1/4 fixed">
+          <PersonalitiesUpdateForm personalities={personalities}/>
+        </div>
+        <div className="w-1/4">
+          &nbsp;
+        </div>
+        <div className="w-3/4 h-3/4">
+          &nbsp;
+          <ScrollView maxHeight="75%">
+            <br/>
+            {chats
+              .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+              .map((chat) => (
+                <div
+                  key={chat.id}
+                  className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${
+                    chat.user_email === user_email && "self-end bg-blue-600" || "bg-slate-200"
+                  }`}
+                >
+                  <div className="text-gray-500">
+                    <div className="flex justify-between gap-x-4">
+                      <div className="py-0.5 text-xs leading-5">
+                        <span className={`font-medium ${chat.user_email === user_email && "text-slate-50"}`}>
+                          {chat.speaker_name}
+                        </span>{" "}
+                      </div>
+                      <time
+                        dateTime="2023-01-23T15:56"
+                        className={`flex-none py-0.5 text-xs leading-5 ${chat.user_email === user_email && "text-slate-50"}`}
+                      >
+                        {intlFormatDistance(new Date(chat.createdAt), new Date())}
+                      </time>
+                    </div>
+                    <p className={`text-sm leading-6 ${chat.user_email === user_email && "text-slate-50"}`}>{chat.message}</p>
                   </div>
-                  <time
-                    dateTime="2023-01-23T15:56"
-                    className={`flex-none py-0.5 text-xs leading-5 ${chat.user_email === user_email && "text-slate-50"}`}
-                  >
-                    {intlFormatDistance(new Date(chat.createdAt), new Date())}
-                  </time>
                 </div>
-                <p className={`text-sm leading-6 ${chat.user_email === user_email && "text-slate-50"}`}>{chat.message}</p>
-              </div>
-            </div>
-        ))}
-        &nbsp;<AlwaysScrollToBottom />
-      </ScrollView>
+            ))}
+            &nbsp;<AlwaysScrollToBottom />
+          </ScrollView>
+        </div>
+      </div>
     </main>
     /*)}</Authenticator>*/
   )
