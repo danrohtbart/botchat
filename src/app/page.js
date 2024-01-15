@@ -248,7 +248,7 @@ export function Home({ signOut, user }) {
     }
   }  
     
-  return (/*<Authenticator>{({ signOut, user }) => (*/
+  return (
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
       <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100 fixed top-0 left-0 right-0">
         <div className="flex h-1/8 w-1/2 items-center">
@@ -324,7 +324,6 @@ export function Home({ signOut, user }) {
         </div>
       </div>
     </main>
-    /*)}</Authenticator>*/
   )
 }
  
