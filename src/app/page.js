@@ -33,6 +33,7 @@ https://docs.amplify.aws/javascript/build-a-backend/graphqlapi/set-up-graphql-ap
 export function Home({ signOut, user }) {
   const [chats, setChats] = React.useState([]);
   const [personalities, setPersonalities] = React.useState([]);
+  const [loggingOut, setLoggingOut] = React.useState(false)
 
   // in the future, retrieve the authenticated user's email address into the user_email variable
   let user_email = 'User email not set';
@@ -43,7 +44,10 @@ export function Home({ signOut, user }) {
         const { signInDetails } = await getCurrentUser();
         user_email = signInDetails.loginId;
       } catch (err) {
-        alert("Could not retrieve your signInDetails. Logging you out.");
+        if (!loggingOut) {
+          setLoggingOut(true);
+          alert("Could not retrieve your signInDetails. Logging you out.");
+        }
         console.log(err);
         signOut();
       }
@@ -101,7 +105,10 @@ export function Home({ signOut, user }) {
         const { signInDetails } = await getCurrentUser();
         user_email = signInDetails.loginId;
       } catch (err) {
-        alert("Could not retrieve your signInDetails. Logging you out.");
+        if (!loggingOut) {
+          setLoggingOut(true);
+          alert("Could not retrieve your signInDetails. Logging you out.");
+        }
         console.log(err);
         signOut();
       }
@@ -333,7 +340,10 @@ async function WriteToGraphQL (amplifyClient, output) {
     const { signInDetails } = await getCurrentUser();
     output.user_email = signInDetails.loginId;
   } catch (err) {
-    alert("Could not retrieve your signInDetails. Logging you out.");
+    if (!loggingOut) {
+      setLoggingOut(true);
+      alert("Could not retrieve your signInDetails. Logging you out.");
+    }
     console.log(err);
     signOut();
   }
