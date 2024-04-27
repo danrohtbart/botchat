@@ -9,18 +9,15 @@
     },
     "additionalAuthTypes": [
       {
-        "mode": "AWS_IAM"
+        "mode": "API_KEY",
+        "expirationTime": 365,
+        "apiKeyExpirationDate": "2025-04-27T14:55:24.408Z",
+        "keyDescription": "API_BOTCHAT_GRAPHQLAPIKEYOUTPUT"
       },
       {
-        "mode": "API_KEY",
-        "keyDescription": "api key description",
-        "expirationTime": 30
+        "mode": "AWS_IAM"
       }
     ],
-    "conflictResolution": {
-      "defaultResolutionStrategy": {
-        "type": "NONE"
-      }
-    }
+    "conflictResolution": {}
   }
 }
