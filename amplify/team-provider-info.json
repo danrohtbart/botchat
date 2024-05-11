@@ -1,4 +1,36 @@
 {
+  "main": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-botchat-main-223437-authRole",
+      "UnauthRoleArn": "arn:aws:iam::253178317163:role/amplify-botchat-main-223437-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::253178317163:role/amplify-botchat-main-223437-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-botchat-main-223437-deployment",
+      "UnauthRoleName": "amplify-botchat-main-223437-unauthRole",
+      "StackName": "amplify-botchat-main-223437",
+      "StackId": "arn:aws:cloudformation:us-east-1:253178317163:stack/amplify-botchat-main-223437/4a24ee60-a11a-11ee-85f5-0e598a8ebf43",
+      "AmplifyAppId": "d3bo8xtge7s7fh"
+    },
+    "categories": {
+      "auth": {
+        "botchat15158084": {}
+      },
+      "function": {
+        "botchatpresignup": {
+          "deploymentBucketName": "amplify-botchat-main-223437-deployment",
+          "s3Key": "amplify-builds/botchatpresignup-58556d5a576a31774873-build.zip"
+        },
+        "botchattriggerjs": {
+          "secretsPathAmplifyAppId": "d3bo8xtge7s7fh",
+          "deploymentBucketName": "amplify-botchat-main-223437-deployment",
+          "s3Key": "amplify-builds/botchattriggerjs-777343733841514e694d-build.zip"
+        }
+      },
+      "api": {
+        "botchat": {}
+      }
+    }
+  },
   "dev": {
     "awscloudformation": {
       "AuthRoleName": "amplify-botchat-dev-135408-authRole",

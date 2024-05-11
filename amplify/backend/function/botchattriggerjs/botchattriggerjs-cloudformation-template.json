@@ -146,7 +146,7 @@
                 ]
               ]
             },
-            "AccessKeyId": {
+            "accessKeyId": {
               "Fn::Join": [
                 "",
                 [
@@ -164,7 +164,7 @@
                       }
                     ]
                   },
-                  "AccessKeyId"
+                  "accessKeyId"
                 ]
               ]
             },

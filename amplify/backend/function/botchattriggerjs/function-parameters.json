@@ -20,7 +20,7 @@
     }
   },
   "secretNames": [
-    "AccessKeyId",
+    "accessKeyId",
     "secretAccessKey"
   ]
 }
