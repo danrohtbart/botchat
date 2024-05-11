@@ -388,8 +388,8 @@ exports.handler = async (event) => {
         const aws_sdk_config = {
             region: 'us-east-1',
             credentials: {
-                accessKeyId: Parameters.find(param => param.Name === '/amplify/d3bo8xtge7s7fh/dev/AMPLIFY_botchattriggerjs_AccessKeyId').Value,
-                secretAccessKey: Parameters.find(param => param.Name === '/amplify/d3bo8xtge7s7fh/dev/AMPLIFY_botchattriggerjs_secretAccessKey').Value
+                accessKeyId: Parameters.find(param => param.Name.includes('AccessKeyId')).Value,
+                secretAccessKey: Parameters.find(param => param.Name.includes('secretAccessKey')).Value
             }
         }
 
