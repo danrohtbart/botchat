@@ -18,5 +18,9 @@
         "update"
       ]
     }
-  }
+  },
+  "secretNames": [
+    "AccessKeyId",
+    "secretAccessKey"
+  ]
 }

@@ -1,0 +1,13 @@
+/***************************************************************************
+ * The contents of this file were generated with Amplify Studio.           *
+ * Please refrain from making any modifications to this file.              *
+ * Any changes to this file will be overwritten when running amplify pull. *
+ **************************************************************************/
+
+export { default as BotCreateForm } from "./BotCreateForm";
+export { default as BotUpdateForm } from "./BotUpdateForm";
+export { default as ChatCreateForm } from "./ChatCreateForm";
+export { default as ChatUpdateForm } from "./ChatUpdateForm";
+export { default as PersonalitiesCreateForm } from "./PersonalitiesCreateForm";
+export { default as PersonalitiesUpdateForm } from "./PersonalitiesUpdateForm";
+export { default as studioTheme } from "./studioTheme";

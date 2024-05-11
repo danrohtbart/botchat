@@ -26,3 +26,11 @@ Bot Chat is an AWS Amplify app. Amplify created the auth, api, DynamoDB, and lam
 
 Cognito is not set up by default to use the botchatpresignup lambda. After deploying, you must go to Cognito, open the user pool, go into User Pool Properties, and add the lambda trigger. 
 https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html
+
+Local development is not least-privilege, and might be incompletely documented. My local development user has these policies: 
+* AdministratorAccess-Amplify
+* AmazonBedrockFullAccess
+* AmazonSNSFullAccess // I think this isn't needed anymore
+* AmazonSSMReadOnlyAccess
+* AmplifyBackendDeployFullAccess
+* SecretsManagerReadWrite

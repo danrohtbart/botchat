@@ -120,6 +120,14 @@
           "resourceName": "botchattriggerjs"
         }
       ]
+    },
+    "AMPLIFY_function_botchattriggerjs_secretsPathAmplifyAppId": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "botchattriggerjs"
+        }
+      ]
     }
   }
 }
