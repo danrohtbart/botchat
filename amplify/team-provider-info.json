@@ -54,7 +54,7 @@
         "botchatboto3bedrock": {},
         "botchattriggerjs": {
           "deploymentBucketName": "amplify-botchat-dev-135408-deployment",
-          "s3Key": "amplify-builds/botchattriggerjs-4c64775341334e453266-build.zip",
+          "s3Key": "amplify-builds/botchattriggerjs-432b3035627a34416343-build.zip",
           "secretsPathAmplifyAppId": "d3bo8xtge7s7fh"
         },
         "botchatpresignup": {

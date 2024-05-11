@@ -34,6 +34,7 @@ const debug_admin = false;
 const mock_bedrock = false;
 const drain_queue = false;
 const prevent_write = false;
+/* this is a fake change to force deployment */
 
 if (debug) {
     console.log('Loading botchattriggerjs.');
