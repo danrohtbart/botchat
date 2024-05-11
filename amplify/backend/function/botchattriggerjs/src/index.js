@@ -5,7 +5,7 @@ const aws = require('aws-sdk');
 
 const { Parameters } = await (new aws.SSM())
   .getParameters({
-    Names: ["accessKeyId","secretAccessKey"].map(secretName => process.env[secretName]),
+    Names: ["AccessKeyId","secretAccessKey"].map(secretName => process.env[secretName]),
     WithDecryption: true,
   })
   .promise();
@@ -28,8 +28,9 @@ const { BedrockRuntimeClient, InvokeModelCommand }  = require('@aws-sdk/client-b
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
-// Set these 4 to false for normal production operation
+// Set these to false for normal production operation
 const debug = false;
+const debug_admin = false;
 const mock_bedrock = false;
 const drain_queue = false;
 const prevent_write = false;
@@ -372,15 +373,31 @@ exports.handler = async (event) => {
             accept: "application/json",
             modelId: "meta.llama2-70b-chat-v1"
         }
+
+        const aws = require('aws-sdk');
+
+        const { Parameters } = await (new aws.SSM())
+          .getParameters({
+            Names: ["AccessKeyId","secretAccessKey"].map(secretName => process.env[secretName]),
+            WithDecryption: true,
+          })
+          .promise();
+        
+        // Parameters will be of the form { Name: 'secretName', Value: 'secretValue', ... }[]
+
         const aws_sdk_config = {
             region: 'us-east-1',
             credentials: {
-                accessKeyId: '***REMOVED***',
-                secretAccessKey: '***REMOVED***'
+                accessKeyId: Parameters.find(param => param.Name.includes('AccessKeyId')).Value,
+                secretAccessKey: Parameters.find(param => param.Name.includes('secretAccessKey')).Value
             }
         }
+
+        if (debug_admin) {
+            console.log("Bedrock config is", aws_sdk_config); 
+            console.log("Parameters: ", Parameters)
+        }
         if (debug) {
-            // console.log("Bedrock config is", aws_sdk_config); // Prints credentials
             console.log("Bedrock request body is", bedrock_request_body);
         }        
 

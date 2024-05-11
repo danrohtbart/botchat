@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.474.0",
-    "aws-amplify": "^6.0.6"
+    "aws-amplify": "^6.0.6",
+    "aws-sdk": "^2.1618.0"
   }
 }
