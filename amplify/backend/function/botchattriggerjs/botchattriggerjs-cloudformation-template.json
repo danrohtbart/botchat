@@ -239,7 +239,10 @@
               ]
             }
           ]
-        }
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonBedrockFullAccess"
+        ]
       }
     },
     "lambdaexecutionpolicy": {

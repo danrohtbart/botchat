@@ -376,7 +376,8 @@ exports.handler = async (event) => {
         }
 
         const aws = require('aws-sdk');
-
+/*
+// This works, but is dependent on AccessKey, which is less secure than Assume Role
         const { Parameters } = await (new aws.SSM())
           .getParameters({
             Names: ["AccessKeyId","secretAccessKey"].map(secretName => process.env[secretName]),
@@ -385,18 +386,20 @@ exports.handler = async (event) => {
           .promise();
         
         // Parameters will be of the form { Name: 'secretName', Value: 'secretValue', ... }[]
+*/
 
         const aws_sdk_config = {
             region: 'us-east-1',
-            credentials: {
+/*            credentials: {
                 accessKeyId: Parameters.find(param => param.Name.includes('AccessKeyId')).Value,
                 secretAccessKey: Parameters.find(param => param.Name.includes('secretAccessKey')).Value
-            }
+            }*/
         }
+
 
         if (debug_admin) {
             console.log("Bedrock config is", aws_sdk_config); 
-            console.log("Parameters: ", Parameters)
+            //console.log("Parameters: ", Parameters)
         }
         if (debug) {
             console.log("Bedrock request body is", bedrock_request_body);
