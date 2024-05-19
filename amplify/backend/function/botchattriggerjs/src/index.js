@@ -1,17 +1,3 @@
-/*
-Use the following code to retrieve configured secrets from SSM:
-
-const aws = require('aws-sdk');
-
-const { Parameters } = await (new aws.SSM())
-  .getParameters({
-    Names: ["AccessKeyId","secretAccessKey"].map(secretName => process.env[secretName]),
-    WithDecryption: true,
-  })
-  .promise();
-
-Parameters will be of the form { Name: 'secretName', Value: 'secretValue', ... }[]
-*/
 /* Amplify Params - DO NOT EDIT
 	API_BOTCHAT_CHATTABLE_ARN
 	API_BOTCHAT_CHATTABLE_NAME
@@ -376,24 +362,9 @@ exports.handler = async (event) => {
         }
 
         const aws = require('aws-sdk');
-/*
-// This works, but is dependent on AccessKey, which is less secure than Assume Role
-        const { Parameters } = await (new aws.SSM())
-          .getParameters({
-            Names: ["AccessKeyId","secretAccessKey"].map(secretName => process.env[secretName]),
-            WithDecryption: true,
-          })
-          .promise();
-        
-        // Parameters will be of the form { Name: 'secretName', Value: 'secretValue', ... }[]
-*/
 
         const aws_sdk_config = {
             region: 'us-east-1',
-/*            credentials: {
-                accessKeyId: Parameters.find(param => param.Name.includes('AccessKeyId')).Value,
-                secretAccessKey: Parameters.find(param => param.Name.includes('secretAccessKey')).Value
-            }*/
         }
 
 
