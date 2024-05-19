@@ -33,7 +33,8 @@ https://docs.amplify.aws/javascript/build-a-backend/graphqlapi/set-up-graphql-ap
 export function Home({ signOut, user }) {
   const [chats, setChats] = React.useState([]);
   const [personalities, setPersonalities] = React.useState([]);
-  const [loggingOut, setLoggingOut] = React.useState(false)
+  const [loggingOut, setLoggingOut] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
 
   // in the future, retrieve the authenticated user's email address into the user_email variable
   let user_email = 'User email not set';
@@ -236,6 +237,10 @@ export function Home({ signOut, user }) {
   }, [ ]); 
 
   async function DeleteChats () {
+    setDeleting(true);
+    if (debug) {
+      console.log("Deleting chats.");
+    }
     try {
       for (let c in chats) {
         // delete that chat using the GraphQL API
@@ -250,8 +255,10 @@ export function Home({ signOut, user }) {
         });
       }
       setChats([]);
+      setDeleting(false);
     } catch (error) {
       console.log("Error deleting chats: ", error);
+      setDeleting(false);
     }
   }  
     
@@ -279,10 +286,10 @@ export function Home({ signOut, user }) {
           />
         </div>
         <div className="h-1/8 flex items-center">
-          <Button onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
+          <Button colorTheme="error" size="small" onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
         </div>
         <div className="h-1/8 flex items-center">
-          <Button onClick={DeleteChats}>&nbsp;Delete&nbsp;Chats</Button>
+          <Button colorTheme="error" size="small" onClick={DeleteChats} isLoading={deleting} loadingText="Deleting...">&nbsp;Delete&nbsp;Chats</Button>
         </div>
       </div>
       <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100">
