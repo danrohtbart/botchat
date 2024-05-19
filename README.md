@@ -24,7 +24,7 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 ## Bot Chat setup
 Bot Chat is an AWS Amplify app. Amplify created the auth, api, DynamoDB, and lambda functions. 
 
-After deploying, check the IAM role `botchatLambdaRole????????-???`. If it does not have the `AmazonBedrockFullAccess` policy attached yet, you need to attach it. 
+After deploying, check the IAM role `botchatLambdaRole????????-???`. If it does not have the `AmazonBedrockFullAccess` policy attached yet, you need to attach it. (It should, but this is the most likely troubleshooting issue)
 
 Cognito is not set up by default to use the botchatpresignup lambda. After deploying, you must go to Cognito, open the user pool, go into User Pool Properties, and add the lambda trigger. 
 https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html
