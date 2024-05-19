@@ -299,6 +299,11 @@ export function Home({ signOut, user }) {
           &nbsp;
           <ScrollView maxHeight="75%">
             <br/>
+            <div className="text-center text-xl font-bold italic text-wrap">
+              {
+                chats.length === 0 ? "Add a topic in the box above, and hit enter. Your message will get the bots chatting." : ""
+              }
+            </div>
             {chats
               .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
               .map((chat) => (
