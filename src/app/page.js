@@ -297,7 +297,11 @@ export function Home({ signOut, user }) {
       </div>
       <div className="flex h-1/8 w-full flex-row">
         <div className="w-1/4 fixed">
-          <PersonalitiesUpdateForm personalities={personalities}/>
+          <PersonalitiesUpdateForm personalities={personalities} overrides={{
+            SubmitButton: {
+              children: 'Update Personalities'
+            }
+          }} />
         </div>
         <div className="w-1/4">
           &nbsp;
