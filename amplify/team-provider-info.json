@@ -21,7 +21,6 @@
           "s3Key": "amplify-builds/botchatpresignup-58556d5a576a31774873-build.zip"
         },
         "botchattriggerjs": {
-          "secretsPathAmplifyAppId": "d3bo8xtge7s7fh",
           "deploymentBucketName": "amplify-botchat-main-223437-deployment",
           "s3Key": "amplify-builds/botchattriggerjs-777343733841514e694d-build.zip"
         }
