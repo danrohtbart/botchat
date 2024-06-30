@@ -366,17 +366,26 @@ exports.handler = async (event) => {
             const bedrock_command = new InvokeModelCommand(bedrock_request_body);
             const bedrock_response = await bedrock_client.send(bedrock_command);
             message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
+            if (debug) {
+                console.log("Full Response from Bedrock is", bedrock_response);
+            }
         }
         if (debug) {
-            console.log("Full message from Bedrock is:", message);
+            console.log("Full message body from Bedrock is:", message);
         }
-        // Trim off any sentence fragments. Keep only the content to the left of the last "." in message
-        message = message.substring(0, message.lastIndexOf(".")+1);
+        // Trim off any sentence fragments. Keep only the content to the left of the last punctuation in message. 
+        // Originally the code only checked for periods. Bots are expressive and sometimes use only exclamation points!
+        const last_period = message.lastIndexOf(".")+1;
+        const last_exclamation = message.lastIndexOf("!")+1;
+        const last_question = message.lastIndexOf("?")+1;
+        let last_punctuation = Math.max(last_period, last_exclamation, last_question);
+        message = message.substring(0, last_punctuation);
 
         if (debug) {
             console.log("Message is ", message);
         }
         if (message == '') {
+            console.warn("Warning: empty message returned by Bedrock.");
             message = "I'm speechless. ";
         }
 
