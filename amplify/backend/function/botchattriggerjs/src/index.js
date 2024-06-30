@@ -244,25 +244,11 @@ exports.handler = async (event) => {
 
         /*
         * Prompt Engineering Section
-        * https://huggingface.co/blog/llama2#how-to-prompt-llama-2
-        *  https://www.reddit.com/r/LocalLLaMA/comments/1561vn5/here_is_a_practical_multiturn_llama2chat_prompt/
-        * The desired grammar is:
-<s>[INST] <<SYS>>
-{{ system_prompt }}
-<</SYS>>
+        * Meta Llama 3 has a much clearer, documented grammar than Llama 2
+        * https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3
+        */
 
-{{ user_msg_1 }} [/INST] {{ model_answer_1 }} </s><s>[INST] {{ user_msg_2 }} [/INST]
-        * ...which we think can be repeated for any number of model_answer_n and user_msg_n+1.
-        *
-        * Because the model is expecting to be the second speaker, we can only pass an odd number of messages. Of course, arrays are zero-indexed, so we get to be confused by odds and evens :facepalm:, so we need to be careful when talking about the array chat_messages.length vs the index that iterates through. 
-        * The simple case is when we have only chat_messages.length==1, because that is the beginning of the thread. 
-        * The normal case is when chat_messages.length is odd. 
-        * But we need a trade-off in this implementation, when chat_messages.length is even. In that case, we will skip the original user prompt (array index 0, message_in_thread 0). 
-        */        
-
-        // The basic prompt is `<s>[INST] <<SYS>>\n{{ system_prompt }}\n<</SYS>>\n\n" 
-        // This is where we insert the extra instructions that we give to all bots, based on all the fun experiments. 
-        let prompt = "<s>[INST] <<SYS>> \n" + speaker_personality + ". Do not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking. \n<</SYS>>\n\n";
+        let prompt = "<|begin_of_text|> \n<|start_header_id|>system<|end_header_id|>\n\n" + speaker_personality + ". Do not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking.<|eot_id|>\n";
 
         if(debug) {
             console.log("Speaker name is", speaker_name);
@@ -271,7 +257,9 @@ exports.handler = async (event) => {
         
         if (message_in_thread == 0) {
             // Simple case. User has just asked the question. 
-            prompt += last_statement.replace(/\n/g, ' ') + " [/INST] ";
+            prompt += "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n" + 
+                last_statement.replace(/\n/g, ' ') + 
+                "<|eot_id|>\n";
         } else {
             // Retrieve all chats in this thread_id, sorted in order of message_in_thread. Iterate through them by message_in_thread,  appending them to prompt. Remove any line breaks, just in case.
             try {
@@ -295,53 +283,47 @@ exports.handler = async (event) => {
                     console.log ("Sorted chat_messages ", chat_messages);
                 }
 
-                if (chat_messages.length % 2 == 1) {
-                    // This is the normal case, when there are an odd number of messages in thread.  
-                    if (debug) {
-                        console.log("chat_messages.length is odd", chat_messages.length);
-                    }
-                    
-                    // Handle the slightly unusual first message
-                    prompt += chat_messages[0].message.replace(/\n/g, ' ') + " [/INST] ";
+                // Handle the slightly unusual first message: it is always the User's prompt
+                prompt += "<|start_header_id|>user<|end_header_id|>\n\n" + chat_messages[0].message.replace(/\n/g, ' ') + "<|eot_id|>\n";
 
-                    // Iterate through the rest of the messages IN PAIRS, appending them to the prompt.
-                    for (let i = 1; i < chat_messages.length - 1; i += 2) {
-                        if (debug) {
-                            console.log("i is", i);
-                            console.log("chat_messages[i].message is", chat_messages[i].message);
-                            console.log("chat_messages[i+1].message is", chat_messages[i+1].message);
-                        }
-                        prompt += chat_messages[i].message.replace(/\n/g, ' ') + " </s><s>[INST] " + chat_messages[i + 1].message.replace(/\n/g, ' ') + " [/INST] ";
-                    }
-                } else {
-                    // Trade-off case: chat_messages is even and >0. To prompt the bot correctly, we're skipping the zero'th element in chat_messages. Same loop as the prior case, except the elements chose from the array are different.
+                // Iterate through the rest of the messages IN PAIRS, appending them to the prompt.
+                // Trade-off decision: when chat_messages is even and >0. To prompt the bot correctly, we're skipping the first response by the prior bots. 
+                let start = 1;
+                if (chat_messages.length % 2 == 0) {
+                    start = 2;
                     if (debug) {
                         console.log("chat_messages.length is even", chat_messages.length);
-                    } 
-
-                    // Handle the slightly unusual first message
-                    prompt += chat_messages[1].message.replace(/\n/g, ' ') + " [/INST] ";
-                    
-                    // Iterate through the rest of the messages IN PAIRS, appending them to the prompt.
-                    for (let i = 2; i < chat_messages.length - 1; i += 2) {
-                        if (debug) {
-                            console.log("i is", i);
-                            console.log("chat_messages[i].message is", chat_messages[i].message);
-                            console.log("chat_messages[i+1].message is", chat_messages[i+1].message);
-                        }
-                        prompt += chat_messages[i].message.replace(/\n/g, ' ') + " <s>[INST] " + chat_messages[i + 1].message.replace(/\n/g, ' ') + " [/INST] ";
-                    }
+                    }    
                 }
 
+                for (let i = start; i < chat_messages.length - 1; i += 2) {
+                    if (debug) {
+                        console.log("i is", i);
+                        console.log("chat_messages[i].message is", chat_messages[i].message);
+                        console.log("chat_messages[i+1].message is", chat_messages[i+1].message);
+                    }
+                    prompt += "<|start_header_id|>assistant<|end_header_id|>\n\n" + 
+                        chat_messages[i].message.replace(/\n/g, ' ') + 
+                        "<|eot_id|>\n" + 
+                        "<|start_header_id|>user<|end_header_id|>\n\n" + 
+                        chat_messages[i + 1].message.replace(/\n/g, ' ') + 
+                        "<|eot_id|>\n";
+                }
+ 
                 if (debug) {
                     console.log("Prompt is", prompt);
                     console.log("End of the prompt.");
                 }
             } catch (error) {
-                prompt += last_statement.replace(/\n/g, ' ') + " [/INST] ";
+                prompt += "<|start_header_id|>user<|end_header_id|>\n\n" + 
+                    last_statement.replace(/\n/g, ' ') + 
+                    "<|eot_id|>\n";
                 console.log("Warning: unable to retrieve chats. This bot will respond based on the last message, without any additional context. ", error);
             }
         }
+
+        // Finally, tell the model that it's the model's turn
+        prompt += "<|start_header_id|>assistant<|end_header_id|>\n\n"
 
         console.log("INFO: Prompt is", prompt);
 
@@ -358,7 +340,7 @@ exports.handler = async (event) => {
             }),
             contentType: "application/json",
             accept: "application/json",
-            modelId: "meta.llama2-70b-chat-v1"
+            modelId: "meta.llama3-70b-instruct-v1:0"
         }
 
         const aws = require('aws-sdk');
