@@ -1,0 +1,9 @@
+{
+  "request": {
+      "userAttributes": {
+          "email": "bobschwartz314@gmail.com",
+          "custom:domain": "gmail.com"
+      }
+  },
+  "response": {}
+}
