@@ -2,7 +2,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../aws-exports';
-import { withAuthenticator, Button, Menu, Input, ScrollView } from '@aws-amplify/ui-react';
+import { Authenticator, withAuthenticator, Button, Menu, Input, ScrollView } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api'; // Needed to import the specific function from aws-amplify
 import React, { useRef, useEffect } from "react";
 import * as mutations from '../graphql/mutations';
@@ -389,4 +389,14 @@ const AlwaysScrollToBottom = () => {
 };
 
 
-export default withAuthenticator(Home);
+export default withAuthenticator(Home, {
+  initialState: 'signUp',
+  components: {
+    SignUp: {
+      Header() {
+        return <div className="text-center">Create your account to make 2 chatbots argue!</div>;
+      },
+      // ...
+    },
+  },
+});
