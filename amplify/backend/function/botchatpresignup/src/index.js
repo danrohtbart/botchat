@@ -10,7 +10,7 @@ exports.handler = (event, context, callback) => {
     var domain = address[1];
 
     const acceptableDomains = ['rohtbart.com', 'aetion.com'];
-    const acceptableAddresses = ['aglazer@fourcubits.com', 'jets613@gmail.com', 'betsymorserohtbart@gmail.com'];
+    const acceptableAddresses = ['Bobschwartz314@gmail.com', 'aglazer@fourcubits.com', 'jets613@gmail.com', 'betsymorserohtbart@gmail.com'];
     
     if (acceptableDomains.includes(domain) || acceptableAddresses.includes(email_address)) {
         // Success! Return to Amazon Cognito
