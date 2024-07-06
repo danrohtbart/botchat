@@ -57,7 +57,7 @@
         },
         "botchatpresignup": {
           "deploymentBucketName": "amplify-botchat-dev-135408-deployment",
-          "s3Key": "amplify-builds/botchatpresignup-58556d5a576a31774873-build.zip"
+          "s3Key": "amplify-builds/botchatpresignup-624738483835696c6544-build.zip"
         }
       }
     }
