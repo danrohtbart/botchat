@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.0.5",
-    "@aws-sdk/client-bedrock-runtime": "^3.478.0",
-    "@aws-sdk/client-lambda": "^3.474.0",
-    "@aws-sdk/client-sns": "^3.478.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.614.0",
+    "@aws-sdk/client-lambda": "^3.614.0",
+    "@aws-sdk/client-sns": "^3.614.0",
     "aws-amplify": "^6.0.9",
     "aws-sdk": "^2.1618.0",
     "boto3": "^0.0.1",
