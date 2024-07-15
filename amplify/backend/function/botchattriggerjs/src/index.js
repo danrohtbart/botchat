@@ -10,7 +10,7 @@
 	REGION
 Amplify Params - DO NOT EDIT */
 
-const { BedrockRuntimeClient, InvokeModelCommand, ConverseCommand }  = require('@aws-sdk/client-bedrock-runtime');
+const { BedrockRuntimeClient, ConverseCommand }  = require('@aws-sdk/client-bedrock-runtime');
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
@@ -20,9 +20,6 @@ const debug_admin = false; // dangerous: this dumps the entire Bedrock config to
 const mock_bedrock = false;
 const drain_queue = false;
 const prevent_write = false;
-
-// Feature Flag for using the Converse API
-const use_converse = true;
 
 if (debug) {
     console.log('Loading botchattriggerjs.');
@@ -246,11 +243,9 @@ exports.handler = async (event) => {
 
         /*
         * Prompt Engineering Section
-        * Meta Llama 3 has a much clearer, documented grammar than Llama 2
-        * https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3
+        * Moved to AWS Bedrock Converse API, to abstract away the specific model
         */
 
-        let prompt = "<|begin_of_text|> \n<|start_header_id|>system<|end_header_id|>\n\n" + speaker_personality + ". Do not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking.<|eot_id|>\n";
         const bedrock_converse_system_prompt = [{ text: speaker_personality + ". Do not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking." }];
 
         // Converse API introducted in Summer 2024
@@ -258,15 +253,10 @@ exports.handler = async (event) => {
 
         if(debug) {
             console.log("Speaker name is", speaker_name);
-            console.log("Prompt starts as", prompt);
         }
         
         if (message_in_thread == 0) {
             // Simple case. User has just asked the question. 
-            prompt += "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n" + 
-                last_statement.replace(/\n/g, ' ') + 
-                "<|eot_id|>\n";
-
             bedrock_converse_messages.push({
                 role: "user",
                 content: [{ text: last_statement.replace(/\n/g, ' ') }]
@@ -295,8 +285,6 @@ exports.handler = async (event) => {
                 }
 
                 // Handle the slightly unusual first message: it is always the User's prompt
-                prompt += "<|start_header_id|>user<|end_header_id|>\n\n" + chat_messages[0].message.replace(/\n/g, ' ') + "<|eot_id|>\n";
-
                 bedrock_converse_messages.push({
                     role: "user",
                     content: [{ text: chat_messages[0].message.replace(/\n/g, ' ') }]
@@ -318,12 +306,7 @@ exports.handler = async (event) => {
                         console.log("chat_messages[i].message is", chat_messages[i].message);
                         console.log("chat_messages[i+1].message is", chat_messages[i+1].message);
                     }
-                    prompt += "<|start_header_id|>assistant<|end_header_id|>\n\n" + 
-                        chat_messages[i].message.replace(/\n/g, ' ') + 
-                        "<|eot_id|>\n" + 
-                        "<|start_header_id|>user<|end_header_id|>\n\n" + 
-                        chat_messages[i + 1].message.replace(/\n/g, ' ') + 
-                        "<|eot_id|>\n";
+                    
                     bedrock_converse_messages.push({
                         role: "assistant",
                         content: [{ text: chat_messages[i].message.replace(/\n/g, ' ') }]
@@ -335,37 +318,15 @@ exports.handler = async (event) => {
                 }
  
                 if (debug) {
-                    console.log("Prompt is", prompt);
                     console.log("bedrock_converse_messages is", bedrock_converse_messages);
-                    console.log("End of the prompt.");
                 }
             } catch (error) {
-                prompt += "<|start_header_id|>user<|end_header_id|>\n\n" + 
-                    last_statement.replace(/\n/g, ' ') + 
-                    "<|eot_id|>\n";
+                bedrock_converse_messages.push({
+                        role: "user",
+                        content: [{ text: last_statement.replace(/\n/g, ' ') }]
+                });
                 console.log("Warning: unable to retrieve chats. This bot will respond based on the last message, without any additional context. ", error);
             }
-        }
-
-        // Finally, tell the model that it's the model's turn
-        prompt += "<|start_header_id|>assistant<|end_header_id|>\n\n"
-
-        console.log("INFO: Prompt is", prompt);
-
-        /**
-         * Configure the bot in Bedrock
-         */
-            
-        bedrock_request_body = {
-            body: JSON.stringify({
-                prompt: prompt,
-                temperature: temperature,
-                top_p: top_p,
-                max_gen_len: length,
-            }),
-            contentType: "application/json",
-            accept: "application/json",
-            modelId: "meta.llama3-70b-instruct-v1:0"
         }
 
         /**
@@ -394,7 +355,6 @@ exports.handler = async (event) => {
             //console.log("Parameters: ", Parameters)
         }
         if (debug) {
-            console.log("Bedrock request body is", bedrock_request_body);
             console.log("bedrock_converse_messages is", bedrock_converse_messages);
         }        
 
@@ -403,15 +363,6 @@ exports.handler = async (event) => {
             message = "Yo, what's up folks? It's Jim Hoagies here, and I gotta say, that game last night was a freakin' joke. The Ravens? They're a real team, they know how to get the job done. But the Jaguars? They're a bunch of scrubs, they don't belong on the same field as the Ravens. I mean, come on, they got shut out ";
         } else {
             const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
-            const bedrock_command = new InvokeModelCommand(bedrock_request_body);
-            const bedrock_response = await bedrock_client.send(bedrock_command);
-            message = JSON.parse(Buffer.from(bedrock_response.body).toString()).generation || '';
-            if (debug) {
-                console.log("Full Response from Bedrock is", bedrock_response);
-            }
-            /** 
-             * Run with the Converse API
-             */
             if(debug) {
                 console.log("Running with Converse API.");
                 console.log("ConverseCommand is: ", ConverseCommand);
@@ -430,11 +381,7 @@ exports.handler = async (event) => {
                     console.log("content ", i, ": ", converse_response.output.message.content[i]);
                 }
             }
-            const converse_responseText = converse_response.output.message.content[0].text;
-            console.log("converse_responseText is ", converse_responseText);
-            if (use_converse) {
-                message = converse_responseText;
-            }
+            message = converse_response.output.message.content[0].text || '';
         }
         if (debug) {
             console.log("Full message body from Bedrock is:", message);
