@@ -15,11 +15,11 @@ const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
 // Set these to false for normal production operation
-const debug = false;
+const debug = true;
 const debug_admin = false; // dangerous: this dumps the entire Bedrock config to the log
 const mock_bedrock = false;
 const drain_queue = false;
-const prevent_write = false;
+const prevent_write = true;
 
 if (debug) {
     console.log('Loading botchattriggerjs.');
@@ -316,10 +316,6 @@ exports.handler = async (event) => {
                         content: [{ text: chat_messages[i+1].message.replace(/\n/g, ' ') }]
                     });
                 }
- 
-                if (debug) {
-                    console.log("bedrock_converse_messages is", bedrock_converse_messages);
-                }
             } catch (error) {
                 bedrock_converse_messages.push({
                         role: "user",
@@ -329,10 +325,22 @@ exports.handler = async (event) => {
             }
         }
 
+        /** 
+         * Select which model will power the Bedrock request
+         * Default is Meta Llama Instruct "meta.llama3-70b-instruct-v1:0";
+         */
+        let modelId = "meta.llama3-70b-instruct-v1:0"; // Default
+//        modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0"; // Working
+//        modelId = "mistral.mistral-large-2402-v1:0" // Working
+//        modelId = "ai21.jamba-instruct-v1:0" // Working
+//        modelId = "cohere.command-r-plus-v1:0" // Working
+
+
+
+
         /**
          * Configure the Bedrock request for the Converse API 
          */
-        const modelId = "meta.llama3-70b-instruct-v1:0";
         const bedrock_converse_params = {
             maxTokens: length,
             temperature: temperature,
@@ -356,6 +364,9 @@ exports.handler = async (event) => {
         }
         if (debug) {
             console.log("bedrock_converse_messages is", bedrock_converse_messages);
+            for (let i = 0; i < bedrock_converse_messages.length; i++) {
+                console.log("bedrock_converse_messages ", i, ": ", bedrock_converse_messages[i]);
+            }
         }        
 
         let message = '';
@@ -365,7 +376,6 @@ exports.handler = async (event) => {
             const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
             if(debug) {
                 console.log("Running with Converse API.");
-                console.log("ConverseCommand is: ", ConverseCommand);
             }
             const converse_command = new ConverseCommand({ 
                 modelId: modelId, 
