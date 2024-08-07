@@ -15,11 +15,11 @@ const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
 // Set these to false for normal production operation
-const debug = true;
+const debug = false;
 const debug_admin = false; // dangerous: this dumps the entire Bedrock config to the log
 const mock_bedrock = false;
 const drain_queue = false;
-const prevent_write = true;
+const prevent_write = false;
 
 if (debug) {
     console.log('Loading botchattriggerjs.');
