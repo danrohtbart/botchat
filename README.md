@@ -44,7 +44,6 @@ Let's say you get a Dependabot alert. Here's how to upgrade versions and resolve
 * Open IDE on the development machine
 * Checkout the branch for the PR
 * Pull - make sure you've got the most updated code
-* If you updated a function
 * Run the local tests
 ```
 amplify mock function botchattriggerjs --event src/event.json --timeout 60
