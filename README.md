@@ -40,18 +40,34 @@ Local development is not least-privilege, and might be incompletely documented. 
 * SecretsManagerReadWrite
 
 ## Resolving Dependabot findings
-Let's say you get a Dependabot alert. Here's how to upgrade versions and resolve it. This is single-player mode, working in the `main` branch. 
-These instructions are temporary - I've turned on PR creation for future alerts. 
+Let's say you get a Dependabot alert. Here's how to upgrade versions and resolve it. 
 * Open IDE on the development machine
 * Checkout the branch for the PR
 * Pull - make sure you've got the most updated code
-* If you updated a function
-1. Run the local tests
+* Run the local tests
 ```
-TBD
+amplify mock function botchattriggerjs --event src/event.json --timeout 60
+amplify mock function botchattriggerjs --event src/event1.json --timeout 60
+amplify mock function botchattriggerjs --event src/event2.json --timeout 60
+amplify mock function botchattriggerjs --event src/event3.json --timeout 60
+amplify mock function botchattriggerjs --event src/event4.json --timeout 60
+amplify mock function botchattriggerjs --event src/event5.json --timeout 60
 ```
-1. Push backend to development server
+* if Amplify has an upgrade, upgrade it
+```
+amplify upgrade
+```
+* Push backend to development server
+```
+amplify push --yes
+```
 * Run local webserver
-* Manually test on local
+```
+npm run dev
+```
+* Manually test at https://localhost:3000
+* Commit and push from development machine
 * Merge PR
+* Watch deployment on AWS console https://us-east-1.console.aws.amazon.com/amplify/apps
+* Confirm Production is running https://www.botchatapp.com
 * Checkout `main` on local machine, to leave it in the right state
