@@ -38,3 +38,20 @@ Local development is not least-privilege, and might be incompletely documented. 
 * AmazonSSMReadOnlyAccess
 * AmplifyBackendDeployFullAccess
 * SecretsManagerReadWrite
+
+## Resolving Dependabot findings
+Let's say you get a Dependabot alert. Here's how to upgrade versions and resolve it. This is single-player mode, working in the `main` branch. 
+These instructions are temporary - I've turned on PR creation for future alerts. 
+* Open IDE on the development machine
+* Checkout the branch for the PR
+* Pull - make sure you've got the most updated code
+* If you updated a function
+1. Run the local tests
+```
+TBD
+```
+1. Push backend to development server
+* Run local webserver
+* Manually test on local
+* Merge PR
+* Checkout `main` on local machine, to leave it in the right state
