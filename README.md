@@ -44,7 +44,7 @@ Let's say you get a Dependabot alert. Here's how to upgrade versions and resolve
 * Open IDE on the development machine
 * Checkout the branch for the PR
 * Pull - make sure you've got the most updated code
-* Run the local tests
+* Run the local tests from `botchat/amplify/backend/function/botchattriggerjs/`
 ```
 amplify mock function botchattriggerjs --event src/event.json --timeout 60
 amplify mock function botchattriggerjs --event src/event1.json --timeout 60
@@ -65,7 +65,7 @@ amplify push --yes
 ```
 npm run dev
 ```
-* Manually test at https://localhost:3000
+* Manually test at http://localhost:3000
 * Commit and push from development machine
 * Merge PR
 * Watch deployment on AWS console https://us-east-1.console.aws.amazon.com/amplify/apps
