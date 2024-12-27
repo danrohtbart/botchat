@@ -10,6 +10,9 @@ frontend:
     test:
       commands:
         - npm test
+        - pwd
+        - ls -la
+        - ls -la reports || echo "Reports directory not found"
   artifacts:
     baseDirectory: .next
     files:
