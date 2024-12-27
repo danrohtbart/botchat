@@ -12,7 +12,14 @@ const customJestConfig = {
     // Handle module aliases (if you're using them in your Next.js project)
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/pages/(.*)$': '<rootDir>/pages/$1'
-  }
+  },
+  reporters: [
+    'default',
+    ['jest-junit', {
+      outputDirectory: 'reports',
+      outputName: 'jest-junit.xml',
+    }]
+  ]
 }
 
 module.exports = createJestConfig(customJestConfig)
