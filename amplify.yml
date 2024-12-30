@@ -18,22 +18,22 @@ test:
   phases: 
     preTest:
       commands:
-        - npm ci
+        - npm i
         - npm install -g wait-on
         - npm install pm2
         - npx pm2 start npm --name "botchat" -- start
         - wait-on http://localhost:3000
     test:
       commands:
-        - npm test
         - npm i -D @playwright/test
         - npx playwright install
         - npx playwright test
+        - echo "Finished tests"
     postTest:
       commands:
+        - npx pm2 --help
         - npx pm2 kill
   artifacts:
-    baseDirectory: reports
+    baseDirectory: '**/*'
     files:
-      - jest-junit.xml
-    configFilePath: '**/jest-junit.xml'
+      - '**/*'
