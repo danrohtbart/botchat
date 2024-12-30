@@ -20,7 +20,8 @@ test:
       commands:
         - npm ci
         - npm install -g wait-on
-        - npm run dev
+        - npm install pm2
+        - npx pm2 start npm --name "botchat" -- start
         - wait-on http://localhost:3000
     test:
       commands:
@@ -28,6 +29,9 @@ test:
         - npm i -D @playwright/test
         - npx playwright install
         - npx playwright test
+    postTest:
+      commands:
+        - npx pm2 stop botchat
   artifacts:
     baseDirectory: reports
     files:
