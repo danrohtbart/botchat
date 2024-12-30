@@ -7,10 +7,6 @@ frontend:
     build:
       commands:
         - npm run build
-    test:
-      commands:
-        - npm test
-        - npx playwright test
   artifacts:
     baseDirectory: .next
     files:
@@ -19,6 +15,11 @@ frontend:
     paths:
       - node_modules/**/*
 test:
+  phases: 
+    test:
+      commands:
+        - npm test
+        - npx playwright test
   artifacts:
     baseDirectory: reports
     files:
