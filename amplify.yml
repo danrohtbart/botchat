@@ -18,10 +18,15 @@ test:
   phases: 
     preTest:
       commands:
-        - npx playwright install
+        - npm ci
+        - npm install -g wait-on
+        - npm run dev
+        - wait-on http://localhost:3000
     test:
       commands:
         - npm test
+        - npm i -D @playwright/test
+        - npx playwright install
         - npx playwright test
   artifacts:
     baseDirectory: reports
