@@ -18,6 +18,7 @@ test:
   phases: 
     preTest:
       commands:
+        - echo fs.inotify.max_user_watches=65536 | tee -a /etc/sysctl.conf && sysctl -p
         - npm ci
         - npm install -g wait-on
         - npm install pm2
@@ -31,7 +32,7 @@ test:
         - npx playwright test
     postTest:
       commands:
-        - npx pm2 stop botchat
+        - npx pm2 kill
   artifacts:
     baseDirectory: reports
     files:
