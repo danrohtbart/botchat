@@ -13,6 +13,7 @@ const customJestConfig = {
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/pages/(.*)$': '<rootDir>/pages/$1'
   },
+  modulePathIgnorePatterns: ["e2e/"],
   reporters: [
     'default',
     ['jest-junit', {
