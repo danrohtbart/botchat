@@ -59,7 +59,6 @@ amplifytools.xcconfig
 **.sample
 #amplify-do-not-edit-end
 /test-results/
-/playwright-report/index.html
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
