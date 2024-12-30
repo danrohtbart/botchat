@@ -16,6 +16,9 @@ frontend:
       - node_modules/**/*
 test:
   phases: 
+    preTest:
+      commands:
+        - npx playwright install
     test:
       commands:
         - npm test
