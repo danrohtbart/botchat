@@ -24,19 +24,7 @@ test:
         - npm install -g pm2
         - npm i -D @playwright/test
         - npx playwright install
-        - sudo dnf install -y \
-  libicu \
-  libatomic \
-  woff2 \
-  opus \
-  libjpeg-turbo \
-  libwebp \
-  enchant2 \
-  hyphen \
-  libgudev \
-  libffi \
-  libevdev \
-  x264-libs
+        - sudo dnf install -y libicu libatomic woff2 opus libjpeg-turbo libwebp enchant2 hyphen libgudev libffi libevdev x264-libs
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
