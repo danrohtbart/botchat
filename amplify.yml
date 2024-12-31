@@ -22,12 +22,13 @@ test:
         - npm ci
         - npm install -g wait-on
         - npm install -g pm2
+        - npm i -D @playwright/test
+        - npx playwright install
+        - npx playwright install webkit
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
       commands:
-        - npm i -D @playwright/test
-        - npx playwright install --with-deps
         - npx playwright test
     postTest:
       commands:
