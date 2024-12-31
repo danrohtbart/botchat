@@ -24,12 +24,12 @@ test:
         - npm i -D @playwright/test
         - npx playwright install chromium
         - npx playwright install firefox
-        - npx playwright install webkit
+        - #npx playwright install webkit # not supported on AWS
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
       commands:
-        - npx playwright test --project chromium --project firefox --project webkit
+        - npx playwright test --project chromium --project firefox #--project webkit
         - ls -la reports
     postTest:
       commands:
