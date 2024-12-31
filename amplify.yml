@@ -19,12 +19,13 @@ test:
     preTest:
       commands:
         - cat /etc/os-release
+        - ls
         # Enable EPEL and CRB repositories
-        - dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-        - dnf config-manager --set-enabled crb
+        - sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        - sudo dnf config-manager --set-enabled crb
         # Install required dependencies
-        - dnf install -y libicu compat-libicu69 libatomic woff2 opus libjpeg-turbo libwebp enchant2 hyphen libgudev libffi libevdev x264
-        - dnf groupinstall -y "Development Tools"
+        - sudo dnf install -y libicu compat-libicu69 libatomic woff2 opus libjpeg-turbo libwebp enchant2 hyphen libgudev libffi libevdev x264
+        - sudo dnf groupinstall -y "Development Tools"
         # Set up the test environment
         - npm ci
         - npm install -g wait-on
@@ -40,6 +41,6 @@ test:
       commands:
         - npx pm2 kill
   artifacts:
-    baseDirectory: 'playwright-report'
+    baseDirectory: '/playwright-report'
     files:
       - 'index.html'
