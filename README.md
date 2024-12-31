@@ -71,3 +71,7 @@ npm run dev
 * Watch deployment on AWS console https://us-east-1.console.aws.amazon.com/amplify/apps
 * Confirm Production is running https://www.botchatapp.com
 * Checkout `main` on local machine, to leave it in the right state
+
+
+## Upgrading Playwright
+When you update Playwright in package.json, you need to update the version in the `amplify.yml` file. 
