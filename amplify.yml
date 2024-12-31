@@ -22,9 +22,11 @@ test:
         - npm ci
         - npm install -g wait-on
         - npm install -g pm2
+        - sudo dnf install -y epel-release
+        - sudo dnf config-manager --set-enabled crb
+        - sudo dnf install -y libicu-69.1 libatomic woff2 opus libjpeg-turbo libwebp enchant2 hyphen libgudev libffi libevdev x264 compat-libicu66 
         - npm i -D @playwright/test
         - npx playwright install
-        - sudo dnf install -y libicu libatomic woff2 opus libjpeg-turbo libwebp enchant2 hyphen libgudev libffi libevdev x264-libs
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
