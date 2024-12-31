@@ -36,10 +36,11 @@ test:
     test:
       commands:
         - npx playwright test
+        - cat playwright-report/index.txt
     postTest:
       commands:
         - npx pm2 kill
   artifacts:
     baseDirectory: '/playwright-report'
     files:
-      - 'index.html'
+      - '**/*'
