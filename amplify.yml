@@ -27,7 +27,7 @@ test:
         - npm install -g wait-on
         - npm install -g pm2
         - npm i -D @playwright/test
-        - sudo npx playwright install --with-deps
+        - npx playwright install --with-deps
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
