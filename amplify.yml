@@ -18,19 +18,19 @@ test:
   phases: 
     preTest:
       commands:
-        - sudo dnf install -y alsa-lib at-spi2-atk at-spi2-core atk bash cairo cups-libs dbus-libs expat flac-libs gdk-pixbuf2 glib2 glibc gtk3 libX11 libXcomposite libXdamage libXext libXfixes libXrandr libXtst libcanberra-gtk3 libdrm libgcc libstdc++ libxcb libxkbcommon libxshmfence libxslt mesa-libgbm nspr nss nss-util pango policycoreutils policycoreutils-python-utils zlib
         - npm ci
         - npm install -g wait-on
         - npm install -g pm2
         - npm i -D @playwright/test
         - npx playwright install chromium
         - npx playwright install firefox
-        - npx playwright install webkit
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
       commands:
-        - npx playwright test --project chromium --project firefox --project webkit
+        - npx playwright test --project chromium --project firefox 
+        - ls -la reports
+        - docker run --add-host=hostmachine:host-gateway --rm --init -it -v $(pwd):/home/pwuser mcr.microsoft.com/playwright:v1.49.1-jammy /bin/sh -c "cd /home/pwuser && npm install @playwright/test@1.49.1 && npx playwright install && npx playwright test" 
         - ls -la reports
     postTest:
       commands:
