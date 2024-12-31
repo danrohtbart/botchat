@@ -18,7 +18,9 @@ test:
   phases: 
     preTest:
       commands:
-        - sudo dnf install -y docker
+        - sudo dnf install -y docker containerd iptables docker-compose-plugin wget tar gzip
+        - sudo alternatives --set iptables /usr/sbin/iptables-legacy
+        - sudo alternatives --set ip6tables /usr/sbin/ip6tables-legacy
         - sudo dockerd &
         - sudo docker info
         - npm ci
@@ -33,7 +35,7 @@ test:
       commands:
         #- npx playwright test --project chromium --project firefox 
         - ls -la reports
-        - docker run --add-host=hostmachine:host-gateway --rm --init -it -v $(pwd):/home/pwuser mcr.microsoft.com/playwright:v1.49.1-jammy /bin/sh -c "cd /home/pwuser && npm install @playwright/test@1.49.1 && npx playwright install && npx playwright test" 
+        - sudo docker run --add-host=hostmachine:host-gateway --rm --init -v $(pwd):/home/pwuser mcr.microsoft.com/playwright:v1.49.1-jammy /bin/sh -c "cd /home/pwuser && npm install @playwright/test@1.49.1 && npx playwright install && npx playwright test" 
         - ls -la reports
     postTest:
       commands:
