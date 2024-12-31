@@ -19,12 +19,16 @@ test:
     preTest:
       commands:
         - cat /etc/os-release
+        # Enable EPEL and CRB repositories
+        - dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        - dnf config-manager --set-enabled crb
+        # Install required dependencies
+        - dnf install -y libicu compat-libicu69 libatomic woff2 opus libjpeg-turbo libwebp enchant2 hyphen libgudev libffi libevdev x264
+        - dnf groupinstall -y "Development Tools"
+        # Set up the test environment
         - npm ci
         - npm install -g wait-on
         - npm install -g pm2
-        - sudo dnf install -y epel-release
-        - sudo dnf config-manager --set-enabled crb
-        - sudo dnf install -y libicu-69.1 libatomic woff2 opus libjpeg-turbo libwebp enchant2 hyphen libgudev libffi libevdev x264 compat-libicu66 
         - npm i -D @playwright/test
         - npx playwright install
         - npx pm2 start npm -- start
