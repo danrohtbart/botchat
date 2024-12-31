@@ -27,12 +27,12 @@ test:
         - npm install -g wait-on
         - npm install -g pm2
         - npm i -D @playwright/test
-        - npx playwright install --with-deps
+        - npx playwright install 
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
       commands:
-        - npx playwright test
+        - npx playwright test --project chromium --project firefox
         - cat playwright-report/index.txt
     postTest:
       commands:
