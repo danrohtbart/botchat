@@ -21,8 +21,6 @@ test:
         - sudo dnf install -y docker
         - sudo dockerd &
         - sudo docker info
-        - timeout 60
-        - sudo docker info
         - npm ci
         - npm install -g wait-on
         - npm install -g pm2
