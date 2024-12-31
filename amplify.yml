@@ -19,9 +19,8 @@ test:
     preTest:
       commands:
         - sudo dnf install -y docker
-        - sudo systemctl start docker
-        - sudo systemctl enable docker
-        - sudo usermod -aG docker $USER
+        - sudo service docker start
+        - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
         - npm ci
         - npm install -g wait-on
         - npm install -g pm2
