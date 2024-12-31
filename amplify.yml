@@ -24,8 +24,6 @@ test:
         #install docker
         - sudo dnf install -y docker 
         - sudo dnf install -y iptables wget tar gzip
-        - sudo alternatives --set iptables /usr/sbin/iptables-legacy
-        - sudo alternatives --set ip6tables /usr/sbin/ip6tables-legacy
         - sudo dockerd &
         - wait-on -t 15000 file:/var/run/docker.sock
         #- npm i -D @playwright/test
