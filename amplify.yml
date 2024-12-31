@@ -29,11 +29,11 @@ test:
     test:
       commands:
         - npx playwright test --project chromium --project firefox
-        - ls -laR /
+        - ls -laR 
     postTest:
       commands:
         - npx pm2 kill
   artifacts:
-    baseDirectory: '/'
+    baseDirectory: 'playwright-report'
     files:
       - '**/*'
