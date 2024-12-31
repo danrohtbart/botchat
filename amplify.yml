@@ -26,7 +26,7 @@ test:
     test:
       commands:
         - npm i -D @playwright/test
-        - npx playwright install
+        - npx playwright install --with-deps
         - npx playwright test
     postTest:
       commands:
