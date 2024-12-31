@@ -21,21 +21,14 @@ test:
         - npm ci
         - npm install -g wait-on
         - npm install -g pm2
-        #install docker
         - sudo dnf install -y docker 
-        - sudo dnf install -y iptables wget tar gzip
         - sudo dockerd &
         - wait-on -t 15000 file:/var/run/docker.sock
-        #- npm i -D @playwright/test
-        #- npx playwright install chromium
-        #- npx playwright install firefox
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
       commands:
-        #- npx playwright test --project chromium --project firefox 
         - ls -la reports
-        - pwd
         - sudo docker run --add-host=hostmachine:host-gateway --rm --init -v $(pwd):/home/pwuser mcr.microsoft.com/playwright:v1.49.1-jammy /bin/sh -c "cd /home/pwuser && npm install @playwright/test@1.49.1 && npx playwright install && npx playwright test" 
         - ls -la reports
     postTest:
