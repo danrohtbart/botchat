@@ -21,7 +21,7 @@ test:
         - cat /etc/os-release
         # Enable Amazon Linux 2023 Extra repositories
         - sudo dnf install -y 'dnf-command(config-manager)'
-        - sudo dnf config-manager --set-enabled crb
+        #- sudo dnf config-manager --set-enabled crb
         # Install required dependencies
         - sudo dnf install -y libicu compat-libicu69 libatomic woff2 opus libjpeg-turbo libwebp enchant2 hyphen libgudev libffi libevdev x264
         - sudo dnf groupinstall -y "Development Tools"
