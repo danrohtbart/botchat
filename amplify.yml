@@ -20,14 +20,14 @@ test:
       commands:
         - cat /etc/os-release
         # Install required dependencies
-        - sudo dnf install -y compat-libicu libicu libatomic woff2 opus libjpeg-turbo libwebp enchant2 libgudev libffi libevdev hyphen-libs 
-        - sudo dnf groupinstall -y "Development Tools"
+#        - sudo dnf install -y compat-libicu libicu libatomic woff2 opus libjpeg-turbo libwebp enchant2 libgudev libffi libevdev hyphen-libs 
+#        - sudo dnf groupinstall -y "Development Tools"
         # Set up the test environment
         - npm ci
         - npm install -g wait-on
         - npm install -g pm2
         - npm i -D @playwright/test
-        - npx playwright install
+        - sudo npx playwright install --with-deps
         - npx pm2 start npm -- start
         - wait-on http://localhost:3000
     test:
