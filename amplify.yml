@@ -19,7 +19,7 @@ test:
     preTest:
       commands:
         - sudo dnf install -y docker
-        - sudo service docker start
+        - sudo dockerd &
         - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
         - npm ci
         - npm install -g wait-on
