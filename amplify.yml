@@ -20,7 +20,7 @@ test:
       commands:
         - cat /etc/os-release
         # Install required dependencies
-        - sudo dnf install -y libicu libatomic woff2 opus libjpeg-turbo libwebp enchant2 libgudev libffi libevdev 
+        - sudo dnf install -y compat-libicu66 libicu-66.1* libatomic woff2 opus libjpeg-turbo8 libwebp enchant2 libgudev libffi7 libevdev libhyphen x264-libs 
         - sudo dnf groupinstall -y "Development Tools"
         # Set up the test environment
         - npm ci
