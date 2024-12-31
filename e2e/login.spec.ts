@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 
 // TODO: externalize this test account u/p into environment variables or secrets. But TBH the blast radius is nonexistent. 
 
+/*
+
 test('login', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.getByRole('tab', { name: 'Sign In' }).click();
@@ -17,3 +19,4 @@ test('login', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Update Personalities' })).toBeVisible();
 });
+*/

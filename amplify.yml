@@ -28,10 +28,8 @@ test:
         - npm i -D @playwright/test
         - npx playwright install
         - npx playwright test
-        - echo "Finished tests"
     postTest:
       commands:
-        - npx pm2 --help
         - npx pm2 kill
   artifacts:
     baseDirectory: 'playwright-report'
