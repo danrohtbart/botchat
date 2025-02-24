@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:selenium": "find selenium -name '*.js' -exec node {} \\;"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.0.5",
@@ -23,7 +24,8 @@
     "next": "^14.2.15",
     "pm2": "^5.4.3",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "selenium-webdriver": "^4.29.0"
   },
   "devDependencies": {
     "@playwright/test": "1.49.1",

@@ -14,6 +14,10 @@ const customJestConfig = {
     '^@/pages/(.*)$': '<rootDir>/pages/$1'
   },
   modulePathIgnorePatterns: ["e2e/"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/selenium/"
+  ],
   reporters: [
     'default',
     ['jest-junit', {
