@@ -31,6 +31,7 @@ test:
         - ls -la reports
         - sudo docker run --add-host=hostmachine:host-gateway --network=host --rm --init -v $(pwd):/home/pwuser mcr.microsoft.com/playwright:v1.49.1-jammy /bin/sh -c "cd /home/pwuser && npm install @playwright/test@1.49.1 && npx playwright install && npx playwright test" 
         - ls -la reports
+        - npm run test:selenium
     postTest:
       commands:
         - npx pm2 kill
