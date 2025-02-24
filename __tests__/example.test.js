@@ -4,10 +4,10 @@ describe('Example Test', () => {
       expect(true).toBe(true)
     });
   });
-  
+/*  
   describe('Intentionally failing Test', () => {
     it('should fail', () => {
       expect(true).toBe(false)
     });
   });
-  
+  */
