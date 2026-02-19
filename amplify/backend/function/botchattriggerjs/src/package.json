@@ -8,8 +8,8 @@
     "@types/aws-lambda": "^8.10.92"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.624.0",
-    "aws-amplify": "^6.4.4",
-    "aws-sdk": "^2.1618.0"
+    "@aws-sdk/client-bedrock-runtime": "^3.993.0",
+    "aws-amplify": "^6.16.2",
+    "aws-sdk": "^2.1693.0"
   }
 }
