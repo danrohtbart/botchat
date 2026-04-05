@@ -27,6 +27,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env.test
 
 # vercel
 .vercel
@@ -62,4 +63,5 @@ amplifytools.xcconfig
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/e2e/.auth/
 /reports/
