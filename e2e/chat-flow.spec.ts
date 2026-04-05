@@ -19,6 +19,9 @@ test('delete chats clears the chat list', async ({ page }) => {
 });
 
 test('submit a topic: input clears and bot responses appear', async ({ page }) => {
+  // Lambda + Bedrock can take >30s on a cold start in CI
+  test.setTimeout(90_000);
+
   // Start clean
   await page.getByRole('button', { name: 'Delete Chats' }).click();
   await expect(page.getByText('Add a topic in the box above')).toBeVisible();
