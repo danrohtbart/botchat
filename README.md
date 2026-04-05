@@ -73,5 +73,42 @@ npm run dev
 * Checkout `main` on local machine, to leave it in the right state
 
 
+## Running tests
+
+### Jest (unit tests)
+```bash
+npm test
+```
+No environment variables needed — all AWS dependencies are mocked.
+
+### Playwright (E2E tests)
+Playwright tests require a running app and real AWS credentials for the test account. Set these two environment variables before running:
+
+| Variable | Description |
+|---|---|
+| `TEST_USER_EMAIL` | Email address of the Cognito test account |
+| `TEST_USER_PASSWORD` | Password of the Cognito test account |
+
+**Locally** — export them in your shell, or create a `.env.test` file (never commit it):
+```bash
+export TEST_USER_EMAIL=you@example.com
+export TEST_USER_PASSWORD=yourpassword
+
+npm start          # start the app on localhost:3000
+npx playwright test
+```
+
+Or inline for a one-off run:
+```bash
+TEST_USER_EMAIL=you@example.com TEST_USER_PASSWORD=yourpassword npx playwright test
+```
+
+**In Amplify CI** — add the variables as environment secrets in the Amplify Console:
+1. Open the app in the [Amplify Console](https://us-east-1.console.aws.amazon.com/amplify/apps)
+2. Go to **Hosting → Environment variables**
+3. Add `TEST_USER_EMAIL` and `TEST_USER_PASSWORD`
+
+They will be available to the test phase in `amplify.yml` automatically.
+
 ## Upgrading Playwright
 When you update Playwright in package.json, you need to update the version in the `amplify.yml` file. 
