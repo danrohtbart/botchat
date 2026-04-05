@@ -1,11 +1,10 @@
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test');
+const path = require('path');
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+// Load test credentials from .env.test (local only, never committed).
+// Variables already in the environment (e.g. Amplify CI secrets) take precedence.
+require('dotenv').config({ path: path.resolve(__dirname, '.env.test'), override: false });
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -37,7 +36,7 @@ module.exports = defineConfig({
     /* Authenticate once and save storage state for tests that need it */
     {
       name: 'setup',
-      testMatch: /.*\.setup\.ts/,
+      testMatch: '**/auth.setup.ts',
     },
 
     {

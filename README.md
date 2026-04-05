@@ -89,19 +89,19 @@ Playwright tests require a running app and real AWS credentials for the test acc
 | `TEST_USER_EMAIL` | Email address of the Cognito test account |
 | `TEST_USER_PASSWORD` | Password of the Cognito test account |
 
-**Locally** — export them in your shell, or create a `.env.test` file (never commit it):
-```bash
-export TEST_USER_EMAIL=you@example.com
-export TEST_USER_PASSWORD=yourpassword
+**Locally** — create a `.env.test` file in the project root (it's gitignored, never commit it):
+```
+TEST_USER_EMAIL=you@example.com
+TEST_USER_PASSWORD=yourpassword
+```
 
+Then:
+```bash
 npm start          # start the app on localhost:3000
 npx playwright test
 ```
 
-Or inline for a one-off run:
-```bash
-TEST_USER_EMAIL=you@example.com TEST_USER_PASSWORD=yourpassword npx playwright test
-```
+Playwright loads `.env.test` automatically via the config. Variables already in your environment take precedence, so CI secrets work without any changes.
 
 **In Amplify CI** — add the variables as environment secrets in the Amplify Console:
 1. Open the app in the [Amplify Console](https://us-east-1.console.aws.amazon.com/amplify/apps)
