@@ -111,4 +111,4 @@ Playwright loads `.env.test` automatically via the config. Variables already in 
 They will be available to the test phase in `amplify.yml` automatically.
 
 ## Upgrading Playwright
-When you update Playwright in package.json, you need to update the version in the `amplify.yml` file. 
+When you update Playwright in `package.json`, you must also update the version in two places in `amplify.yml`: the Docker image tag (`mcr.microsoft.com/playwright:vX.Y.Z-jammy`) and the `npm install @playwright/test@X.Y.Z` line. All three must match. Current version: **1.58.2**.
