@@ -390,13 +390,44 @@ const AlwaysScrollToBottom = () => {
 
 
 export default withAuthenticator(Home, {
-  initialState: 'signUp',
+  initialState: 'signIn',
   components: {
+    Header() {
+      return (
+        <div className="flex flex-col items-center pt-8 pb-4 px-6 text-center">
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
+            🎙️ BotChat
+          </h1>
+          <p className="text-gray-600 text-base max-w-xs">
+            Drop in a topic. Two AI personalities of your imagination take it from there.
+          </p>
+        </div>
+      );
+    },
     SignUp: {
       Header() {
-        return <div className="text-center">Create your account to make 2 chatbots argue!</div>;
+        return (
+          <div className="text-center px-4 pb-2">
+            <p className="text-sm text-gray-500">Free to join. No credit card required.</p>
+          </div>
+        );
       },
-      // ...
+    },
+    SignIn: {
+      Header() {
+        return (
+          <div className="text-center px-4 pb-2">
+            <p className="text-sm text-gray-500">Welcome back — the bots missed you.</p>
+          </div>
+        );
+      },
+    },
+    Footer() {
+      return (
+        <div className="text-center py-4 text-xs text-gray-400">
+          Powered by AWS Bedrock &amp; Amplify
+        </div>
+      );
     },
   },
 });
