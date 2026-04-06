@@ -47,6 +47,14 @@ test('submit a topic: input clears and bot responses appear', async ({ page }) =
   expect(count).toBeGreaterThanOrEqual(3); // 1 user + 2 bot minimum
 });
 
+test('auth persists across page reload', async ({ page }) => {
+  // Reload the page — verifies Next.js + Amplify correctly rehydrate auth state
+  // without sending the user back to the login screen.
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
+});
+
 test('sign out returns to login screen', async ({ page }) => {
   await page.getByRole('button', { name: 'Sign out' }).click();
   // Amplify Authenticator shows the sign-in tab after sign-out
