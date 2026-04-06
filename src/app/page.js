@@ -390,7 +390,7 @@ const AlwaysScrollToBottom = () => {
 
 
 export default withAuthenticator(Home, {
-  initialState: 'signUp',
+  initialState: 'signIn',
   components: {
     Header() {
       return (
@@ -399,7 +399,7 @@ export default withAuthenticator(Home, {
             🎙️ BotChat
           </h1>
           <p className="text-gray-600 text-base max-w-xs">
-            Drop in a topic. Two opinionated AI sports radio hosts take it from there.
+            Drop in a topic. Two AI personalities of your imagination take it from there.
           </p>
         </div>
       );
