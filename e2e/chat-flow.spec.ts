@@ -11,11 +11,13 @@ test.beforeEach(async ({ page }) => {
 
 test('delete chats clears the chat list', async ({ page }) => {
   await page.getByRole('button', { name: 'Delete Chats' }).click();
-  // Wait for the loading state to resolve
+  // While the API call runs, the button's accessible name changes to "Deleting..."
+  // (via isLoading/loadingText), so querying it by "Delete Chats" returns nothing.
+  // Wait for the empty-state text instead — it only appears after deletion completes.
+  await expect(page.getByText('Add a topic in the box above')).toBeVisible({ timeout: 15_000 });
+  // Button should be back in its default state once deletion is done.
   await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete Chats' })).not.toBeDisabled();
-  // Confirm empty state prompt appears
-  await expect(page.getByText('Add a topic in the box above')).toBeVisible();
 });
 
 test('submit a topic: input clears and bot responses appear', async ({ page }) => {
