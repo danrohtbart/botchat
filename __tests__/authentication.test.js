@@ -59,11 +59,11 @@ describe('Authentication', () => {
       render(<Home />);
     });
 
-    // Wait for the Create Account button to appear
-    const createAccountButton = await screen.findByRole('button', { 
-      name: /create account/i 
+    // Default state is signIn — wait for the Sign in button to appear
+    const signInButton = await screen.findByRole('button', {
+      name: /sign in/i
     });
-    
-    expect(createAccountButton).toBeInTheDocument();
+
+    expect(signInButton).toBeInTheDocument();
   });
 });
