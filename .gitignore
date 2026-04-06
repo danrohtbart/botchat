@@ -50,7 +50,6 @@ build/
 dist/
 node_modules/
 aws-exports.js
-!__mocks__/aws-exports.js
 awsconfiguration.json
 amplifyconfiguration.json
 amplifyconfiguration.dart
