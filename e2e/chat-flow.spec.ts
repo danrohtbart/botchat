@@ -24,6 +24,7 @@ test('submit a topic: input clears and bot responses appear', async ({ page }) =
 
   // Start clean
   await page.getByRole('button', { name: 'Delete Chats' }).click();
+  await expect(page.getByRole('button', { name: 'Delete Chats' })).not.toBeDisabled();
   await expect(page.getByText('Add a topic in the box above')).toBeVisible();
 
   // Type a topic and submit
@@ -34,8 +35,9 @@ test('submit a topic: input clears and bot responses appear', async ({ page }) =
   // Input should clear immediately
   await expect(input).toHaveValue('');
 
-  // User message appears
-  await expect(page.getByText('You')).toBeVisible();
+  // User message appears — .first() avoids strict mode violation when chat history
+  // contains multiple prior "You" speaker labels
+  await expect(page.getByText('You', { exact: true }).first()).toBeVisible();
 
   // Wait for at least two bot responses (Jim + Mark minimum)
   // Lambda → Bedrock round trips can take up to 60 seconds on a cold start
