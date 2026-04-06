@@ -351,8 +351,6 @@ exports.handler = async (event) => {
         /**
          * Configure the BedrockRuntimeClient
          */
-        const aws = require('aws-sdk');
-
         const aws_sdk_config = {
             region: 'us-east-1',
         }
