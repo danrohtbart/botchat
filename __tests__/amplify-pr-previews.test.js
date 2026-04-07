@@ -31,4 +31,12 @@ describe('Amplify PR Preview configuration', () => {
     expect(config.preview).toHaveProperty('artifacts');
     expect(config.preview.artifacts.baseDirectory).toBe('.next');
   });
+
+  it('preview preBuild generates aws-exports.js from environment variables', () => {
+    const preBuildCommands = config.preview.phases.preBuild.commands;
+    const generationStep = preBuildCommands.find(cmd => cmd.includes('aws-exports.js'));
+    expect(generationStep).toBeDefined();
+    expect(generationStep).toContain('PREVIEW_APPSYNC_ENDPOINT');
+    expect(generationStep).toContain('PREVIEW_USER_POOLS_ID');
+  });
 });
