@@ -10,7 +10,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:selenium": "find selenium -name '*.js' -exec node {} \\;"
+    "test:selenium": "find selenium -name '*.js' -exec node {} \\;",
+    "check:secrets": "trufflehog git file://. --only-verified --fail"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.15.0",
