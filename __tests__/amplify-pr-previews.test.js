@@ -12,31 +12,27 @@ describe('Amplify PR Preview configuration', () => {
     config = yaml.load(raw);
   });
 
-  it('amplify.yml has a preview section', () => {
-    expect(config).toHaveProperty('preview');
+  it('amplify.yml has a frontend section', () => {
+    expect(config).toHaveProperty('frontend');
   });
 
-  it('preview section has build phases', () => {
-    expect(config.preview).toHaveProperty('phases');
-    expect(config.preview.phases).toHaveProperty('preBuild');
-    expect(config.preview.phases).toHaveProperty('build');
+  it('frontend preBuild generates aws-exports.js for PR builds', () => {
+    const preBuildCommands = config.frontend.phases.preBuild.commands;
+    const generationStep = preBuildCommands.find(
+      cmd => typeof cmd === 'string' && cmd.includes('aws-exports.js')
+    );
+    expect(generationStep).toBeDefined();
+    expect(generationStep).toContain('AWS_PULL_REQUEST_ID');
+    expect(generationStep).toContain('PREVIEW_APPSYNC_ENDPOINT');
+    expect(generationStep).toContain('PREVIEW_USER_POOLS_ID');
   });
 
-  it('preview build phase runs npm run build', () => {
-    const buildCommands = config.preview.phases.build.commands;
+  it('frontend build phase runs npm run build', () => {
+    const buildCommands = config.frontend.phases.build.commands;
     expect(buildCommands).toContain('npm run build');
   });
 
-  it('preview section has artifacts pointing to .next', () => {
-    expect(config.preview).toHaveProperty('artifacts');
-    expect(config.preview.artifacts.baseDirectory).toBe('.next');
-  });
-
-  it('preview preBuild generates aws-exports.js from environment variables', () => {
-    const preBuildCommands = config.preview.phases.preBuild.commands;
-    const generationStep = preBuildCommands.find(cmd => cmd.includes('aws-exports.js'));
-    expect(generationStep).toBeDefined();
-    expect(generationStep).toContain('PREVIEW_APPSYNC_ENDPOINT');
-    expect(generationStep).toContain('PREVIEW_USER_POOLS_ID');
+  it('frontend artifacts point to .next', () => {
+    expect(config.frontend.artifacts.baseDirectory).toBe('.next');
   });
 });
