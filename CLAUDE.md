@@ -4,10 +4,40 @@ These instructions apply to every Claude Code session in this repository. Follow
 
 ---
 
+## Operating modes
+
+Claude operates in one of two modes, selected by Dan at the start of a session:
+
+### Default mode (approval required)
+Dan approves every PR before it is merged. Claude opens PRs and waits. See [Pull request process](#pull-request-process) and [Amplify build loop](#amplify-build-loop) below.
+
+### Yolo mode (fully autonomous)
+Dan activates this by saying **"yolo mode"** (or equivalent) at the start of a session.
+
+In yolo mode Claude operates without approval gates:
+
+1. Write a failing test (red). Commit it.
+2. Write the minimum implementation to make it pass (green). Commit it.
+3. Run `npm test` locally to confirm all tests pass.
+4. Push the branch and open a PR.
+5. **Merge the PR immediately** once CI is green — do not wait for Dan.
+6. Watch the Amplify build at https://us-east-1.console.aws.amazon.com/amplify/apps
+7. If the build fails: diagnose, create a new fix branch, open a PR, merge it, watch again.
+8. Loop steps 6–7 until the Amplify build succeeds and https://www.botchatapp.com is working.
+9. **Notify Dan after every failed Amplify build attempt**, regardless of whether a fix is ready.
+
+Constraints that apply in both modes (never override):
+- Never commit secrets or credentials to GitHub (see [Security](#security-never-commit-secrets)).
+- Never delete, skip, or disable a test from a prior PR to make a new test pass.
+- Never disable or work around TruffleHog.
+
+---
+
 ## Identity & ownership
 
-- This is **Dan Rohtbart's** project. Dan is the sole approver for all pull requests.
-- Never merge a PR without Dan's explicit approval, even if CI is green.
+- This is **Dan Rohtbart's** project.
+- In **default mode**, Dan is the sole approver for all pull requests. Never merge without his explicit approval.
+- In **yolo mode**, Claude may merge PRs autonomously once CI is green.
 - Notify Dan after each failed Amplify build attempt or any other significant failure.
 
 ---
@@ -37,23 +67,25 @@ These instructions apply to every Claude Code session in this repository. Follow
 1. Create a feature branch with a descriptive name (e.g. `claude/short-description-XXXX`).
 2. Keep PRs focused — one logical change per PR.
 3. Write a clear PR description explaining *what* changed and *why*.
-4. Push and open the PR. **Do not merge it.** Wait for Dan's approval.
-5. If CI fails after you open the PR, fix the failure in a new commit on the same branch, push, and wait again.
+4. Push and open the PR.
+   - **Default mode:** Do not merge. Wait for Dan's explicit approval.
+   - **Yolo mode:** Merge immediately once CI is green.
+5. If CI fails after you open the PR, fix the failure in a new commit on the same branch, push, and repeat.
 
 ---
 
 ## Amplify build loop
 
-After Dan merges a PR, watch the Amplify build at:
+After a PR is merged, watch the Amplify build at:
 https://us-east-1.console.aws.amazon.com/amplify/apps
 
 If the build fails:
 1. Diagnose the failure from the Amplify build log.
-2. Fix it in a new branch.
-3. Open a new PR. Do not merge it — wait for Dan's approval.
-4. After Dan merges, watch the next Amplify build.
-5. Repeat until the build succeeds.
-6. **Notify Dan** after each failed build attempt, regardless of whether you have a fix ready.
+2. **Notify Dan** immediately.
+3. Fix it in a new branch and open a PR.
+   - **Default mode:** Wait for Dan's approval before merging.
+   - **Yolo mode:** Merge once CI is green, then watch the next build.
+4. Repeat until the build succeeds.
 
 The production site is https://www.botchatapp.com. Confirm it is working after each successful Amplify deployment.
 
@@ -130,5 +162,5 @@ After any backend change (`amplify push`), verify:
 3. Run `amplify upgrade` if Amplify itself has an upgrade.
 4. Run `amplify push --yes` to push backend changes.
 5. Run `npm run dev` and manually test at http://localhost:3000.
-6. Commit, push, and open a PR. Do not merge it — wait for Dan.
-7. After Dan merges, watch the Amplify build.
+6. Commit, push, and open a PR. Merge per the active operating mode.
+7. Watch the Amplify build.
