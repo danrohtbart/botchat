@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Pre-commit hook: scan staged files for common credential patterns
+#
+# Activate on a fresh clone with:
+#   git config core.hooksPath .githooks
+#
+# This is a belt-and-suspenders check that runs without any external
+# dependencies. TruffleHog (.pre-commit-config.yaml) and Amplify CI
+# provide additional layers of scanning.
+
+set -euo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+# Patterns that suggest hardcoded credentials (applied to staged diff lines)
+PATTERNS=(
+  'AKIA[0-9A-Z]{16}'                                     # AWS Access Key ID
+  'aws_secret_access_key\s*=\s*[^$<{(\s]'                # AWS secret key assignment
+  'aws_session_token\s*=\s*[^$<{(\s]'                    # AWS session token assignment
+  '-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY'           # PEM private keys
+  'password\s*[:=]\s*["\x27][^\x27"$]{8,}'               # Hardcoded passwords (8+ chars)
+  'api[_-]?key\s*[:=]\s*["\x27][A-Za-z0-9+/]{16,}'      # Generic API keys
+  'secret[_-]?key\s*[:=]\s*["\x27][A-Za-z0-9+/]{16,}'   # Generic secret keys
+  'Authorization:\s*Bearer\s+[A-Za-z0-9._-]{20,}'        # Bearer tokens in source
+  'ghp_[A-Za-z0-9]{36}'                                  # GitHub personal access tokens
+  'sk-[A-Za-z0-9]{32,}'                                  # OpenAI / Anthropic style keys
+)
+
+# Files to skip (binary assets, lockfiles with long hashes)
+SKIP_PATTERN='\.(png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|pdf|zip|tar|gz)$'
+SKIP_FILES='package-lock.json'
+
+FOUND=0
+
+for FILE in $STAGED; do
+  # Skip binary/asset files
+  if echo "$FILE" | grep -qE "$SKIP_PATTERN"; then
+    continue
+  fi
+  # Skip known safe files with long hex strings
+  if echo "$FILE" | grep -qF "$SKIP_FILES"; then
+    continue
+  fi
+
+  # Only examine added lines in the diff (lines starting with +, excluding +++ header)
+  DIFF_LINES=$(git diff --cached -- "$FILE" | grep -E '^\+[^+]' | sed 's/^\+//' || true)
+
+  if [ -z "$DIFF_LINES" ]; then
+    continue
+  fi
+
+  for PATTERN in "${PATTERNS[@]}"; do
+    if echo "$DIFF_LINES" | grep -qP "$PATTERN" 2>/dev/null; then
+      echo "CREDENTIAL SCAN BLOCKED: Possible secret detected in $FILE"
+      echo "  Pattern matched: $PATTERN"
+      FOUND=1
+      break
+    fi
+  done
+done
+
+if [ "$FOUND" -eq 1 ]; then
+  echo ""
+  echo "Remove or replace the flagged values before committing."
+  echo "Use environment variables for secrets — never hardcode them."
+  echo ""
+  echo "If this is a confirmed false positive, bypass with:"
+  echo "  git commit --no-verify"
+  echo "and document the reason in your PR description."
+  exit 1
+fi
+
+# Run TruffleHog if available (provides deeper scanning on top of the grep check)
+if command -v trufflehog &>/dev/null; then
+  trufflehog git file://. --since-commit HEAD --only-verified --fail 2>/dev/null || {
+    echo "TruffleHog detected a verified secret. Commit blocked."
+    echo "Remove the secret and try again."
+    exit 1
+  }
+fi
+
+exit 0
