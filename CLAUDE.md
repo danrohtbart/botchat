@@ -143,21 +143,22 @@ When `dev` is stable and ready for production:
 
 ## Amplify build loop
 
-After Dan merges, the Amplify build runs automatically. Monitor with:
+After any merge, the Amplify build runs automatically. Monitor with:
 ```bash
-aws amplify list-jobs --app-id d3bo8xtge7s7fh --branch-name <main|dev>
+aws amplify list-jobs --app-id d3bo8xtge7s7fh --branch-name <main|dev> --query 'jobSummaries[0].status'
 ```
 
-If the build fails:
-1. Diagnose from the Amplify build log.
-2. **Notify Dan** immediately.
-3. Fix on a new feature branch, open a PR to `dev`, and wait for Dan to merge.
-4. Repeat until the build succeeds and the site is working.
+| Branch | URL after successful build | Who watches |
+|--------|---------------------------|-------------|
+| `dev`  | https://dev.d3bo8xtge7s7fh.amplifyapp.com | Claude (yolo) / Dan (default) |
+| `main` | https://www.botchatapp.com | Dan always |
 
-| Branch | URL after successful build |
-|--------|---------------------------|
-| `dev`  | https://dev.d3bo8xtge7s7fh.amplifyapp.com |
-| `main` | https://www.botchatapp.com |
+### dev build failures
+**Yolo mode:** Claude diagnoses, fixes on a new branch, merges to `dev`, and watches again. Notify Dan once the dev site is confirmed working.
+**Default mode:** Notify Dan immediately. Fix on a new branch, open a PR to `dev`, wait for Dan to merge.
+
+### main build failures
+In both modes: notify Dan immediately. Fix on a new feature branch, open a PR to `dev`. Dan merges to `dev`, then promotes to `main` when ready.
 
 ---
 
@@ -230,9 +231,9 @@ After any backend change (`amplify push`), verify:
 ## Resolving Dependabot alerts
 
 1. Check out the PR branch (from `dev`).
-2. Run `npm install` and update `package-lock.json`.
-3. Run `amplify upgrade` if Amplify itself has an upgrade.
-4. Run `amplify push --yes` to push backend changes.
-5. Run `npm run dev` and manually test at http://localhost:3000.
-6. Open a PR targeting `dev`. Wait for Dan to merge.
-7. Watch the dev Amplify build, then promote to `main`.
+2. Run `npm install` to update `package-lock.json`.
+3. If Amplify CLI itself has an upgrade, run `amplify upgrade`. If that modifies any files under `amplify/`, run `amplify push --yes` to deploy the backend change locally before testing — otherwise skip `amplify push`, as Amplify CI will handle deployment automatically when the PR merges.
+4. Run `npm run dev` and manually test at http://localhost:3000.
+5. Run `npm test` to confirm all unit tests pass.
+6. Open a PR targeting `dev`. Merge to `dev` (yolo) or wait for Dan (default).
+7. Watch the dev Amplify build. When green, Dan promotes to `main`.
