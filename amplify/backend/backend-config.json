@@ -15,7 +15,7 @@
           "additionalAuthenticationProviders": [
             {
               "apiKeyConfig": {
-                "apiKeyExpirationDate": "2025-04-27T14:55:24.408Z",
+                "apiKeyExpirationDate": "2027-04-08T00:00:00.000Z",
                 "apiKeyExpirationDays": 365,
                 "description": "API_BOTCHAT_GRAPHQLAPIKEYOUTPUT"
               },
