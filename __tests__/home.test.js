@@ -168,4 +168,24 @@ describe('Home component', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign\s*out/i }));
     expect(mockSignOut).toHaveBeenCalledTimes(1);
   });
+
+  test('personalities panel is hidden on mobile and visible on desktop', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    const panel = screen.getByTestId('personalities-panel');
+    expect(panel.className).toMatch(/\bhidden\b/);
+    expect(panel.className).toMatch(/\bmd:block\b/);
+  });
+
+  test('chat area is full-width on mobile', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    const chatArea = screen.getByTestId('chat-area');
+    expect(chatArea.className).toMatch(/\bw-full\b/);
+    expect(chatArea.className).toMatch(/\bmd:w-3\/4\b/);
+  });
 });
