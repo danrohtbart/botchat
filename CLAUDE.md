@@ -44,8 +44,8 @@ feature branch (from dev)
 4. Push and open a PR **targeting `dev`** (not `main`).
 5. The Amplify PR preview builds automatically and uses the `dev` backend.
 6. Assess the preview at `https://pr-{N}.d3bo8xtge7s7fh.amplifyapp.com` — log in with `.env.test` credentials (`TEST_USER_EMAIL` / `TEST_USER_PASSWORD`).
-7. Dan merges to `dev`. Amplify builds and deploys to the dev environment.
-8. When `dev` is stable and ready for production, open a PR from `dev` → `main`. Dan reviews and merges.
+7. Merge to `dev` (in yolo mode) or wait for Dan (in default mode). Amplify builds and deploys to the dev environment.
+8. When `dev` is stable and ready for production, open a PR from `dev` → `main`. **Dan reviews and merges — never Claude.**
 9. Amplify builds `main` and deploys to production.
 
 ### Backend changes (GraphQL schema, Lambda, DynamoDB)
@@ -68,7 +68,7 @@ Dan approves every PR before it is merged. Claude opens PRs and waits. See [Pull
 ### Yolo mode (fully autonomous)
 Dan activates this by saying **"yolo mode"** (or equivalent) at the start of a session.
 
-In yolo mode Claude operates without approval gates, **except Claude must never merge a PR — merging is always Dan's decision.**
+In yolo mode Claude operates without approval gates, with one hard constraint: **Claude may merge PRs to `dev`, but must never merge to `main` — only Dan merges to main.**
 
 0. **Read the ClickUp ticket in full before writing any code.** Use `mcp__clickup__clickup_get_task` or `mcp__clickup__clickup_search` to fetch the ticket. Do not skip this step even if the task seems obvious from the session prompt.
 1. Branch from `dev` (see [Git flow](#git-flow) above).
@@ -82,19 +82,21 @@ In yolo mode Claude operates without approval gates, **except Claude must never 
    ```
    The preview URL is `https://pr-{N}.d3bo8xtge7s7fh.amplifyapp.com`.
 7. **Assess the PR preview.** Log in using `.env.test` credentials and manually verify the feature works correctly. If broken, push a fix, wait for the preview to rebuild, and re-assess.
-8. **Notify Dan** with your assessment: the preview URL, what you tested, what passed, and any concerns. Dan will merge when satisfied.
+8. **Merge to `dev`** once CI is green and the preview assessment passes.
+9. Watch the `dev` Amplify build. If it fails, diagnose, fix on the same branch or a new one, and repeat.
+10. **Notify Dan** once the feature is live on dev: share the dev URL, what you tested, and any concerns. Dan will decide when to promote to `main`.
 
 Constraints that apply in both modes (never override):
 - Never commit secrets or credentials to GitHub (see [Security](#security-never-commit-secrets)).
 - Never delete, skip, or disable a test from a prior PR to make a new test pass.
 - Never disable or work around TruffleHog.
-- **Never merge a PR** — in any mode, merging is always Dan's decision.
+- **Never merge a PR to `main`** — only Dan promotes to production.
 
 ---
 
 ## Identity & ownership
 
-- This is **Dan Rohtbart's** project. Dan is the sole approver for all pull requests — never merge without his explicit approval.
+- This is **Dan Rohtbart's** project. Claude may merge PRs to `dev` in yolo mode, but **never to `main`** — only Dan promotes to production.
 - Notify Dan after each failed Amplify build attempt or any other significant failure.
 
 ---
