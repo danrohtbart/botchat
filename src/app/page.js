@@ -300,9 +300,9 @@ export function Home({ signOut, user }) {
         <div className="hidden md:block w-1/4">
           &nbsp;
         </div>
-        <div data-testid="chat-area" className="w-full md:w-3/4 h-3/4">
+        <div data-testid="chat-area" className="w-full md:w-3/4">
           &nbsp;
-          <ScrollView maxHeight="75%">
+          <ScrollView maxHeight="75vh">
             <br/>
             <div className="text-center text-xl font-bold italic text-wrap">
               {
