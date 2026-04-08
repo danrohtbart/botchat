@@ -264,49 +264,43 @@ export function Home({ signOut, user }) {
     
   return (
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
-      <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100 fixed top-0 left-0 right-0">
-        <div className="flex h-1/8 w-1/2 items-center">
-          <b>Talk:&nbsp;</b>
-          <Input
-            type="text"
-            name="search"
-            id="search"
-            onKeyUp={async (e) => {
-              if (e.key === "Enter") {
-                const output = {
-                  message: e.target.value,
-                  user_email: user_email, 
-                  speaker_name: 'You',
-                };
-                WriteToGraphQL (amplifyClient, output);
-                e.target.value = "";
-              }
-            }}
-            className="block w-full rounded-md border-0 py-1.5 pr-14 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-          />
-        </div>
-        <div className="h-1/8 flex items-center">
-          <Button colorTheme="error" size="small" onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
-        </div>
-        <div className="h-1/8 flex items-center">
-          <Button colorTheme="error" size="small" onClick={DeleteChats} isLoading={deleting} loadingText="Deleting...">&nbsp;Delete&nbsp;Chats</Button>
-        </div>
+      <div className="flex p-2 w-full flex-row items-center gap-2 bg-gray-100 fixed top-0 left-0 right-0 z-10">
+        <b className="whitespace-nowrap text-sm">Talk:&nbsp;</b>
+        <Input
+          type="text"
+          name="search"
+          id="search"
+          onKeyUp={async (e) => {
+            if (e.key === "Enter") {
+              const output = {
+                message: e.target.value,
+                user_email: user_email,
+                speaker_name: 'You',
+              };
+              WriteToGraphQL (amplifyClient, output);
+              e.target.value = "";
+            }
+          }}
+          className="flex-1 min-w-0 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-sm leading-6"
+        />
+        <Button colorTheme="error" size="small" onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
+        <Button colorTheme="error" size="small" onClick={DeleteChats} isLoading={deleting} loadingText="Deleting...">&nbsp;Delete&nbsp;Chats</Button>
       </div>
-      <div className="flex h-1/8 p-2 w-full flex-row justify-evenly bg-gray-100">
+      <div className="h-14 p-2 w-full bg-gray-100">
           &nbsp;
       </div>
-      <div className="flex h-1/8 w-full flex-row">
-        <div className="w-1/4 fixed">
+      <div className="flex w-full flex-row">
+        <div data-testid="personalities-panel" className="hidden md:block w-1/4 fixed">
           <PersonalitiesUpdateForm personalities={personalities} overrides={{
             SubmitButton: {
               children: 'Update Personalities'
             }
           }} />
         </div>
-        <div className="w-1/4">
+        <div className="hidden md:block w-1/4">
           &nbsp;
         </div>
-        <div className="w-3/4 h-3/4">
+        <div data-testid="chat-area" className="w-full md:w-3/4 h-3/4">
           &nbsp;
           <ScrollView maxHeight="75%">
             <br/>
