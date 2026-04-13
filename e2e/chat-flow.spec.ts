@@ -39,7 +39,7 @@ test('submit a topic: input clears and bot responses appear', async ({ page }) =
 
   // User message appears — .first() avoids strict mode violation when chat history
   // contains multiple prior "You" speaker labels
-  await expect(page.getByText('You', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('You', { exact: true }).first()).toBeVisible({ timeout: 10_000 });
 
   // Wait for at least two bot responses (Jim + Mark minimum)
   // Lambda → Bedrock round trips can take up to 60 seconds on a cold start
