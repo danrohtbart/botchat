@@ -39,7 +39,7 @@
       "DeploymentBucketName": "amplify-botchat-dev-135408-deployment",
       "UnauthRoleName": "amplify-botchat-dev-135408-unauthRole",
       "StackName": "amplify-botchat-dev-135408",
-      "StackId": "arn:aws:cloudformation:us-east-1:253178317163:stack/amplify-botchat-dev-135408/55a558c0-96c4-11ee-ab3e-12c707d6e8df",
+      "StackId": "arn:aws:cloudformation:us-east-1:253178317163:stack/amplify-botchat-dev-135408/938d1820-3768-11f1-94fd-12cd21b16d1f",
       "AmplifyAppId": "d3bo8xtge7s7fh"
     },
     "categories": {
@@ -50,10 +50,9 @@
         "botchat": {}
       },
       "function": {
-        "botchatboto3bedrock": {},
         "botchattriggerjs": {
           "deploymentBucketName": "amplify-botchat-dev-135408-deployment",
-          "s3Key": "amplify-builds/botchattriggerjs-454b4f2f763137472b47-build.zip"
+          "s3Key": "amplify-builds/botchattriggerjs-653754314c4b4e6c4163-build.zip"
         },
         "botchatpresignup": {
           "deploymentBucketName": "amplify-botchat-dev-135408-deployment",

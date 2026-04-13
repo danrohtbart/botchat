@@ -6,7 +6,7 @@ test.use({ storageState: path.join(__dirname, '.auth/user.json') });
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible({ timeout: 15_000 });
 });
 
 test('delete chats clears the chat list', async ({ page }) => {
@@ -14,20 +14,21 @@ test('delete chats clears the chat list', async ({ page }) => {
   // While the API call runs, the button's accessible name changes to "Deleting..."
   // (via isLoading/loadingText), so querying it by "Delete Chats" returns nothing.
   // Wait for the empty-state text instead — it only appears after deletion completes.
-  await expect(page.getByText('Add a topic in the box above')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Add a topic in the box above')).toBeVisible({ timeout: 30_000 });
   // Button should be back in its default state once deletion is done.
   await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete Chats' })).not.toBeDisabled();
 });
 
 test('submit a topic: input clears and bot responses appear', async ({ page }) => {
-  // Lambda + Bedrock can take >30s on a cold start in CI
-  test.setTimeout(90_000);
+  // Lambda + Bedrock can take >30s on a cold start in CI; budget extra time for
+  // the full flow: delete (30s) + user message (60s) + two bot responses (60s)
+  test.setTimeout(150_000);
 
   // Start clean
   await page.getByRole('button', { name: 'Delete Chats' }).click();
   await expect(page.getByRole('button', { name: 'Delete Chats' })).not.toBeDisabled();
-  await expect(page.getByText('Add a topic in the box above')).toBeVisible();
+  await expect(page.getByText('Add a topic in the box above')).toBeVisible({ timeout: 30_000 });
 
   // Type a topic and submit
   const input = page.locator('#search');
@@ -39,7 +40,7 @@ test('submit a topic: input clears and bot responses appear', async ({ page }) =
 
   // User message appears — .first() avoids strict mode violation when chat history
   // contains multiple prior "You" speaker labels
-  await expect(page.getByText('You', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('You', { exact: true }).first()).toBeVisible({ timeout: 60_000 });
 
   // Wait for at least two bot responses (Jim + Mark minimum)
   // Lambda → Bedrock round trips can take up to 60 seconds on a cold start

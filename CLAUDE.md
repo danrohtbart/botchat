@@ -9,8 +9,8 @@ These instructions apply to every Claude Code session in this repository. Follow
 | Environment | Git branch | Amplify backend | Cognito pool | URL |
 |-------------|------------|-----------------|--------------|-----|
 | Production  | `main`     | `main` (stack `amplify-botchat-main-223437`) | `us-east-1_N9z5Z5X2w` | https://www.botchatapp.com |
-| Development | `dev`      | `dev` (stack `amplify-botchat-dev-135408`)   | `us-east-1_AYMzkIGAz` | https://dev.d3bo8xtge7s7fh.amplifyapp.com |
-| PR preview  | `pr-{N}`   | `dev` (via `PREVIEW_*` env vars)             | `us-east-1_AYMzkIGAz` | https://pr-{N}.d3bo8xtge7s7fh.amplifyapp.com |
+| Development | `dev`      | `dev` (stack `amplify-botchat-dev-135408`)   | `us-east-1_D4wZSVZIu` | https://dev.d3bo8xtge7s7fh.amplifyapp.com |
+| PR preview  | `pr-{N}`   | `dev` (via `PREVIEW_*` env vars)             | `us-east-1_D4wZSVZIu` | https://pr-{N}.d3bo8xtge7s7fh.amplifyapp.com |
 
 **PR previews always use the `dev` backend.** Feature branches must target `dev`, not `main` — this ensures the PR preview is validated against the same backend that will receive the change.
 
@@ -176,7 +176,7 @@ Requires a running app and real Cognito credentials:
 TEST_USER_EMAIL=...
 TEST_USER_PASSWORD=...
 ```
-Store them in `.env.test` (gitignored). The test user must exist in **both** Cognito pools (`us-east-1_AYMzkIGAz` for dev, `us-east-1_N9z5Z5X2w` for main). Start the app first:
+Store them in `.env.test` (gitignored). The test user must exist in **both** Cognito pools (`us-east-1_D4wZSVZIu` for dev, `us-east-1_N9z5Z5X2w` for main). Start the app first:
 ```bash
 npm start
 npx playwright test
@@ -217,6 +217,24 @@ When writing Lambda tests, always import AWS SDK modules from the project root `
 - **Lambda node_modules**: the Lambda function has its own `node_modules/`. When writing Jest tests for Lambda code, force resolution through the project root via `moduleNameMapper` so mocks work correctly.
 - **Selenium** is no longer used in CI (replaced by Playwright). Do not add Selenium back to the CI pipeline.
 - **CSS percentage heights cascade** — if you remove an explicit height from a parent div (e.g. `h-1/8`), any child using `height: %` or `maxHeight: %` will resolve to 0 in WebKit (Safari) because percentage heights require a sized parent. Before removing a height class from any container, grep for `h-`, `maxHeight`, and percentage-based sizing in its direct children and descendants, and switch them to viewport-relative units (e.g. `vh`) or fixed values if needed.
+- **`amplify push` silently clears the Cognito pre-signup trigger.** The auth CloudFormation template does not include `LambdaConfig`, so every `amplify push` that touches the auth stack resets the trigger to empty. After any `amplify push --env dev` or `--env main`, re-apply the trigger manually:
+  ```bash
+  # dev
+  aws cognito-idp update-user-pool --user-pool-id us-east-1_D4wZSVZIu \
+    --lambda-config PreSignUp=arn:aws:lambda:us-east-1:253178317163:function:botchatpresignup-dev \
+    --region us-east-1
+  # main
+  aws cognito-idp update-user-pool --user-pool-id us-east-1_N9z5Z5X2w \
+    --lambda-config PreSignUp=arn:aws:lambda:us-east-1:253178317163:function:botchatpresignup-main \
+    --region us-east-1
+  ```
+- **`amplify push` can strip `AmazonBedrockFullAccess` from Lambda roles.** After any backend push, verify both `botchatLambdaRole*` roles in the updated environment still have the policy attached — and re-attach if missing:
+  ```bash
+  aws iam attach-role-policy \
+    --role-name <botchatLambdaRole…-dev> \
+    --policy-arn arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+  ```
+- **The `dev` and `main` Amplify environments use different auth mechanisms.** The `dev` env is configured with direct AWS access keys (`configLevel: project`). The `main` env uses Amplify Studio (`configLevel: amplifyAdmin`), which requires browser-based OAuth. If you run any `amplify` CLI command that targets the `main` environment (e.g. `amplify env checkout main`, `amplify push --env main`), it will hang waiting for a browser auth prompt — there is no way to proceed from the terminal alone. Only run Amplify CLI commands against the `dev` environment in automated or headless contexts.
 
 ---
 

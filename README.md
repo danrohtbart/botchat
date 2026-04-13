@@ -102,7 +102,7 @@ npx playwright test
 ```
 
 The test user must exist and be confirmed in both Cognito pools:
-- Dev pool: `us-east-1_AYMzkIGAz`
+- Dev pool: `us-east-1_D4wZSVZIu`
 - Main/production pool: `us-east-1_N9z5Z5X2w`
 
 **In Amplify CI** — `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` are set as app-level environment variables in the Amplify Console and injected automatically into the test phase.
@@ -175,14 +175,30 @@ When a PR modifies anything under `amplify/` (GraphQL schema, Lambda, DynamoDB):
 2. Run `amplify push --env dev` to deploy the backend change to the dev environment.
 3. Verify the dev site works end-to-end: https://dev.d3bo8xtge7s7fh.amplifyapp.com
 4. Open a `dev → main` PR. After Dan merges, run `amplify push --env main` (or confirm Amplify CI handles it).
-5. After every backend push, verify:
-   - IAM role `botchatLambdaRole*` still has `AmazonBedrockFullAccess` attached.
-   - If the signup allow-list is active, the Cognito pre-signup Lambda trigger (`botchatpresignup`) is still configured on the user pool.
+5. After every backend push, verify and re-apply two things that `amplify push` silently resets:
 
-### Signup allow-list (optional, not currently active)
+   **a) Cognito pre-signup trigger** — the auth CloudFormation template lacks `LambdaConfig`, so every push wipes it:
+   ```bash
+   # dev
+   aws cognito-idp update-user-pool --user-pool-id us-east-1_D4wZSVZIu \
+     --lambda-config PreSignUp=arn:aws:lambda:us-east-1:253178317163:function:botchatpresignup-dev \
+     --region us-east-1
+   # main
+   aws cognito-idp update-user-pool --user-pool-id us-east-1_N9z5Z5X2w \
+     --lambda-config PreSignUp=arn:aws:lambda:us-east-1:253178317163:function:botchatpresignup-main \
+     --region us-east-1
+   ```
 
-To restrict signups to an allow-list, configure the Cognito user pool to use the `botchatpresignup` Lambda as a pre-signup trigger. This must be done separately for each environment (dev, main) in the Cognito console:  
-https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html
+   **b) IAM Bedrock policy** — verify `botchatLambdaRole*` still has `AmazonBedrockFullAccess` and re-attach if missing:
+   ```bash
+   aws iam attach-role-policy \
+     --role-name <botchatLambdaRole…-dev|main> \
+     --policy-arn arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+   ```
+
+### Signup allow-list
+
+The `botchatpresignup` Lambda restricts signups to `rohtbart.com`, `aetion.com`, and a small set of specific Gmail addresses. The pre-signup trigger is **active** on both the dev and main Cognito pools. It must be manually re-applied after every `amplify push` (see step 5 above).
 
 ---
 

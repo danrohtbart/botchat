@@ -15,7 +15,7 @@ test('login', async ({ page }) => {
   await page.getByPlaceholder('Enter your Email').fill(email);
   await page.getByPlaceholder('Enter your Password').fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.getByText('Talk: Sign out Delete Chats')).toBeVisible();
+  await expect(page.getByText('Talk: Sign out Delete Chats')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Bot Personality ControlsName')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
