@@ -35,6 +35,7 @@ export function Home({ signOut, user }) {
   const [personalities, setPersonalities] = React.useState([]);
   const [loggingOut, setLoggingOut] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+  const [showSettings, setShowSettings] = React.useState(false);
 
   // in the future, retrieve the authenticated user's email address into the user_email variable
   let user_email = 'User email not set';
@@ -283,6 +284,7 @@ export function Home({ signOut, user }) {
           }}
           className="flex-1 min-w-0 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-sm leading-6"
         />
+        <Button size="small" className="md:hidden whitespace-nowrap" data-testid="mobile-settings-button" onClick={() => setShowSettings(true)}>&nbsp;Bot&nbsp;Settings</Button>
         <Button colorTheme="error" size="small" onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
         <Button colorTheme="error" size="small" onClick={DeleteChats} isLoading={deleting} loadingText="Deleting...">&nbsp;Delete&nbsp;Chats</Button>
       </div>
@@ -340,6 +342,21 @@ export function Home({ signOut, user }) {
           </ScrollView>
         </div>
       </div>
+      {showSettings && (
+        <div data-testid="mobile-settings-modal" className="fixed inset-0 z-50 bg-white overflow-y-auto md:hidden">
+          <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-100">
+            <span className="font-bold text-sm">Bot Settings</span>
+            <Button size="small" data-testid="mobile-settings-close" onClick={() => setShowSettings(false)}>Close</Button>
+          </div>
+          <div data-testid="mobile-settings-form">
+            <PersonalitiesUpdateForm
+              personalities={personalities}
+              overrides={{ SubmitButton: { children: 'Update Personalities' } }}
+              onSuccess={() => setShowSettings(false)}
+            />
+          </div>
+        </div>
+      )}
     </main>
   )
 }
