@@ -10,11 +10,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('delete chats clears the chat list', async ({ page }) => {
+  // Budget extra time for WebKit cold-start AppSync latency in CI.
+  test.setTimeout(90_000);
+
   await page.getByRole('button', { name: 'Delete Chats' }).click();
   // While the API call runs, the button's accessible name changes to "Deleting..."
   // (via isLoading/loadingText), so querying it by "Delete Chats" returns nothing.
   // Wait for the empty-state text instead — it only appears after deletion completes.
-  await expect(page.getByText('Add a topic in the box above')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText('Add a topic in the box above')).toBeVisible({ timeout: 60_000 });
   // Button should be back in its default state once deletion is done.
   await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete Chats' })).not.toBeDisabled();
