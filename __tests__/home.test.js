@@ -1,4 +1,4 @@
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, act, fireEvent, within } from '@testing-library/react';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 // jest.mock calls are hoisted, so factories cannot close over variables defined
@@ -29,8 +29,20 @@ jest.mock('aws-amplify', () => ({
 
 jest.mock('../src/aws-exports', () => ({}));
 
+// Capture props passed to PersonalitiesUpdateForm so tests can assert on them.
+// Module-level so it can be read inside test callbacks.
+let lastPersonalitiesFormProps = {};
 jest.mock('../src/ui-components', () => ({
-  PersonalitiesUpdateForm: () => null,
+  PersonalitiesUpdateForm: (props) => {
+    lastPersonalitiesFormProps = props;
+    return (
+      <div data-testid="personalities-update-form">
+        {props.onSuccess && (
+          <button data-testid="mock-form-success" onClick={props.onSuccess}>Save</button>
+        )}
+      </div>
+    );
+  },
 }));
 
 jest.mock('date-fns/intlFormatDistance', () => jest.fn(() => 'just now'));
@@ -92,6 +104,7 @@ const defaultProps = { signOut: mockSignOut, user: { username: 'test@example.com
 describe('Home component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    lastPersonalitiesFormProps = {};
   });
 
   test('shows empty-state prompt when there are no chats', async () => {
@@ -187,5 +200,76 @@ describe('Home component', () => {
     const chatArea = screen.getByTestId('chat-area');
     expect(chatArea.className).toMatch(/\bw-full\b/);
     expect(chatArea.className).toMatch(/\bmd:w-3\/4\b/);
+  });
+
+  test('mobile settings button exists and is hidden on desktop', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    const btn = screen.getByTestId('mobile-settings-button');
+    expect(btn).toBeInTheDocument();
+    expect(btn.className).toMatch(/\bmd:hidden\b/);
+  });
+
+  test('mobile settings modal is not shown by default', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    expect(screen.queryByTestId('mobile-settings-modal')).not.toBeInTheDocument();
+  });
+
+  test('clicking mobile settings button opens the personality settings modal', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    fireEvent.click(screen.getByTestId('mobile-settings-button'));
+    expect(screen.getByTestId('mobile-settings-modal')).toBeInTheDocument();
+  });
+
+  test('mobile settings modal contains the personality form', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    fireEvent.click(screen.getByTestId('mobile-settings-button'));
+    const modal = screen.getByTestId('mobile-settings-modal');
+    expect(within(modal).getByTestId('personalities-update-form')).toBeInTheDocument();
+  });
+
+  test('mobile settings modal passes current bot names to the personality form', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    fireEvent.click(screen.getByTestId('mobile-settings-button'));
+    expect(lastPersonalitiesFormProps.personalities).toMatchObject({
+      name_1: 'Jim',
+      name_2: 'Mark',
+    });
+  });
+
+  test('close button in mobile settings modal hides the modal', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    fireEvent.click(screen.getByTestId('mobile-settings-button'));
+    expect(screen.getByTestId('mobile-settings-modal')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('mobile-settings-close'));
+    expect(screen.queryByTestId('mobile-settings-modal')).not.toBeInTheDocument();
+  });
+
+  test('submitting personality form closes the mobile settings modal', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    fireEvent.click(screen.getByTestId('mobile-settings-button'));
+    expect(screen.getByTestId('mobile-settings-modal')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('mock-form-success'));
+    expect(screen.queryByTestId('mobile-settings-modal')).not.toBeInTheDocument();
   });
 });
