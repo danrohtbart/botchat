@@ -35,6 +35,7 @@ export function Home({ signOut, user }) {
   const [personalities, setPersonalities] = React.useState([]);
   const [loggingOut, setLoggingOut] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+  const [showSettings, setShowSettings] = React.useState(false);
 
   // in the future, retrieve the authenticated user's email address into the user_email variable
   let user_email = 'User email not set';
@@ -264,30 +265,36 @@ export function Home({ signOut, user }) {
     
   return (
     <main className="flex min-h-screen min-w-full flex-col items-center bg-white">
-      <div className="flex p-2 w-full flex-row items-center gap-2 bg-gray-100 fixed top-0 left-0 right-0 z-10">
-        <b className="whitespace-nowrap text-sm">Talk:&nbsp;</b>
-        <Input
-          type="text"
-          name="search"
-          id="search"
-          onKeyUp={async (e) => {
-            if (e.key === "Enter") {
-              const output = {
-                message: e.target.value,
-                user_email: user_email,
-                speaker_name: 'You',
-              };
-              WriteToGraphQL (amplifyClient, output);
-              e.target.value = "";
-            }
-          }}
-          className="flex-1 min-w-0 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-sm leading-6"
-        />
-        <Button colorTheme="error" size="small" onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
-        <Button colorTheme="error" size="small" onClick={DeleteChats} isLoading={deleting} loadingText="Deleting...">&nbsp;Delete&nbsp;Chats</Button>
+      <div className="fixed top-0 left-0 right-0 z-10 bg-gray-100 flex flex-col md:flex-row md:items-center md:p-2">
+        {/* Action buttons: top row on mobile (order-first), right side on desktop (md:order-last) */}
+        <div data-testid="header-actions" className="order-first md:order-last flex items-center justify-end gap-2 p-2 pb-1 md:p-0">
+          <Button colorTheme="error" size="small" onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
+          <Button colorTheme="error" size="small" onClick={DeleteChats} isLoading={deleting} loadingText="Deleting...">&nbsp;Delete&nbsp;Chats</Button>
+        </div>
+        {/* Talk input row: bottom on mobile, left (flex-1) on desktop */}
+        <div className="flex items-center gap-2 px-2 pb-2 md:p-0 md:flex-1">
+          <b className="whitespace-nowrap text-sm">Talk:&nbsp;</b>
+          <Input
+            type="text"
+            name="search"
+            id="search"
+            onKeyUp={async (e) => {
+              if (e.key === "Enter") {
+                const output = {
+                  message: e.target.value,
+                  user_email: user_email,
+                  speaker_name: 'You',
+                };
+                WriteToGraphQL (amplifyClient, output);
+                e.target.value = "";
+              }
+            }}
+            className="flex-1 min-w-0 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-base leading-6"
+          />
+          <button className="md:hidden text-sm px-2 py-1 rounded border border-gray-300 bg-white whitespace-nowrap" data-testid="mobile-settings-button" onClick={() => setShowSettings(true)}>Bot Settings</button>
+        </div>
       </div>
-      <div className="h-14 p-2 w-full bg-gray-100">
-          &nbsp;
+      <div data-testid="header-spacer" className="h-24 md:h-14 w-full bg-gray-100">
       </div>
       <div className="flex w-full flex-row">
         <div data-testid="personalities-panel" className="hidden md:block w-1/4 fixed">
@@ -302,7 +309,7 @@ export function Home({ signOut, user }) {
         </div>
         <div data-testid="chat-area" className="w-full md:w-3/4">
           &nbsp;
-          <ScrollView maxHeight="75vh">
+          <ScrollView height="calc(100vh - 6rem)">
             <br/>
             <div className="text-center text-xl font-bold italic text-wrap">
               {
@@ -340,6 +347,21 @@ export function Home({ signOut, user }) {
           </ScrollView>
         </div>
       </div>
+      {showSettings && (
+        <div data-testid="mobile-settings-modal" className="fixed inset-0 z-50 bg-white overflow-y-auto md:hidden">
+          <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-100">
+            <span className="font-bold text-sm">Bot Settings</span>
+            <Button size="small" data-testid="mobile-settings-close" onClick={() => setShowSettings(false)}>Close</Button>
+          </div>
+          <div data-testid="mobile-settings-form">
+            <PersonalitiesUpdateForm
+              personalities={personalities}
+              overrides={{ SubmitButton: { children: 'Update Personalities' } }}
+              onSuccess={() => setShowSettings(false)}
+            />
+          </div>
+        </div>
+      )}
     </main>
   )
 }
