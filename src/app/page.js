@@ -284,7 +284,7 @@ export function Home({ signOut, user }) {
           }}
           className="flex-1 min-w-0 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-sm leading-6"
         />
-        <Button size="small" className="md:hidden whitespace-nowrap" data-testid="mobile-settings-button" onClick={() => setShowSettings(true)}>&nbsp;Bot&nbsp;Settings</Button>
+        <button className="md:hidden text-sm px-2 py-1 rounded border border-gray-300 bg-white whitespace-nowrap" data-testid="mobile-settings-button" onClick={() => setShowSettings(true)}>Bot Settings</button>
         <Button colorTheme="error" size="small" onClick={signOut}>&nbsp;Sign&nbsp;out</Button>
         <Button colorTheme="error" size="small" onClick={DeleteChats} isLoading={deleting} loadingText="Deleting...">&nbsp;Delete&nbsp;Chats</Button>
       </div>

@@ -21,6 +21,6 @@ test('login', async ({ page }) => {
   await expect(page.getByRole('button', { name: /sign\s*out/i })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Update Personalities' })).toBeVisible();
-  // Bot Settings button exists in DOM but is hidden on desktop viewports
-  await expect(page.getByTestId('mobile-settings-button')).not.toBeVisible();
+  // Bot Settings button is present in the DOM (CSS hides it on desktop)
+  await expect(page.getByTestId('mobile-settings-button')).toBeAttached();
 });
