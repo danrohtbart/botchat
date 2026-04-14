@@ -15,9 +15,12 @@ test('login', async ({ page }) => {
   await page.getByPlaceholder('Enter your Email').fill(email);
   await page.getByPlaceholder('Enter your Password').fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.getByText('Talk: Sign out Delete Chats')).toBeVisible({ timeout: 15_000 });
+  // Wait for post-login UI using a stable role selector (header text varies with viewport/buttons)
+  await expect(page.getByRole('button', { name: /sign\s*out/i })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Bot Personality ControlsName')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /sign\s*out/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Update Personalities' })).toBeVisible();
+  // Bot Settings button exists in DOM but is hidden on desktop viewports
+  await expect(page.getByTestId('mobile-settings-button')).not.toBeVisible();
 });
