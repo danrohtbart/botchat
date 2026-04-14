@@ -272,4 +272,24 @@ describe('Home component', () => {
     fireEvent.click(screen.getByTestId('mock-form-success'));
     expect(screen.queryByTestId('mobile-settings-modal')).not.toBeInTheDocument();
   });
+
+  test('mobile header action buttons use flex ordering for two-row mobile layout', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    const actionsRow = screen.getByTestId('header-actions');
+    expect(actionsRow.className).toMatch(/\border-first\b/);
+    expect(actionsRow.className).toMatch(/\bmd:order-last\b/);
+  });
+
+  test('header spacer is taller on mobile than desktop', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    const spacer = screen.getByTestId('header-spacer');
+    expect(spacer.className).toMatch(/\bh-24\b/);
+    expect(spacer.className).toMatch(/\bmd:h-14\b/);
+  });
 });
