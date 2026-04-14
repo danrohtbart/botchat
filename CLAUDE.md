@@ -136,8 +136,16 @@ Constraints that apply in both modes (never override):
 ### Promoting dev → main
 When `dev` is stable and ready for production:
 1. Open a PR from `dev` → `main`.
-2. Dan reviews and merges.
-3. Watch the production Amplify build (see [Amplify build loop](#amplify-build-loop)).
+2. **Before notifying Dan, verify the PR is conflict-free and all checks have passed:**
+   ```bash
+   gh pr view <N> --json mergeable,mergeStateStatus,statusCheckRollup
+   ```
+   - `mergeable` must be `"MERGEABLE"` (not `"CONFLICTING"`)
+   - `mergeStateStatus` must be `"CLEAN"` (not `"DIRTY"` or `"BLOCKED"`)
+   - All entries in `statusCheckRollup` must have `conclusion: "SUCCESS"`
+   If any check fails or a conflict exists, resolve it before presenting the PR to Dan.
+3. Dan reviews and merges.
+4. Watch the production Amplify build (see [Amplify build loop](#amplify-build-loop)).
 
 ---
 
