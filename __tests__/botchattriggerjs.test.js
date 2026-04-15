@@ -128,6 +128,9 @@ beforeAll(() => {
   process.env.REGION = 'us-east-1';
   process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT = 'https://test.appsync.amazonaws.com/graphql';
   process.env.API_BOTCHAT_GRAPHQLAPIKEYOUTPUT = 'test-api-key';
+  process.env.AWS_ACCESS_KEY_ID = 'test-access-key';
+  process.env.AWS_SECRET_ACCESS_KEY = 'test-secret-key';
+  process.env.AWS_SESSION_TOKEN = 'test-session-token';
 });
 
 beforeEach(() => {
@@ -176,6 +179,21 @@ describe('Amplify.configure', () => {
       aws_appsync_graphqlEndpoint: 'https://test.appsync.amazonaws.com/graphql',
     });
     expect(configArg).not.toHaveProperty('aws_appsync_apiKey');
+  });
+
+  test('passes a credentials provider that reads Lambda IAM env vars', async () => {
+    const event = makeStreamEvent();
+    await handler(event);
+    const libraryOptions = Amplify.configure.mock.calls[0][1];
+    expect(libraryOptions).toBeDefined();
+    const provider = libraryOptions?.Auth?.credentialsProvider;
+    expect(provider).toBeDefined();
+    const result = await provider.getCredentialsAndIdentityId();
+    expect(result.credentials).toMatchObject({
+      accessKeyId: 'test-access-key',
+      secretAccessKey: 'test-secret-key',
+      sessionToken: 'test-session-token',
+    });
   });
 });
 
