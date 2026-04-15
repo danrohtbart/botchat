@@ -90,33 +90,60 @@ If I were handing this pattern to a team — or running multiple bots with diffe
 
 This way, even if a bot's instructions are malformed or a prompt injection attempt tells it to "merge to main," GitHub itself blocks the action. Defense in depth.
 
-### 2. Separate Bot Identity from Human Identity
+### 2. Separate Bot Identity from Human Identity (Without Blowing Up Your GitHub Bill)
 
 Right now, the bot commits and pushes under whatever Git credentials are available in the session. There's no way to distinguish a bot-authored merge from a human-authored merge in the audit log. That's a problem.
 
-**What this looks like in practice:**
+The naive fix is "create a separate GitHub user for each bot." But GitHub charges per seat — $4/month on Team, $21/month on Enterprise. If you're running three AI agents, a CI bot, and Dependabot, you're paying for five extra seats before you've written a line of code. That doesn't scale either.
 
-| Actor | GitHub Identity | Privileges | How Authenticated |
-|-------|----------------|------------|-------------------|
-| Dan (human) | `danrohtbart` | Full admin. Can merge to `main` and `dev`. Can modify branch protection rules. Can run `amplify push`. | Personal access token or SSH key with full repo scope |
-| Claude (dev bot) | `botchat-claude-dev` | Can create branches, open PRs, merge to `dev` only. Cannot modify repo settings. Cannot merge to `main`. | Fine-grained PAT scoped to: contents (write), pull requests (write), limited to `dev` branch pattern |
-| Dependabot | `dependabot[bot]` | Can open PRs for dependency updates. Cannot merge anything. | GitHub-managed bot token |
-| Future: CI bot | `botchat-ci` | Can trigger deployments, run `amplify push`. Cannot modify code. Cannot merge PRs. | OIDC-federated IAM role, no long-lived credentials |
+**The right answer is GitHub Apps.** A GitHub App:
 
-The key insight: **each actor gets its own GitHub identity with the minimum privileges needed for its role.** The bot doesn't need admin access. It doesn't need to manage branch protection. It doesn't need to touch production. Give it a fine-grained personal access token that literally cannot do what it shouldn't do.
+- **Does not consume a seat.** It's free. You can create as many as you need.
+- **Has its own identity.** Commits and merges appear as `botchat-dev-agent[bot]` in the audit log — clearly distinguishable from any human.
+- **Has scoped, installation-level permissions.** You grant it `contents: write` and `pull_requests: write` on one repo, and that's all it can touch. It cannot modify branch protection rules, manage team membership, or access other repos.
+- **Generates short-lived installation tokens.** No long-lived PATs sitting in environment variables. The token expires, limiting blast radius if leaked.
+
+**This is what the identity table should look like:**
+
+| Actor | GitHub Identity | Type | Privileges | Per-Seat Cost |
+|-------|----------------|------|------------|---------------|
+| Dan (human) | `danrohtbart` | User | Full admin. Merge to `main` and `dev`. Modify repo settings. Run `amplify push`. | 1 seat |
+| Claude (dev agent) | `botchat-dev-agent[bot]` | GitHub App | Create branches, open PRs, merge to `dev` only. Cannot touch `main`. Cannot modify repo settings. | **Free** |
+| Claude (prod promoter) | Same app, different workflow | GitHub App | Can open PRs targeting `main`. Cannot merge them. | **Free** |
+| Dependabot | `dependabot[bot]` | GitHub App | Open PRs for dependency updates. Cannot merge. | **Free** |
+| Future: infra bot | `botchat-infra[bot]` | GitHub App | Trigger deploys, run post-deploy verification. Cannot modify code. | **Free** |
+
+Five actors, one paid seat. The rest is configuration.
+
+### The Yolo Mode Privilege Escalation Problem
+
+Here's the subtlety that matters for teams: **when a GitHub admin activates yolo mode, the bot inherits the admin's credentials.**
+
+Today, when I say "yolo mode" to Claude, it operates in my terminal session, with my Git credentials. That means the bot — which should only be able to merge to `dev` — is technically pushing and merging as `danrohtbart`, an account with full admin privileges. The bot behaves itself because CLAUDE.md says to. But if you're an engineering leader with six developers who are all GitHub admins, and each of them can spin up an autonomous agent in yolo mode, every one of those bots is operating with admin-level GitHub access.
+
+**The fix is credential de-escalation.** When a human activates yolo mode:
+
+1. The human authenticates as themselves (full privileges, as expected).
+2. The bot session authenticates to GitHub using the **GitHub App installation token**, not the human's credentials.
+3. The bot's actions — branches, commits, PR opens, merges — all appear under the `[bot]` identity.
+4. The human's admin privileges are never available to the bot process. They can't leak through a prompt injection, a misconfigured instruction file, or a model hallucination.
+
+The human's role is to *activate* the bot and *review its output*. The human's credentials never flow into the bot's execution context. This is the same principle as `sudo` — you authenticate as root to start a service, but the service runs as its own user with limited permissions.
 
 ### 3. Formalize the Licensing Model
 
-When you operate a dark factory, every autonomous actor needs a "license" — a formal, auditable grant of specific privileges. This is how I think about it:
+When you operate a dark factory, every autonomous actor needs a "license" — a formal, auditable grant of specific privileges. Think of it like role-based access control, but for agents that write code.
 
 **License tiers:**
 
-- **L1 — Code Author**: Can create branches, write code, push commits. Cannot open PRs. (Useful for experimental or untrusted bots.)
-- **L2 — Dev Contributor**: Everything in L1, plus can open PRs targeting `dev` and merge them after CI passes. This is what Claude has today in yolo mode.
-- **L3 — Production Promoter**: Everything in L2, plus can open PRs targeting `main`. Cannot merge them — only flags them for human review. (This is also what Claude does today, but it should be a distinct, deliberately granted privilege.)
-- **L4 — Human Operator**: Can merge to `main`. Can modify infrastructure. Can change branch protection rules. Can grant and revoke licenses. **Humans only.**
+- **L1 — Code Author**: Can create branches, write code, push commits. Cannot open PRs. (Useful for experimental or untrusted bots, or for a new agent you're evaluating before granting merge access.)
+- **L2 — Dev Contributor**: Everything in L1, plus can open PRs targeting `dev` and merge them after CI passes. This is what Claude has today in yolo mode. **Enforced by:** GitHub App permissions + branch protection rules that allow the App to merge to `dev`.
+- **L3 — Production Promoter**: Everything in L2, plus can open PRs targeting `main`. Cannot merge them — only flags them for human review. **Enforced by:** branch protection on `main` requiring human approval from an L4 actor.
+- **L4 — Human Operator**: Can merge to `main`. Can modify infrastructure. Can change branch protection rules. Can grant and revoke licenses. **Humans only. Enforced by:** GitHub user account with admin role + MFA.
 
 The current system has two tiers: "bot" and "Dan." That's not enough. Dependabot should be L1 (it opens PRs but shouldn't merge). Claude should be L2 in yolo mode, L3 when preparing production promotions. A future staging-validation bot might be L3. Dan — or any human engineer joining the team — is L4.
+
+**Critically, the license tier is enforced by the platform, not by instructions.** An L2 bot can't merge to `main` because its GitHub App token doesn't have that permission — not because a markdown file told it not to. An L4 human can activate an L2 bot session without the bot inheriting L4 privileges, because credential de-escalation separates the activator from the actor.
 
 ### 4. Make the Audit Trail Machine-Readable
 
