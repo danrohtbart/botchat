@@ -161,13 +161,21 @@ Build logs: https://us-east-1.console.aws.amazon.com/amplify/apps
 
 ### PR previews
 
-When you open a PR, Amplify builds a preview automatically. The preview uses the **dev backend** (Cognito pool `us-east-1_AYMzkIGAz`, AppSync endpoint from `PREVIEW_*` env vars). No configuration is needed — this is already set up on the `dev` branch.
+When you open a PR, Amplify builds a preview automatically. The preview uses the **dev backend** (Cognito pool `us-east-1_D4wZSVZIu`, AppSync endpoint from `PREVIEW_*` env vars set in the Amplify Console). No configuration is needed — this is already set up on the `dev` branch.
 
 Preview URL format: `https://pr-{N}.d3bo8xtge7s7fh.amplifyapp.com`
 
 ---
 
 ## Backend changes (Amplify resources)
+
+### AppSync authentication
+
+The Lambda (`botchattriggerjs`) authenticates to AppSync using **AWS IAM** — its execution role credentials (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN`) are passed to the Amplify client via a custom `credentialsProvider`. There is no API key. The `appsync:GraphQL` permission is granted by the `AmplifyResourcesPolicy` in the Lambda's CloudFormation stack.
+
+The AppSync API's primary auth is **Amazon Cognito User Pools** (frontend). AWS IAM is an additional auth type (Lambda only).
+
+### Deploying backend changes
 
 When a PR modifies anything under `amplify/` (GraphQL schema, Lambda, DynamoDB):
 
