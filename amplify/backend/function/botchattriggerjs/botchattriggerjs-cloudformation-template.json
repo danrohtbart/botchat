@@ -23,7 +23,7 @@
     "apibotchatGraphQLAPIEndpointOutput": {
       "Type": "String",
       "Default": "apibotchatGraphQLAPIEndpointOutput"
-    },
+    }
   },
   "Conditions": {
     "ShouldNotCreateEnvResources": {
