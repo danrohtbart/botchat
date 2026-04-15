@@ -24,10 +24,6 @@
       "Type": "String",
       "Default": "apibotchatGraphQLAPIEndpointOutput"
     },
-    "apibotchatGraphQLAPIKeyOutput": {
-      "Type": "String",
-      "Default": "apibotchatGraphQLAPIKeyOutput"
-    }
   },
   "Conditions": {
     "ShouldNotCreateEnvResources": {
@@ -87,9 +83,6 @@
             },
             "API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT": {
               "Ref": "apibotchatGraphQLAPIEndpointOutput"
-            },
-            "API_BOTCHAT_GRAPHQLAPIKEYOUTPUT": {
-              "Ref": "apibotchatGraphQLAPIKeyOutput"
             },
             "API_BOTCHAT_CHATTABLE_NAME": {
               "Fn::ImportValue": {

@@ -165,17 +165,17 @@ describe('early-exit conditions', () => {
 });
 
 describe('Amplify.configure', () => {
-  test('is called with env vars on every invocation', async () => {
+  test('is called with AWS_IAM auth type and no API key', async () => {
     const event = makeStreamEvent();
     await handler(event);
     expect(Amplify.configure).toHaveBeenCalledTimes(1);
-    expect(Amplify.configure).toHaveBeenCalledWith(
-      expect.objectContaining({
-        aws_project_region: 'us-east-1',
-        aws_appsync_apiKey: 'test-api-key',
-        aws_appsync_graphqlEndpoint: 'https://test.appsync.amazonaws.com/graphql',
-      })
-    );
+    const configArg = Amplify.configure.mock.calls[0][0];
+    expect(configArg).toMatchObject({
+      aws_project_region: 'us-east-1',
+      aws_appsync_authenticationType: 'AWS_IAM',
+      aws_appsync_graphqlEndpoint: 'https://test.appsync.amazonaws.com/graphql',
+    });
+    expect(configArg).not.toHaveProperty('aws_appsync_apiKey');
   });
 });
 
