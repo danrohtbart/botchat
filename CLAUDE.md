@@ -56,6 +56,13 @@ When a PR includes files under `amplify/`:
 - After the `dev → main` PR merges, run `amplify push --env main` (or verify Amplify CI handles it) and confirm production.
 - Always verify afterwards: IAM role `botchatLambdaRole*` has `AmazonBedrockFullAccess`, and the Cognito pre-signup trigger is still configured.
 
+**AppSync auth:** The Lambda uses AWS IAM auth (no API key). The `appsync:GraphQL` IAM permission is already in `AmplifyResourcesPolicy` in the Lambda's CloudFormation stack. No API key resource should exist in the AppSync stack — verify with:
+```bash
+aws cloudformation describe-stack-resources \
+  --stack-name amplify-botchat-dev-135408-apibotchat-TASOZLXM4JKO \
+  --query 'StackResources[?ResourceType==`AWS::AppSync::ApiKey`]'
+```
+
 ---
 
 ## Operating modes
@@ -224,6 +231,7 @@ When writing Lambda tests, always import AWS SDK modules from the project root `
 - **TruffleHog in CI** uses `--only-verified --fail`. Only verified secrets cause failures. Do not disable this flag or skip the TruffleHog step to unblock a build.
 - **Lambda node_modules**: the Lambda function has its own `node_modules/`. When writing Jest tests for Lambda code, force resolution through the project root via `moduleNameMapper` so mocks work correctly.
 - **Selenium** is no longer used in CI (replaced by Playwright). Do not add Selenium back to the CI pipeline.
+- **`aws-amplify` v6 does not auto-discover Lambda IAM credentials.** When the Lambda calls AppSync with `AWS_IAM` auth, it must pass a custom `credentialsProvider` to `Amplify.configure()` that reads `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` from the environment. Without this, every GraphQL call fails with `NoCredentials`. The Lambda's `amplify_config` block handles this — do not remove or simplify the second argument to `Amplify.configure()`.
 - **CSS percentage heights cascade** — if you remove an explicit height from a parent div (e.g. `h-1/8`), any child using `height: %` or `maxHeight: %` will resolve to 0 in WebKit (Safari) because percentage heights require a sized parent. Before removing a height class from any container, grep for `h-`, `maxHeight`, and percentage-based sizing in its direct children and descendants, and switch them to viewport-relative units (e.g. `vh`) or fixed values if needed.
 - **`amplify push` silently clears the Cognito pre-signup trigger.** The auth CloudFormation template does not include `LambdaConfig`, so every `amplify push` that touches the auth stack resets the trigger to empty. After any `amplify push --env dev` or `--env main`, re-apply the trigger manually:
   ```bash

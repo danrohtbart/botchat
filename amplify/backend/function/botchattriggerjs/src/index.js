@@ -3,7 +3,6 @@
 	API_BOTCHAT_CHATTABLE_NAME
 	API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT
 	API_BOTCHAT_GRAPHQLAPIIDOUTPUT
-	API_BOTCHAT_GRAPHQLAPIKEYOUTPUT
 	API_BOTCHAT_PERSONALITIESTABLE_ARN
 	API_BOTCHAT_PERSONALITIESTABLE_NAME
 	ENV
@@ -152,12 +151,22 @@ exports.handler = async (event) => {
         "aws_project_region": process.env.REGION,
         "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
         "aws_appsync_region": process.env.REGION,
-        "aws_appsync_authenticationType": "API_KEY",
-        "aws_appsync_apiKey": process.env.API_BOTCHAT_GRAPHQLAPIKEYOUTPUT,
+        "aws_appsync_authenticationType": "AWS_IAM",
     }
 
-    Amplify.configure({
-        ...amplify_config,
+    Amplify.configure(amplify_config, {
+        Auth: {
+            credentialsProvider: {
+                getCredentialsAndIdentityId: async () => ({
+                    credentials: {
+                        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                        sessionToken: process.env.AWS_SESSION_TOKEN,
+                    }
+                }),
+                clearCredentialsAndIdentityId: async () => {},
+            }
+        }
     });
 
     const amplifyClient = generateClient();

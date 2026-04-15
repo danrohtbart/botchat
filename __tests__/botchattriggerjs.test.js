@@ -128,6 +128,9 @@ beforeAll(() => {
   process.env.REGION = 'us-east-1';
   process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT = 'https://test.appsync.amazonaws.com/graphql';
   process.env.API_BOTCHAT_GRAPHQLAPIKEYOUTPUT = 'test-api-key';
+  process.env.AWS_ACCESS_KEY_ID = 'test-access-key';
+  process.env.AWS_SECRET_ACCESS_KEY = 'test-secret-key';
+  process.env.AWS_SESSION_TOKEN = 'test-session-token';
 });
 
 beforeEach(() => {
@@ -165,17 +168,32 @@ describe('early-exit conditions', () => {
 });
 
 describe('Amplify.configure', () => {
-  test('is called with env vars on every invocation', async () => {
+  test('is called with AWS_IAM auth type and no API key', async () => {
     const event = makeStreamEvent();
     await handler(event);
     expect(Amplify.configure).toHaveBeenCalledTimes(1);
-    expect(Amplify.configure).toHaveBeenCalledWith(
-      expect.objectContaining({
-        aws_project_region: 'us-east-1',
-        aws_appsync_apiKey: 'test-api-key',
-        aws_appsync_graphqlEndpoint: 'https://test.appsync.amazonaws.com/graphql',
-      })
-    );
+    const configArg = Amplify.configure.mock.calls[0][0];
+    expect(configArg).toMatchObject({
+      aws_project_region: 'us-east-1',
+      aws_appsync_authenticationType: 'AWS_IAM',
+      aws_appsync_graphqlEndpoint: 'https://test.appsync.amazonaws.com/graphql',
+    });
+    expect(configArg).not.toHaveProperty('aws_appsync_apiKey');
+  });
+
+  test('passes a credentials provider that reads Lambda IAM env vars', async () => {
+    const event = makeStreamEvent();
+    await handler(event);
+    const libraryOptions = Amplify.configure.mock.calls[0][1];
+    expect(libraryOptions).toBeDefined();
+    const provider = libraryOptions?.Auth?.credentialsProvider;
+    expect(provider).toBeDefined();
+    const result = await provider.getCredentialsAndIdentityId();
+    expect(result.credentials).toMatchObject({
+      accessKeyId: 'test-access-key',
+      secretAccessKey: 'test-secret-key',
+      sessionToken: 'test-session-token',
+    });
   });
 });
 
