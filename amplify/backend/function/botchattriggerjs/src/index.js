@@ -29,76 +29,8 @@ const max_thread = 6;
 const temperature = 0.9;
 const top_p = 0.1;
 
-// Needed to hardcode the GraphQL into this function because I was struggling with importing it from ../../../../../src/graphql/mutations and queries
-const createChat = /* GraphQL */ `
-  mutation CreateChat(
-    $input: CreateChatInput!
-    $condition: ModelChatConditionInput
-  ) {
-    createChat(input: $input, condition: $condition) {
-      id
-      message
-      message_in_thread
-      user_email
-      speaker_name
-      thread_id
-      createdAt
-      updatedAt
-      owner
-      __typename
-    }
-  }
-`;
-
-const listPersonalities = /* GraphQL */ `
-  query ListPersonalities(
-    $filter: ModelPersonalitiesFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listPersonalities(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        id
-        name_1
-        personality_1
-        name_2
-        personality_2
-        user_email
-        createdAt
-        updatedAt
-        owner
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;    
-
-const listChats = /* GraphQL */ `
-  query ListChats(
-    $filter: ModelChatFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listChats(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        id
-        message
-        message_in_thread
-        user_email
-        speaker_name
-        thread_id
-        createdAt
-        updatedAt
-        owner
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
+// GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
+const { createChat, listPersonalities, listChats } = require('./graphql');
 
 /**
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
