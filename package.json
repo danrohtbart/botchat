@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "test:selenium": "find selenium -name '*.js' -exec node {} \\;",
     "check:secrets": "trufflehog git file://. --only-verified --fail",
-    "check:no-skip": "bash scripts/check-no-disabled-tests.sh"
+    "check:no-skip": "bash scripts/check-no-disabled-tests.sh",
+    "sync-lambda-graphql": "node scripts/sync-lambda-graphql.js"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.15.0",
