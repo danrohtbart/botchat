@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -29,23 +28,11 @@ jobs:
             echo "needed=false" >> $GITHUB_OUTPUT
           else
             echo "needed=true" >> $GITHUB_OUTPUT
-            echo "branch=sync/main-to-dev-$(git rev-parse --short origin/main)" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create sync branch and merge
+      - name: Merge main into dev and push
         if: steps.check.outputs.needed == 'true'
         run: |
-          git checkout -b "${{ steps.check.outputs.branch }}" origin/dev
+          git checkout -b sync-main-to-dev origin/dev
           git merge origin/main --no-edit
-          git push origin "${{ steps.check.outputs.branch }}"
-
-      - name: Open PR
-        if: steps.check.outputs.needed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr create \
-            --base dev \
-            --head "${{ steps.check.outputs.branch }}" \
-            --title "Sync main → dev" \
-            --body "Automated sync after main was updated. No conflicts — safe to merge."
+          git push origin sync-main-to-dev:dev
