@@ -37,14 +37,16 @@ export function Home({ signOut, user }) {
   const [deleting, setDeleting] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
 
-  // in the future, retrieve the authenticated user's email address into the user_email variable
-  let user_email = 'User email not set';
+  // authenticated user's email — stored in state so it can drive JSX comparisons
+  const [userEmail, setUserEmail] = React.useState('');
 
   React.useEffect(() => {
     async function fetchChats() {
+      let currentEmail = '';
       try {
         const { signInDetails } = await getCurrentUser();
-        user_email = signInDetails.loginId;
+        setUserEmail(signInDetails.loginId);
+        currentEmail = signInDetails.loginId;
       } catch (err) {
         if (!loggingOut) {
           setLoggingOut(true);
@@ -54,14 +56,14 @@ export function Home({ signOut, user }) {
         signOut();
       }
       if (debug) {
-        console.log("Retrieving chats with user email: ", user_email);
+        console.log("Retrieving chats with user email: ", currentEmail);
       }
       try {
         const allChats = await amplifyClient.graphql({
           query: queries.listChats,
           variables: {
             filter: {
-              user_email: { eq: user_email } // this is the authenticated user's email address
+              user_email: { eq: currentEmail } // this is the authenticated user's email address
             }
           },
           authMode: 'userPool',
@@ -102,10 +104,12 @@ export function Home({ signOut, user }) {
       let graphql_personalities = null;
       let must_initialize_personalities = false;
 
-      // Replicated from FetchChats. Opportunity for future refactoring. 
+      // Replicated from FetchChats. Opportunity for future refactoring.
+      let currentEmail = '';
       try {
         const { signInDetails } = await getCurrentUser();
-        user_email = signInDetails.loginId;
+        setUserEmail(signInDetails.loginId);
+        currentEmail = signInDetails.loginId;
       } catch (err) {
         if (!loggingOut) {
           setLoggingOut(true);
@@ -122,7 +126,7 @@ export function Home({ signOut, user }) {
           query: queries.listPersonalities,
           variables: {
             filter: {
-              user_email: { eq: user_email } // this is the authenticated user's email address
+              user_email: { eq: currentEmail } // this is the authenticated user's email address
             }
           },
           authMode: 'userPool',
@@ -149,7 +153,7 @@ export function Home({ signOut, user }) {
             personality_1: "You are a sports talk radio host from Philadelphia, named Jim Hoagies. You should respond like a jerk. You have strong opinions, and do not present counter-arguments.",
             name_2: "Mark",
             personality_2: "You are a sports talk radio host from Philadelphia, named Mark Waterice. You are polite, smart, and firm. You have strong opinions, and do not present counter-arguments.",
-            user_email: user_email,
+            user_email: currentEmail,
           };
           if (debug) {
             console.log("Initializing with default personalities: ", default_personalities);
@@ -181,7 +185,7 @@ export function Home({ signOut, user }) {
           query: queries.listPersonalities,
           variables: {
             filter: {
-              user_email: { eq: user_email } // this is the authenticated user's email address
+              user_email: { eq: currentEmail } // this is the authenticated user's email address
             }
           },
           authMode: 'userPool',
@@ -282,7 +286,7 @@ export function Home({ signOut, user }) {
               if (e.key === "Enter") {
                 const output = {
                   message: e.target.value,
-                  user_email: user_email,
+                  user_email: userEmail,
                   speaker_name: 'You',
                 };
                 WriteToGraphQL (amplifyClient, output);
@@ -322,24 +326,24 @@ export function Home({ signOut, user }) {
                 <div
                   key={chat.id}
                   className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${
-                    chat.user_email === user_email && "self-end bg-blue-600" || "bg-slate-200"
+                    chat.user_email === userEmail && "self-end bg-blue-600" || "bg-slate-200"
                   }`}
                 >
                   <div className="text-gray-500">
                     <div className="flex justify-between gap-x-4">
                       <div className="py-0.5 text-xs leading-5">
-                        <span className={`font-medium ${chat.user_email === user_email && "text-slate-50"}`}>
+                        <span className={`font-medium ${chat.user_email === userEmail && "text-slate-50"}`}>
                           {chat.speaker_name}
                         </span>{" "}
                       </div>
                       <time
                         dateTime="2023-01-23T15:56"
-                        className={`flex-none py-0.5 text-xs leading-5 ${chat.user_email === user_email && "text-slate-50"}`}
+                        className={`flex-none py-0.5 text-xs leading-5 ${chat.user_email === userEmail && "text-slate-50"}`}
                       >
                         {intlFormatDistance(new Date(chat.createdAt), new Date())}
                       </time>
                     </div>
-                    <p className={`text-sm leading-6 ${chat.user_email === user_email && "text-slate-50"}`}>{chat.message}</p>
+                    <p className={`text-sm leading-6 ${chat.user_email === userEmail && "text-slate-50"}`}>{chat.message}</p>
                   </div>
                 </div>
             ))}
