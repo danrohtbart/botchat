@@ -8,3 +8,12 @@ repos:
         entry: bash -c 'trufflehog git file://. --since-commit HEAD --only-verified --fail'
         language: system
         stages: [commit, push]
+  - repo: local
+    hooks:
+      - id: sync-lambda-graphql
+        name: Sync Lambda GraphQL
+        description: Regenerates amplify/.../src/graphql.js from src/graphql/ when schema files change. If this hook modifies the file, stage it and commit again.
+        entry: node scripts/sync-lambda-graphql.js
+        language: system
+        files: ^src/graphql/(mutations|queries)\.js$
+        stages: [commit]
