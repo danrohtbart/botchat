@@ -1,6 +1,6 @@
 # BotChat
 
-BotChat is a mobile-responsive AI chat app built on Next.js 14 and AWS Amplify. Users sign in via Amazon Cognito and chat with configurable AI personalities powered by AWS Bedrock (Converse API). Chat history is stored in DynamoDB via an AppSync GraphQL API, and a Lambda function handles all AI interactions.
+BotChat is a mobile-responsive AI chat app built on Next.js 16 and AWS Amplify. Users sign in via Amazon Cognito and chat with configurable AI personalities powered by AWS Bedrock (Converse API). Chat history is stored in DynamoDB via an AppSync GraphQL API, and a Lambda function handles all AI interactions.
 
 ---
 
@@ -136,6 +136,8 @@ TruffleHog scans for verified secrets in two places:
 
 2. **Amplify CI** — runs in the `preTest` phase of every build via `amplify.yml`.
 
+The same pre-commit hook configuration (`.pre-commit-config.yaml`) also runs `scripts/sync-lambda-graphql.js` automatically when `src/graphql/mutations.js` or `src/graphql/queries.js` are staged — see [Lambda GraphQL sync](#lambda-graphql-sync) below.
+
 If TruffleHog blocks a commit or build, remove the offending secret — do not disable the scanner or bypass the hook.
 
 To scan manually:
@@ -151,7 +153,7 @@ Amplify automatically builds and deploys on every push to `dev` or `main`. The p
 
 | Phase | What runs |
 |-------|-----------|
-| `preBuild` | `npm install`; for PR previews, generates `aws-exports.js` from the dev backend |
+| `preBuild` | `npm install`; runs `sync-lambda-graphql` and fails if the committed file is stale; for PR previews, generates `aws-exports.js` from the dev backend |
 | `build` | `npm run build` |
 | `preTest` | TruffleHog scan, starts the app with pm2 via Docker |
 | `test` | `npm run check:no-skip`, Jest unit tests, Playwright E2E tests |
@@ -207,6 +209,29 @@ When a PR modifies anything under `amplify/` (GraphQL schema, Lambda, DynamoDB):
 ### Signup allow-list
 
 The `botchatpresignup` Lambda restricts signups to `rohtbart.com`, `aetion.com`, and a small set of specific Gmail addresses. The pre-signup trigger is **active** on both the dev and main Cognito pools. It must be manually re-applied after every `amplify push` (see step 5 above).
+
+### Lambda GraphQL sync
+
+The AppSync schema autogenerates ESM files (`src/graphql/mutations.js`, `src/graphql/queries.js`) that the React frontend imports directly. The Lambda function (`botchattriggerjs`) is CommonJS and runs inside its own zip package — it cannot import those ESM files at runtime.
+
+The solution is a committed CJS re-export file:
+
+```
+amplify/backend/function/botchattriggerjs/src/graphql.js  ← committed, generated
+```
+
+It is produced by:
+
+```bash
+npm run sync-lambda-graphql
+```
+
+This must be re-run (and the result committed) any time the GraphQL schema changes and `amplify codegen` regenerates `src/graphql/mutations.js` or `src/graphql/queries.js`.
+
+Two automated guards prevent the file from drifting:
+
+1. **Pre-commit hook** — `.pre-commit-config.yaml` runs `sync-lambda-graphql` automatically when `mutations.js` or `queries.js` are staged. If it modifies `graphql.js`, stage the updated file and commit again.
+2. **CI diff check** — `amplify.yml` preBuild runs the sync script then `git diff --exit-code` on `graphql.js`. If the committed file is stale, the build fails with an actionable error message.
 
 ---
 
