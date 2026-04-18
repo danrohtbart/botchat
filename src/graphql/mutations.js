@@ -70,7 +70,6 @@ export const createChat = /* GraphQL */ `
       user_email
       speaker_name
       thread_id
-      test_sync_field
       createdAt
       updatedAt
       owner
