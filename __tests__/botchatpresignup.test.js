@@ -30,6 +30,14 @@ describe('botchatpresignup handler', () => {
     await expect(invoke('User@aetion.com')).resolves.toBeDefined();
   });
 
+  test('allows email from arccosgolf.com', async () => {
+    await expect(invoke('User@arccosgolf.com')).resolves.toBeDefined();
+  });
+
+  test('arccosgolf.com domain matching is case-insensitive', async () => {
+    await expect(invoke('User@ARCCOSGOLF.COM')).resolves.toBeDefined();
+  });
+
   test('domain matching is case-insensitive', async () => {
     await expect(invoke('User@ROHTBART.COM')).resolves.toBeDefined();
     await expect(invoke('Someone@AETION.COM')).resolves.toBeDefined();
