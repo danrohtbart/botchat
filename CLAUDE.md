@@ -111,6 +111,7 @@ Constraints that apply in both modes (never override):
 
 - This is **Dan Rohtbart's** project. Claude may merge PRs to `dev` in yolo mode, but **never to `main`** — only Dan promotes to production.
 - Notify Dan after each failed Amplify build attempt or any other significant failure.
+- **GitHub token:** Claude Code sessions use a fine-grained PAT (`GITHUB_TOKEN` env var) that has Contents, Pull requests, and Workflows permissions on this repo but **no Administration permission**. This means Claude cannot modify branch protection rules or bypass them — the "never merge to `main`" rule is enforced both by instruction and by the token's technical limitations. See the README "GitHub access control" section for setup details.
 
 ---
 
