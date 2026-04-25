@@ -18,21 +18,26 @@
 const { execSync } = require('child_process');
 
 function ghApi(path) {
-  return JSON.parse(execSync(`gh api ${path}`, { encoding: 'utf8' }));
+  // stderr is silenced so a failed `gh api` (e.g. unauthenticated CI) does
+  // not pollute the test output before we fall back to skipping.
+  return JSON.parse(
+    execSync(`gh api ${path}`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }),
+  );
 }
 
+// Run synchronously at module load — Jest evaluates the describe blocks (and
+// therefore itIfGH) before any beforeAll hook fires, so ghAvailable must be
+// settled before the describes run, not inside beforeAll.
 let protection;
 let repoPermissions;
 let ghAvailable = true;
 
-beforeAll(() => {
-  try {
-    protection = ghApi('repos/danrohtbart/botchat/branches/main/protection');
-    repoPermissions = ghApi('repos/danrohtbart/botchat').permissions;
-  } catch {
-    ghAvailable = false;
-  }
-});
+try {
+  protection = ghApi('repos/danrohtbart/botchat/branches/main/protection');
+  repoPermissions = ghApi('repos/danrohtbart/botchat').permissions;
+} catch {
+  ghAvailable = false;
+}
 
 const itIfGH = (name, fn) =>
   ghAvailable ? test(name, fn) : test.skip(name, fn);
