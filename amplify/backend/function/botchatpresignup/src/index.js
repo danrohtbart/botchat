@@ -10,7 +10,7 @@ exports.handler = (event, context, callback) => {
     var domain = address[1].toLowerCase();
 
     // AcceptableDomains and AcceptableAddresses must be in lowercase
-    const acceptableDomains = ['rohtbart.com', 'aetion.com'];
+    const acceptableDomains = ['rohtbart.com', 'aetion.com', 'arccosgolf.com'];
     const acceptableAddresses = ['bobschwartz314@gmail.com', 'aglazer@fourcubits.com', 'jets613@gmail.com', 'betsymorserohtbart@gmail.com'];
     
     if (acceptableDomains.includes(domain) || acceptableAddresses.includes(email_address)) {
