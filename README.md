@@ -1,6 +1,6 @@
 # BotChat
 
-BotChat is a mobile-responsive AI chat app built on Next.js 16 and AWS Amplify. Users sign in via Amazon Cognito and chat with configurable AI personalities powered by AWS Bedrock (Converse API). Chat history is stored in DynamoDB via an AppSync GraphQL API, and a Lambda function handles all AI interactions.
+BotChat is a mobile-responsive AI chat application built on Next.js 16 and AWS Amplify. Users sign in via Amazon Cognito and chat with configurable AI personalities powered by AWS Bedrock (Converse API). Chat history is stored in DynamoDB via an AppSync GraphQL API, and a Lambda function handles all AI interactions.
 
 ---
 
