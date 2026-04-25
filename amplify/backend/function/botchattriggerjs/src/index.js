@@ -9,7 +9,7 @@
 	REGION
 Amplify Params - DO NOT EDIT */
 
-const { BedrockRuntimeClient, ConverseCommand }  = require('@aws-sdk/client-bedrock-runtime');
+const { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
 
@@ -29,8 +29,40 @@ const max_thread = 6;
 const temperature = 0.9;
 const top_p = 0.1;
 
+// Image generation tunables. Titan v2 produces a 320x320 PNG; base64-encoded
+// it stays well under the DynamoDB 400 KB row limit even when both image_1 and
+// image_2 are populated on the same record.
+const IMAGE_MODEL_ID = 'amazon.titan-image-generator-v2:0';
+const IMAGE_DIMENSION = 320;
+
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
-const { createChat, listPersonalities, listChats } = require('./graphql');
+const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql');
+
+function configureAmplify() {
+    const amplify_config = {
+        "aws_project_region": process.env.REGION,
+        "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
+        "aws_appsync_region": process.env.REGION,
+        "aws_appsync_authenticationType": "AWS_IAM",
+    }
+
+    Amplify.configure(amplify_config, {
+        Auth: {
+            credentialsProvider: {
+                getCredentialsAndIdentityId: async () => ({
+                    credentials: {
+                        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                        sessionToken: process.env.AWS_SESSION_TOKEN,
+                    }
+                }),
+                clearCredentialsAndIdentityId: async () => {},
+            }
+        }
+    });
+
+    return generateClient();
+}
 
 /**
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
@@ -38,21 +70,140 @@ const { createChat, listPersonalities, listChats } = require('./graphql');
 exports.handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
 
+    const record = event.Records[0];
+
+    if (record.eventName === 'REMOVE') {
+        console.log('This is a REMOVE event. Ignoring it.');
+        return { statusCode: 200 };
+    }
+
+    // Route on the event source. The Lambda is wired to two streams: ChatTable
+    // and PersonalitiesTable. The ARN is how we tell which one fired.
+    const eventSourceARN = record.eventSourceARN || '';
+    if (eventSourceARN.includes('Personalities')) {
+        return handlePersonalitiesEvent(record);
+    }
+    return handleChatEvent(record);
+};
+
+// ─── Personalities stream handler ────────────────────────────────────────────
+//
+// Generates a portrait image with Bedrock for each personality slot whose text
+// changed, then writes the base64 PNGs back to image_1 / image_2 on the same
+// record. Loop guard: if the only fields that changed are image_1 / image_2
+// (this Lambda's own write echoing back through the stream), short-circuit.
+
+function ddbStringValue(image, field) {
+    if (!image || !image[field]) return null;
+    return image[field].S || null;
+}
+
+async function generatePortraitImage(promptText) {
+    const fullPrompt =
+        `Portrait of a person whose personality is: ${promptText}. ` +
+        `Photorealistic headshot, plain neutral background, friendly expression.`;
+
+    const body = {
+        taskType: 'TEXT_IMAGE',
+        textToImageParams: { text: fullPrompt },
+        imageGenerationConfig: {
+            numberOfImages: 1,
+            height: IMAGE_DIMENSION,
+            width: IMAGE_DIMENSION,
+            cfgScale: 8.0,
+            quality: 'standard',
+            seed: Math.floor(Math.random() * 100000),
+        },
+    };
+
+    const command = new InvokeModelCommand({
+        modelId: IMAGE_MODEL_ID,
+        contentType: 'application/json',
+        accept: 'application/json',
+        body: JSON.stringify(body),
+    });
+
+    const bedrockClient = new BedrockRuntimeClient({ region: 'us-east-1' });
+    const response = await bedrockClient.send(command);
+    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+    return responseBody.images[0];
+}
+
+async function handlePersonalitiesEvent(record) {
+    const newImage = record.dynamodb && record.dynamodb.NewImage;
+    const oldImage = record.dynamodb && record.dynamodb.OldImage;
+    if (!newImage) {
+        console.log('Personalities event has no NewImage. Ignoring.');
+        return 'Successfully processed DynamoDB record';
+    }
+
+    const id = ddbStringValue(newImage, 'id');
+    const newP1 = ddbStringValue(newImage, 'personality_1');
+    const newP2 = ddbStringValue(newImage, 'personality_2');
+    const oldP1 = ddbStringValue(oldImage, 'personality_1');
+    const oldP2 = ddbStringValue(oldImage, 'personality_2');
+
+    const p1Changed = newP1 && newP1 !== oldP1;
+    const p2Changed = newP2 && newP2 !== oldP2;
+
+    if (!p1Changed && !p2Changed) {
+        console.log('No personality text changed (likely echo of our own image write). Skipping.');
+        return 'Successfully processed DynamoDB record';
+    }
+
+    if (debug) {
+        console.log('Personality changes detected', { id, p1Changed, p2Changed });
+    }
+
+    const updateInput = { id };
+
+    if (p1Changed) {
+        try {
+            updateInput.image_1 = await generatePortraitImage(newP1);
+        } catch (err) {
+            console.log('Image generation failed for slot 1', err);
+        }
+    }
+    if (p2Changed) {
+        try {
+            updateInput.image_2 = await generatePortraitImage(newP2);
+        } catch (err) {
+            console.log('Image generation failed for slot 2', err);
+        }
+    }
+
+    if (Object.keys(updateInput).length === 1) {
+        // Only `id` is set — no images succeeded. Nothing to write.
+        return 'Successfully processed DynamoDB record';
+    }
+
+    try {
+        const amplifyClient = configureAmplify();
+        await amplifyClient.graphql({
+            query: updatePersonalities,
+            variables: { input: updateInput },
+        });
+        if (debug) {
+            console.log('Personalities image update written', updateInput);
+        }
+    } catch (err) {
+        console.log('Failed to write Personalities image update', err);
+    }
+
+    return 'Successfully processed DynamoDB record';
+}
+
+// ─── Chat stream handler (existing behavior) ─────────────────────────────────
+
+async function handleChatEvent(record) {
     /**
-     * Initialization section. Quickly return if the result can't be 200. 
+     * Initialization section. Quickly return if the result can't be 200.
      */
 
-    if (event.Records[0].eventName == "REMOVE") {
-            console.log("This is a REMOVE event. Ignoring it.");
-            return {
-                statusCode: 200
-            };
-    }
-        
     /*
     * Focusing only on Records[0] is losing messages. Future improvement: iterate here.
     */
-    const incoming_message = event.Records[0].dynamodb; 
+    const incoming_message = record.dynamodb;
     if (debug) {
         console.log("Incoming message is", incoming_message);
     }
@@ -79,29 +230,7 @@ exports.handler = async (event) => {
      *  Retrieve personalities section
      */
 
-    const amplify_config = {
-        "aws_project_region": process.env.REGION,
-        "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
-        "aws_appsync_region": process.env.REGION,
-        "aws_appsync_authenticationType": "AWS_IAM",
-    }
-
-    Amplify.configure(amplify_config, {
-        Auth: {
-            credentialsProvider: {
-                getCredentialsAndIdentityId: async () => ({
-                    credentials: {
-                        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-                        sessionToken: process.env.AWS_SESSION_TOKEN,
-                    }
-                }),
-                clearCredentialsAndIdentityId: async () => {},
-            }
-        }
-    });
-
-    const amplifyClient = generateClient();
+    const amplifyClient = configureAmplify();
 
     const incoming_user_email = incoming_content.user_email.S || '';
     if (debug) {
@@ -128,7 +257,7 @@ exports.handler = async (event) => {
             if (owner_personality.length > 1) {
                 console.log("Warning: user ", incoming_content.email_address, "has too many personalities: ", owner_personality.length)
             }
-             // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner. 
+             // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner.
             name_1 = owner_personality.name_1;
             personality_1 = owner_personality.personality_1;
             name_2 = owner_personality.name_2;
@@ -145,7 +274,7 @@ exports.handler = async (event) => {
         console.log("Name 2 is", name_2);
         console.log("Personality 2 is", personality_2);
     }
-    
+
     /**
      * Now that we have the Personality, let's get started on the Chat
      */
@@ -156,7 +285,7 @@ exports.handler = async (event) => {
     let thread_id = '';
     if (incoming_content.thread_id) {
         thread_id = incoming_content.thread_id.S;
-    } 
+    }
 
     if(debug) {
         console.log("Last speaker " + last_speaker);
@@ -172,9 +301,9 @@ exports.handler = async (event) => {
         }
     } else {
         let speaker_name, speaker_personality;
-        // Using the last_speaker, determine who will speak. 
+        // Using the last_speaker, determine who will speak.
         if (last_speaker != name_1) {
-            // Bot 1 will speak by default - the only time they don't speak is if they just spoke. 
+            // Bot 1 will speak by default - the only time they don't speak is if they just spoke.
             speaker_name = name_1;
             speaker_personality = personality_1;
         } else {
@@ -195,9 +324,9 @@ exports.handler = async (event) => {
         if(debug) {
             console.log("Speaker name is", speaker_name);
         }
-        
+
         if (message_in_thread == 0) {
-            // Simple case. User has just asked the question. 
+            // Simple case. User has just asked the question.
             bedrock_converse_messages.push({
                 role: "user",
                 content: [{ text: last_statement.replace(/\n/g, ' ') }]
@@ -232,13 +361,13 @@ exports.handler = async (event) => {
                 });
 
                 // Iterate through the rest of the messages IN PAIRS, appending them to the prompt.
-                // Trade-off decision: when chat_messages is even and >0. To prompt the bot correctly, we're skipping the first response by the prior bots. 
+                // Trade-off decision: when chat_messages is even and >0. To prompt the bot correctly, we're skipping the first response by the prior bots.
                 let start = 1;
                 if (chat_messages.length % 2 == 0) {
                     start = 2;
                     if (debug) {
                         console.log("chat_messages.length is even", chat_messages.length);
-                    }    
+                    }
                 }
 
                 for (let i = start; i < chat_messages.length - 1; i += 2) {
@@ -247,7 +376,7 @@ exports.handler = async (event) => {
                         console.log("chat_messages[i].message is", chat_messages[i].message);
                         console.log("chat_messages[i+1].message is", chat_messages[i+1].message);
                     }
-                    
+
                     bedrock_converse_messages.push({
                         role: "assistant",
                         content: [{ text: chat_messages[i].message.replace(/\n/g, ' ') }]
@@ -266,7 +395,7 @@ exports.handler = async (event) => {
             }
         }
 
-        /** 
+        /**
          * Select which model will power the Bedrock request
          * Default is Meta Llama Instruct "meta.llama3-70b-instruct-v1:0";
          */
@@ -280,7 +409,7 @@ exports.handler = async (event) => {
 
 
         /**
-         * Configure the Bedrock request for the Converse API 
+         * Configure the Bedrock request for the Converse API
          */
         const bedrock_converse_params = {
             maxTokens: length,
@@ -298,7 +427,7 @@ exports.handler = async (event) => {
 
 
         if (debug_admin) {
-            console.log("Bedrock config is", aws_sdk_config); 
+            console.log("Bedrock config is", aws_sdk_config);
             //console.log("Parameters: ", Parameters)
         }
         if (debug) {
@@ -306,7 +435,7 @@ exports.handler = async (event) => {
             for (let i = 0; i < bedrock_converse_messages.length; i++) {
                 console.log("bedrock_converse_messages ", i, ": ", bedrock_converse_messages[i]);
             }
-        }        
+        }
 
         let message = '';
         if(mock_bedrock) {
@@ -316,11 +445,11 @@ exports.handler = async (event) => {
             if(debug) {
                 console.log("Running with Converse API.");
             }
-            const converse_command = new ConverseCommand({ 
-                modelId: modelId, 
+            const converse_command = new ConverseCommand({
+                modelId: modelId,
                 messages: bedrock_converse_messages,
-                system: bedrock_converse_system_prompt, 
-                inferenceConfig: bedrock_converse_params, 
+                system: bedrock_converse_system_prompt,
+                inferenceConfig: bedrock_converse_params,
             });
             const converse_response = await bedrock_client.send(converse_command);
             if (debug) {
@@ -335,7 +464,7 @@ exports.handler = async (event) => {
         if (debug) {
             console.log("Full message body from Bedrock is:", message);
         }
-        // Trim off any sentence fragments. Keep only the content to the left of the last punctuation in message. 
+        // Trim off any sentence fragments. Keep only the content to the left of the last punctuation in message.
         // Originally the code only checked for periods. Bots are expressive and sometimes use only exclamation points!
         const last_period = message.lastIndexOf(".")+1;
         const last_exclamation = message.lastIndexOf("!")+1;
@@ -369,7 +498,7 @@ exports.handler = async (event) => {
             const amplify_result = await amplifyClient.graphql({
                 query: createChat,
                 variables: {
-                    input: output, 
+                    input: output,
                 }
             });
             if (debug) {

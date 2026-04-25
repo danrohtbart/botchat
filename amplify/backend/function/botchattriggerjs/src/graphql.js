@@ -22,6 +22,28 @@ const createChat = /* GraphQL */ `
   }
 `;
 
+const updatePersonalities = /* GraphQL */ `
+  mutation UpdatePersonalities(
+    $input: UpdatePersonalitiesInput!
+    $condition: ModelPersonalitiesConditionInput
+  ) {
+    updatePersonalities(input: $input, condition: $condition) {
+      id
+      name_1
+      personality_1
+      name_2
+      personality_2
+      image_1
+      image_2
+      user_email
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+
 const listPersonalities = /* GraphQL */ `
   query ListPersonalities(
     $filter: ModelPersonalitiesFilterInput
@@ -35,6 +57,8 @@ const listPersonalities = /* GraphQL */ `
         personality_1
         name_2
         personality_2
+        image_1
+        image_2
         user_email
         createdAt
         updatedAt
@@ -72,4 +96,4 @@ const listChats = /* GraphQL */ `
   }
 `;
 
-module.exports = { createChat, listPersonalities, listChats };
+module.exports = { createChat, updatePersonalities, listPersonalities, listChats };

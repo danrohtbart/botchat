@@ -1,9 +1,11 @@
-type Personalities @model @auth(rules: [{allow: owner}, {allow: public, provider: iam, operations: [read]}]) {
+type Personalities @model @auth(rules: [{allow: owner}, {allow: public, provider: iam, operations: [read, update]}]) {
   id: ID!
   name_1: String
   personality_1: String
   name_2: String
   personality_2: String
+  image_1: String
+  image_2: String
   user_email: String
 }
 
