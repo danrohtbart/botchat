@@ -147,6 +147,62 @@ npm run check:secrets
 
 ---
 
+## GitHub access control
+
+### Branch protection on `main`
+
+The `main` branch has a classic branch protection rule with these settings:
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Required approving reviews | 1 | Non-admin PRs (e.g. from Claude agents) need a review before merge |
+| Enforce admins | **off** | Lets Dan (repo owner) merge without a review when promoting `dev → main` |
+| Allow force pushes | off | Prevents history rewriting |
+| Allow deletions | off | Protects the branch from accidental deletion |
+
+**Why enforce admins is off:** With `enforce_admins: true` on a personal repo, the owner can't merge their own PRs (nobody else can approve them). Turning it off lets Dan bypass the rule as repo owner while the requirement still blocks non-admin tokens such as Claude's fine-grained PAT.
+
+### Fine-grained PAT for Claude agents
+
+Claude Code agents use a **fine-grained Personal Access Token** scoped to this repository with the following permissions — and critically, without Administration access:
+
+| Permission | Level |
+|-----------|-------|
+| Contents | Read & Write |
+| Pull requests | Read & Write |
+| Workflows | Read & Write |
+| Administration | **not granted** |
+
+Because the PAT lacks Administration permission, Claude agents cannot modify branch protection rules or bypass them — even in yolo mode. This is the technical enforcement that backs the CLAUDE.md rule "never merge to `main`."
+
+**Setting up the PAT (one-time, for Dan):**
+
+1. Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token
+2. Token name: `claude-code-botchat` (or similar)
+3. Expiration: set a reminder to rotate periodically
+4. Repository access: **Only select repositories** → `danrohtbart/botchat`
+5. Permissions: Contents (R/W), Pull requests (R/W), Workflows (R/W) — nothing else
+6. Copy the token and set it in Claude Code:
+   ```bash
+   claude config set env.GITHUB_TOKEN ghp_yourtoken
+   ```
+   Or add it to your shell profile so the `gh` CLI picks it up when running inside Claude Code sessions.
+
+**Verifying the setup:**
+
+```bash
+# Should return false (no admin access)
+gh api repos/danrohtbart/botchat --jq '.permissions.admin'
+
+# Should show enforce_admins: false and required_approving_review_count: 1
+gh api repos/danrohtbart/botchat/branches/main/protection \
+  --jq '{enforce_admins: .enforce_admins.enabled, required_reviews: .required_pull_request_reviews.required_approving_review_count}'
+```
+
+The Jest test `__tests__/github-branch-protection.test.js` automates these checks and runs whenever `gh` is authenticated.
+
+---
+
 ## CI/CD (Amplify)
 
 Amplify automatically builds and deploys on every push to `dev` or `main`. The pipeline is defined in `amplify.yml`:
