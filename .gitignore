@@ -66,3 +66,9 @@ amplifytools.xcconfig
 /playwright/.auth/
 /e2e/.auth/
 /reports/
+
+# Claude Code: track only the shared permissions file. Everything else under
+# .claude/ (worktrees, scheduled-task locks, settings.local.json) is per-user
+# or per-session state.
+.claude/*
+!.claude/settings.json
