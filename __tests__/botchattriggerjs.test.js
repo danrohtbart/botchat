@@ -614,7 +614,7 @@ describe('Personalities stream — image generation', () => {
     expect(ConverseCommand).toHaveBeenCalledTimes(1);
     expect(InvokeModelCommand).not.toHaveBeenCalled();
     const converseArgs = ConverseCommand.mock.calls[0][0];
-    expect(converseArgs.modelId).toMatch(/claude/);
+    expect(converseArgs.modelId).toMatch(/llama|claude/);
     expect(converseArgs.messages[0].content[0].text).toContain('new jim');
 
     // updatePersonalities called with SVG data URI stored in image_1

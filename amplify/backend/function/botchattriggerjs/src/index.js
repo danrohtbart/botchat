@@ -31,7 +31,7 @@ const top_p = 0.1;
 
 // SVG avatar generation model. Claude generates a 320×320 SVG portrait based
 // on the personality description; the result is stored as a data URI.
-const IMAGE_MODEL_ID = 'anthropic.claude-3-haiku-20240307-v1:0';
+const IMAGE_MODEL_ID = 'meta.llama3-70b-instruct-v1:0';
 
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
 const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql');
