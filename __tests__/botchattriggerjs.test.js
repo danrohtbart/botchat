@@ -610,7 +610,7 @@ describe('Personalities stream — image generation', () => {
     // Bedrock invoked with InvokeModelCommand for image generation
     expect(InvokeModelCommand).toHaveBeenCalledTimes(1);
     const invokeArgs = InvokeModelCommand.mock.calls[0][0];
-    expect(invokeArgs.modelId).toBe('amazon.titan-image-generator-v2:0');
+    expect(invokeArgs.modelId).toBe('amazon.nova-canvas-v1:0');
     expect(invokeArgs.contentType).toBe('application/json');
     const body = JSON.parse(invokeArgs.body);
     expect(body.taskType).toBe('TEXT_IMAGE');
