@@ -12,6 +12,8 @@ export const onCreatePersonalities = /* GraphQL */ `
       personality_1
       name_2
       personality_2
+      image_1
+      image_2
       user_email
       createdAt
       updatedAt
@@ -31,6 +33,8 @@ export const onUpdatePersonalities = /* GraphQL */ `
       personality_1
       name_2
       personality_2
+      image_1
+      image_2
       user_email
       createdAt
       updatedAt
@@ -50,6 +54,8 @@ export const onDeletePersonalities = /* GraphQL */ `
       personality_1
       name_2
       personality_2
+      image_1
+      image_2
       user_email
       createdAt
       updatedAt
