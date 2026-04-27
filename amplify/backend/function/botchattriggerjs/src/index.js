@@ -29,11 +29,9 @@ const max_thread = 6;
 const temperature = 0.9;
 const top_p = 0.1;
 
-// Image generation tunables. Titan v2 produces a 320x320 PNG; base64-encoded
-// it stays well under the DynamoDB 400 KB row limit even when both image_1 and
-// image_2 are populated on the same record.
-const IMAGE_MODEL_ID = 'amazon.nova-canvas-v1:0';
-const IMAGE_DIMENSION = 320;
+// SVG avatar generation model. Claude generates a 320×320 SVG portrait based
+// on the personality description; the result is stored as a data URI.
+const IMAGE_MODEL_ID = 'anthropic.claude-3-haiku-20240307-v1:0';
 
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
 const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql');
@@ -98,34 +96,27 @@ function ddbStringValue(image, field) {
     return image[field].S || null;
 }
 
-async function generatePortraitImage(promptText) {
-    const fullPrompt =
-        `Portrait of a person whose personality is: ${promptText}. ` +
-        `Photorealistic headshot, plain neutral background, friendly expression.`;
+async function generatePortraitImage(promptText, name) {
+    const prompt =
+        `Generate a simple 320x320 SVG avatar portrait for a person named ${name} whose personality is: "${promptText}". ` +
+        `Requirements: valid SVG with viewBox="0 0 320 320", abstract geometric portrait, ` +
+        `personality-appropriate colors, include a large first-letter initial, no external resources. ` +
+        `Output ONLY the SVG markup with no explanation or markdown fences.`;
 
-    const body = {
-        taskType: 'TEXT_IMAGE',
-        textToImageParams: { text: fullPrompt },
-        imageGenerationConfig: {
-            numberOfImages: 1,
-            height: IMAGE_DIMENSION,
-            width: IMAGE_DIMENSION,
-            cfgScale: 8.0,
-seed: Math.floor(Math.random() * 100000),
-        },
-    };
-
-    const command = new InvokeModelCommand({
+    const command = new ConverseCommand({
         modelId: IMAGE_MODEL_ID,
-        contentType: 'application/json',
-        accept: 'application/json',
-        body: JSON.stringify(body),
+        messages: [{ role: 'user', content: [{ text: prompt }] }],
+        inferenceConfig: { maxTokens: 1500, temperature: 0.9 },
     });
 
     const bedrockClient = new BedrockRuntimeClient({ region: 'us-east-1' });
     const response = await bedrockClient.send(command);
-    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-    return responseBody.images[0];
+    const svgText = response.output.message.content[0].text;
+
+    const match = svgText.match(/<svg[\s\S]*<\/svg>/i);
+    const svg = match ? match[0] : svgText.trim();
+
+    return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
 
 async function handlePersonalitiesEvent(record) {
@@ -137,6 +128,8 @@ async function handlePersonalitiesEvent(record) {
     }
 
     const id = ddbStringValue(newImage, 'id');
+    const name1 = ddbStringValue(newImage, 'name_1') || 'Bot';
+    const name2 = ddbStringValue(newImage, 'name_2') || 'Bot';
     const newP1 = ddbStringValue(newImage, 'personality_1');
     const newP2 = ddbStringValue(newImage, 'personality_2');
     const oldP1 = ddbStringValue(oldImage, 'personality_1');
@@ -158,14 +151,14 @@ async function handlePersonalitiesEvent(record) {
 
     if (p1Changed) {
         try {
-            updateInput.image_1 = await generatePortraitImage(newP1);
+            updateInput.image_1 = await generatePortraitImage(newP1, name1);
         } catch (err) {
             console.log('Image generation failed for slot 1', err);
         }
     }
     if (p2Changed) {
         try {
-            updateInput.image_2 = await generatePortraitImage(newP2);
+            updateInput.image_2 = await generatePortraitImage(newP2, name2);
         } catch (err) {
             console.log('Image generation failed for slot 2', err);
         }

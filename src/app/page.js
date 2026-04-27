@@ -336,7 +336,7 @@ export function Home({ signOut, user }) {
                       <div className="py-0.5 text-xs leading-5 flex items-center gap-2">
                         {avatarBase64 && (
                           <img
-                            src={`data:image/png;base64,${avatarBase64}`}
+                            src={avatarBase64}
                             alt={`${chat.speaker_name} avatar`}
                             className="w-8 h-8 rounded-full object-cover"
                           />

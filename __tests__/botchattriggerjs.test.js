@@ -97,12 +97,12 @@ function makePersonalitiesStreamEvent({
 }
 
 /**
- * Builds a Bedrock InvokeModel response containing a base64 image payload.
- * Titan/Nova return `{ images: [<base64>] }` JSON inside `body` (Uint8Array).
+ * Builds a Bedrock Converse response containing SVG text for avatar generation.
+ * Claude returns the SVG markup as a text content block.
  */
-function makeImageResponse(base64 = 'ZmFrZS1iYXNlNjQtaW1hZ2U=') {
+function makeSVGConverseResponse(svgContent = '<svg viewBox="0 0 320 320"><circle cx="160" cy="160" r="160" fill="#4A90D9"/></svg>') {
   return {
-    body: new TextEncoder().encode(JSON.stringify({ images: [base64] })),
+    output: { message: { content: [{ text: svgContent }] } },
   };
 }
 
@@ -594,12 +594,15 @@ describe('Personalities stream — image generation', () => {
     });
   }
 
+  const MOCK_SVG = '<svg viewBox="0 0 320 320"><circle cx="160" cy="160" r="160" fill="#4A90D9"/></svg>';
+  const MOCK_SVG_DATA_URI = `data:image/svg+xml;base64,${Buffer.from(MOCK_SVG).toString('base64')}`;
+
   beforeEach(() => {
     setupPersonalitiesGraphqlMock();
-    mockBedrockSend.mockResolvedValue(makeImageResponse('IMAGE_1_BASE64'));
+    mockBedrockSend.mockResolvedValue(makeSVGConverseResponse(MOCK_SVG));
   });
 
-  test('MODIFY: when personality_1 text changes, calls Bedrock image gen and writes image_1 back', async () => {
+  test('MODIFY: when personality_1 text changes, calls Claude via ConverseCommand and writes SVG data URI to image_1', async () => {
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_1: 'old jim' }),
@@ -607,30 +610,21 @@ describe('Personalities stream — image generation', () => {
     });
     await handler(event);
 
-    // Bedrock invoked with InvokeModelCommand for image generation
-    expect(InvokeModelCommand).toHaveBeenCalledTimes(1);
-    const invokeArgs = InvokeModelCommand.mock.calls[0][0];
-    expect(invokeArgs.modelId).toBe('amazon.nova-canvas-v1:0');
-    expect(invokeArgs.contentType).toBe('application/json');
-    const body = JSON.parse(invokeArgs.body);
-    expect(body.taskType).toBe('TEXT_IMAGE');
-    expect(body.textToImageParams.text).toContain('new jim');
+    // ConverseCommand used for SVG generation (not InvokeModelCommand)
+    expect(ConverseCommand).toHaveBeenCalledTimes(1);
+    expect(InvokeModelCommand).not.toHaveBeenCalled();
+    const converseArgs = ConverseCommand.mock.calls[0][0];
+    expect(converseArgs.modelId).toMatch(/claude/);
+    expect(converseArgs.messages[0].content[0].text).toContain('new jim');
 
-    // ConverseCommand (text generation) not invoked for Personalities events
-    expect(ConverseCommand).not.toHaveBeenCalled();
-
-    // updatePersonalities mutation called with the base64 image_1 saved
+    // updatePersonalities called with SVG data URI stored in image_1
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
     expect(updateCall).toBeDefined();
-    expect(updateCall[0].variables.input).toMatchObject({
-      id: 'p1',
-      image_1: 'IMAGE_1_BASE64',
-    });
+    expect(updateCall[0].variables.input.image_1).toBe(MOCK_SVG_DATA_URI);
     expect(updateCall[0].variables.input).not.toHaveProperty('image_2');
   });
 
-  test('MODIFY: when personality_2 text changes, generates image_2 only', async () => {
-    mockBedrockSend.mockResolvedValue(makeImageResponse('IMAGE_2_BASE64'));
+  test('MODIFY: when personality_2 text changes, generates SVG for image_2 only', async () => {
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_2: 'old mark' }),
@@ -638,19 +632,20 @@ describe('Personalities stream — image generation', () => {
     });
     await handler(event);
 
-    expect(InvokeModelCommand).toHaveBeenCalledTimes(1);
-    const body = JSON.parse(InvokeModelCommand.mock.calls[0][0].body);
-    expect(body.textToImageParams.text).toContain('new mark');
+    expect(ConverseCommand).toHaveBeenCalledTimes(1);
+    const converseArgs = ConverseCommand.mock.calls[0][0];
+    expect(converseArgs.messages[0].content[0].text).toContain('new mark');
 
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input).toMatchObject({ id: 'p1', image_2: 'IMAGE_2_BASE64' });
+    expect(updateCall[0].variables.input.image_2).toBe(MOCK_SVG_DATA_URI);
     expect(updateCall[0].variables.input).not.toHaveProperty('image_1');
   });
 
-  test('MODIFY: when both personality_1 and personality_2 change, generates two images', async () => {
+  test('MODIFY: when both personality_1 and personality_2 change, generates two SVGs', async () => {
+    const SVG2 = '<svg viewBox="0 0 320 320"><circle cx="160" cy="160" r="160" fill="#E74C3C"/></svg>';
     mockBedrockSend
-      .mockResolvedValueOnce(makeImageResponse('IMG1'))
-      .mockResolvedValueOnce(makeImageResponse('IMG2'));
+      .mockResolvedValueOnce(makeSVGConverseResponse(MOCK_SVG))
+      .mockResolvedValueOnce(makeSVGConverseResponse(SVG2));
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_1: 'old1', personality_2: 'old2' }),
@@ -658,19 +653,16 @@ describe('Personalities stream — image generation', () => {
     });
     await handler(event);
 
-    expect(InvokeModelCommand).toHaveBeenCalledTimes(2);
+    expect(ConverseCommand).toHaveBeenCalledTimes(2);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input).toMatchObject({
-      id: 'p1',
-      image_1: 'IMG1',
-      image_2: 'IMG2',
-    });
+    expect(updateCall[0].variables.input.image_1).toBe(MOCK_SVG_DATA_URI);
+    expect(updateCall[0].variables.input.image_2).toBe(`data:image/svg+xml;base64,${Buffer.from(SVG2).toString('base64')}`);
   });
 
-  test('INSERT: brand-new Personalities record generates images for both slots', async () => {
+  test('INSERT: brand-new Personalities record generates SVGs for both slots', async () => {
     mockBedrockSend
-      .mockResolvedValueOnce(makeImageResponse('IMG1'))
-      .mockResolvedValueOnce(makeImageResponse('IMG2'));
+      .mockResolvedValueOnce(makeSVGConverseResponse(MOCK_SVG))
+      .mockResolvedValueOnce(makeSVGConverseResponse(MOCK_SVG));
     const event = makePersonalitiesStreamEvent({
       eventName: 'INSERT',
       oldImage: null,
@@ -678,19 +670,13 @@ describe('Personalities stream — image generation', () => {
     });
     await handler(event);
 
-    expect(InvokeModelCommand).toHaveBeenCalledTimes(2);
+    expect(ConverseCommand).toHaveBeenCalledTimes(2);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input).toMatchObject({
-      id: 'p1',
-      image_1: 'IMG1',
-      image_2: 'IMG2',
-    });
+    expect(updateCall[0].variables.input.image_1).toBe(MOCK_SVG_DATA_URI);
+    expect(updateCall[0].variables.input.image_2).toBe(MOCK_SVG_DATA_URI);
   });
 
   test('LOOP GUARD: MODIFY where only image fields changed does NOT call Bedrock', async () => {
-    // Lambda's own write echoes back through the stream as a MODIFY whose
-    // personality_1/personality_2 text is unchanged but image_1 went from null
-    // to a base64 string. Handler must short-circuit.
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_1: 'same', image_1: null }),
@@ -698,6 +684,7 @@ describe('Personalities stream — image generation', () => {
     });
     await handler(event);
 
+    expect(ConverseCommand).not.toHaveBeenCalled();
     expect(InvokeModelCommand).not.toHaveBeenCalled();
     expect(mockGraphql).not.toHaveBeenCalled();
   });
@@ -709,6 +696,7 @@ describe('Personalities stream — image generation', () => {
       newImage: makePersonalityImage({ personality_2: 'same', image_2: 'NEW' }),
     });
     await handler(event);
+    expect(ConverseCommand).not.toHaveBeenCalled();
     expect(InvokeModelCommand).not.toHaveBeenCalled();
   });
 
@@ -721,11 +709,12 @@ describe('Personalities stream — image generation', () => {
       }],
     };
     await handler(event);
+    expect(ConverseCommand).not.toHaveBeenCalled();
     expect(InvokeModelCommand).not.toHaveBeenCalled();
     expect(mockGraphql).not.toHaveBeenCalled();
   });
 
-  test('does not throw when image generation fails — handler returns success', async () => {
+  test('does not throw when SVG generation fails — handler returns success', async () => {
     mockBedrockSend.mockRejectedValueOnce(new Error('Bedrock throttling'));
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
@@ -733,14 +722,13 @@ describe('Personalities stream — image generation', () => {
       newImage: makePersonalityImage({ personality_1: 'new' }),
     });
     await expect(handler(event)).resolves.toBeDefined();
-    // No update written when image generation fails for the only changed slot
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
     expect(updateCall).toBeUndefined();
   });
 
   test('does not throw when updatePersonalities mutation fails', async () => {
     setupPersonalitiesGraphqlMock({ updateShouldFail: true });
-    mockBedrockSend.mockResolvedValue(makeImageResponse('IMG'));
+    mockBedrockSend.mockResolvedValue(makeSVGConverseResponse(MOCK_SVG));
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_1: 'old' }),
