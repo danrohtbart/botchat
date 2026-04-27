@@ -158,11 +158,11 @@ describe('Home component', () => {
 
     const jimAvatar = screen.getByAltText('Jim avatar');
     expect(jimAvatar).toBeInTheDocument();
-    expect(jimAvatar.getAttribute('src')).toBe('data:image/png;base64,JIM_BASE64_PNG');
+    expect(jimAvatar.getAttribute('src')).toBe('JIM_BASE64_PNG');
 
     const markAvatar = screen.getByAltText('Mark avatar');
     expect(markAvatar).toBeInTheDocument();
-    expect(markAvatar.getAttribute('src')).toBe('data:image/png;base64,MARK_BASE64_PNG');
+    expect(markAvatar.getAttribute('src')).toBe('MARK_BASE64_PNG');
   });
 
   test('does not render an avatar for chat rows whose speaker has no image yet', async () => {
