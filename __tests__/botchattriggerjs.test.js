@@ -595,7 +595,9 @@ describe('Personalities stream — image generation', () => {
   }
 
   const MOCK_SVG = '<svg viewBox="0 0 320 320"><circle cx="160" cy="160" r="160" fill="#4A90D9"/></svg>';
-  const MOCK_SVG_DATA_URI = `data:image/svg+xml;base64,${Buffer.from(MOCK_SVG).toString('base64')}`;
+  // Lambda adds xmlns when missing, so the stored URI uses the xmlns-injected version
+  const MOCK_SVG_WITH_NS = MOCK_SVG.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  const MOCK_SVG_DATA_URI = `data:image/svg+xml;base64,${Buffer.from(MOCK_SVG_WITH_NS).toString('base64')}`;
 
   beforeEach(() => {
     setupPersonalitiesGraphqlMock();
@@ -643,6 +645,7 @@ describe('Personalities stream — image generation', () => {
 
   test('MODIFY: when both personality_1 and personality_2 change, generates two SVGs', async () => {
     const SVG2 = '<svg viewBox="0 0 320 320"><circle cx="160" cy="160" r="160" fill="#E74C3C"/></svg>';
+    const SVG2_WITH_NS = SVG2.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
     mockBedrockSend
       .mockResolvedValueOnce(makeSVGConverseResponse(MOCK_SVG))
       .mockResolvedValueOnce(makeSVGConverseResponse(SVG2));
@@ -656,7 +659,7 @@ describe('Personalities stream — image generation', () => {
     expect(ConverseCommand).toHaveBeenCalledTimes(2);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
     expect(updateCall[0].variables.input.image_1).toBe(MOCK_SVG_DATA_URI);
-    expect(updateCall[0].variables.input.image_2).toBe(`data:image/svg+xml;base64,${Buffer.from(SVG2).toString('base64')}`);
+    expect(updateCall[0].variables.input.image_2).toBe(`data:image/svg+xml;base64,${Buffer.from(SVG2_WITH_NS).toString('base64')}`);
   });
 
   test('INSERT: brand-new Personalities record generates SVGs for both slots', async () => {

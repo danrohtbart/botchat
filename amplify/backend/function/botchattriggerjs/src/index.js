@@ -114,7 +114,12 @@ async function generatePortraitImage(promptText, name) {
     const svgText = response.output.message.content[0].text;
 
     const match = svgText.match(/<svg[\s\S]*<\/svg>/i);
-    const svg = match ? match[0] : svgText.trim();
+    let svg = match ? match[0] : svgText.trim();
+
+    // Mobile Safari requires the SVG namespace to render as an <img> src
+    if (!svg.includes('xmlns=')) {
+        svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
 
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
