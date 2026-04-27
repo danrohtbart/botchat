@@ -32,7 +32,7 @@ const top_p = 0.1;
 // Image generation tunables. Titan v2 produces a 320x320 PNG; base64-encoded
 // it stays well under the DynamoDB 400 KB row limit even when both image_1 and
 // image_2 are populated on the same record.
-const IMAGE_MODEL_ID = 'amazon.titan-image-generator-v2:0';
+const IMAGE_MODEL_ID = 'amazon.nova-canvas-v1:0';
 const IMAGE_DIMENSION = 320;
 
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
@@ -111,8 +111,7 @@ async function generatePortraitImage(promptText) {
             height: IMAGE_DIMENSION,
             width: IMAGE_DIMENSION,
             cfgScale: 8.0,
-            quality: 'standard',
-            seed: Math.floor(Math.random() * 100000),
+seed: Math.floor(Math.random() * 100000),
         },
     };
 
