@@ -118,12 +118,11 @@ async function generatePortraitImage(promptText, name) {
 
     // Step 2: Call DALL-E 3 to generate the image
     const requestBody = JSON.stringify({
-        model: 'dall-e-3',
+        model: 'dall-e-2',
         prompt: imagePrompt,
         n: 1,
-        size: '1024x1024',
+        size: '256x256',
         response_format: 'b64_json',
-        quality: 'standard',
     });
 
     const b64 = await new Promise((resolve, reject) => {
