@@ -9,6 +9,7 @@
 	REGION
 Amplify Params - DO NOT EDIT */
 
+const https = require('https');
 const { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
@@ -29,9 +30,10 @@ const max_thread = 6;
 const temperature = 0.9;
 const top_p = 0.1;
 
-// SVG avatar generation model. Claude generates a 320×320 SVG portrait based
-// on the personality description; the result is stored as a data URI.
-const IMAGE_MODEL_ID = 'meta.llama3-70b-instruct-v1:0';
+// Two-step avatar generation:
+// 1. Llama3 writes a detailed caricature image prompt from the personality description
+// 2. DALL-E 3 renders the actual image via OpenAI API
+const PROMPT_MODEL_ID = 'meta.llama3-70b-instruct-v1:0';
 
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
 const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql');
@@ -97,31 +99,61 @@ function ddbStringValue(image, field) {
 }
 
 async function generatePortraitImage(promptText, name) {
-    const prompt =
-        `Generate a simple 320x320 SVG avatar portrait for a person named ${name} whose personality is: "${promptText}". ` +
-        `Requirements: valid SVG with viewBox="0 0 320 320", abstract geometric portrait, ` +
-        `personality-appropriate colors, include a large first-letter initial, no external resources. ` +
-        `Output ONLY the SVG markup with no explanation or markdown fences.`;
-
-    const command = new ConverseCommand({
-        modelId: IMAGE_MODEL_ID,
-        messages: [{ role: 'user', content: [{ text: prompt }] }],
-        inferenceConfig: { maxTokens: 1500, temperature: 0.9 },
-    });
+    // Step 1: Use Llama3 to write a detailed caricature prompt
+    const metaPrompt =
+        `You are a caricature artist's assistant. Write a DALL-E image generation prompt for a caricature portrait of a character named ${name}.\n` +
+        `Their personality: "${promptText}"\n\n` +
+        `A caricature exaggerates the most defining trait as a physical feature. ` +
+        `Identify the single most dominant trait and describe exactly what physical feature to exaggerate and how. ` +
+        `Write a 2-3 sentence image generation prompt describing: the exaggerated feature, the caricature/cartoon illustration style, and any personality-relevant colors or accessories. ` +
+        `Output ONLY the image prompt, nothing else.`;
 
     const bedrockClient = new BedrockRuntimeClient({ region: 'us-east-1' });
-    const response = await bedrockClient.send(command);
-    const svgText = response.output.message.content[0].text;
+    const promptResponse = await bedrockClient.send(new ConverseCommand({
+        modelId: PROMPT_MODEL_ID,
+        messages: [{ role: 'user', content: [{ text: metaPrompt }] }],
+        inferenceConfig: { maxTokens: 200, temperature: 0.8 },
+    }));
+    const imagePrompt = `Caricature portrait illustration: ${promptResponse.output.message.content[0].text.trim()}`;
 
-    const match = svgText.match(/<svg[\s\S]*<\/svg>/i);
-    let svg = match ? match[0] : svgText.trim();
+    // Step 2: Call DALL-E 3 to generate the image
+    const requestBody = JSON.stringify({
+        model: 'dall-e-3',
+        prompt: imagePrompt,
+        n: 1,
+        size: '1024x1024',
+        response_format: 'b64_json',
+        quality: 'standard',
+    });
 
-    // Mobile Safari requires the SVG namespace to render as an <img> src
-    if (!svg.includes('xmlns=')) {
-        svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-    }
+    const b64 = await new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.openai.com',
+            path: '/v1/images/generations',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Content-Length': Buffer.byteLength(requestBody),
+            },
+        };
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    resolve(JSON.parse(data).data[0].b64_json);
+                } else {
+                    reject(new Error(`OpenAI API error ${res.statusCode}: ${data}`));
+                }
+            });
+        });
+        req.on('error', reject);
+        req.write(requestBody);
+        req.end();
+    });
 
-    return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    return `data:image/png;base64,${b64}`;
 }
 
 async function handlePersonalitiesEvent(record) {
