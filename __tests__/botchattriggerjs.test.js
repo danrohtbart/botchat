@@ -31,6 +31,12 @@ jest.mock('aws-amplify', () => ({
   Amplify: { configure: jest.fn() },
 }));
 
+// Mock https for OpenAI API calls
+jest.mock('https', () => {
+  const mockRequest = jest.fn();
+  return { request: mockRequest, __mockRequest: mockRequest };
+});
+
 // ─── Retrieve mock references ─────────────────────────────────────────────────
 
 const bedrockMod = require('@aws-sdk/client-bedrock-runtime');
@@ -41,6 +47,27 @@ const apiMod = require('aws-amplify/api');
 const mockGraphql = apiMod.__mockGraphql;
 
 const { Amplify } = require('aws-amplify');
+
+const httpsMod = require('https');
+const mockHttpsRequest = httpsMod.__mockRequest;
+
+/**
+ * Sets up mockHttpsRequest to simulate a successful OpenAI images/generations response.
+ */
+function setupOpenAIMock(b64Image = 'FAKE_BASE64_PNG') {
+  mockHttpsRequest.mockImplementation((options, callback) => {
+    const body = JSON.stringify({ data: [{ b64_json: b64Image }] });
+    const res = {
+      statusCode: 200,
+      on: jest.fn((event, handler) => {
+        if (event === 'data') handler(body);
+        if (event === 'end') handler();
+      }),
+    };
+    callback(res);
+    return { on: jest.fn(), write: jest.fn(), end: jest.fn() };
+  });
+}
 
 const { handler } = require('../amplify/backend/function/botchattriggerjs/src/index.js');
 
@@ -594,17 +621,20 @@ describe('Personalities stream — image generation', () => {
     });
   }
 
-  const MOCK_SVG = '<svg viewBox="0 0 320 320"><circle cx="160" cy="160" r="160" fill="#4A90D9"/></svg>';
-  // Lambda adds xmlns when missing, so the stored URI uses the xmlns-injected version
-  const MOCK_SVG_WITH_NS = MOCK_SVG.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-  const MOCK_SVG_DATA_URI = `data:image/svg+xml;base64,${Buffer.from(MOCK_SVG_WITH_NS).toString('base64')}`;
+  const MOCK_IMAGE_B64 = 'FAKE_BASE64_PNG_IMAGE';
+  const MOCK_IMAGE_DATA_URI = `data:image/png;base64,${MOCK_IMAGE_B64}`;
 
   beforeEach(() => {
     setupPersonalitiesGraphqlMock();
-    mockBedrockSend.mockResolvedValue(makeSVGConverseResponse(MOCK_SVG));
+    // Llama3 returns the image generation prompt
+    mockBedrockSend.mockResolvedValue({
+      output: { message: { content: [{ text: 'A loud Knicks fan with a giant open mouth, bulging eyes.' }] } },
+    });
+    // OpenAI returns the image
+    setupOpenAIMock(MOCK_IMAGE_B64);
   });
 
-  test('MODIFY: when personality_1 text changes, calls Claude via ConverseCommand and writes SVG data URI to image_1', async () => {
+  test('MODIFY: when personality_1 changes, calls Llama3 for prompt then OpenAI for image, stores PNG data URI in image_1', async () => {
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_1: 'old jim' }),
@@ -612,21 +642,26 @@ describe('Personalities stream — image generation', () => {
     });
     await handler(event);
 
-    // ConverseCommand used for SVG generation (not InvokeModelCommand)
+    // Step 1: Llama3 called to generate the image prompt
     expect(ConverseCommand).toHaveBeenCalledTimes(1);
     expect(InvokeModelCommand).not.toHaveBeenCalled();
     const converseArgs = ConverseCommand.mock.calls[0][0];
-    expect(converseArgs.modelId).toMatch(/llama|claude/);
     expect(converseArgs.messages[0].content[0].text).toContain('new jim');
 
-    // updatePersonalities called with SVG data URI stored in image_1
+    // Step 2: OpenAI called with Authorization header
+    expect(mockHttpsRequest).toHaveBeenCalledTimes(1);
+    const [httpsOptions] = mockHttpsRequest.mock.calls[0];
+    expect(httpsOptions.hostname).toBe('api.openai.com');
+    expect(httpsOptions.headers['Authorization']).toMatch(/^Bearer /);
+
+    // image_1 stored as PNG data URI
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
     expect(updateCall).toBeDefined();
-    expect(updateCall[0].variables.input.image_1).toBe(MOCK_SVG_DATA_URI);
+    expect(updateCall[0].variables.input.image_1).toBe(MOCK_IMAGE_DATA_URI);
     expect(updateCall[0].variables.input).not.toHaveProperty('image_2');
   });
 
-  test('MODIFY: when personality_2 text changes, generates SVG for image_2 only', async () => {
+  test('MODIFY: when personality_2 changes, generates image_2 only', async () => {
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_2: 'old mark' }),
@@ -635,20 +670,31 @@ describe('Personalities stream — image generation', () => {
     await handler(event);
 
     expect(ConverseCommand).toHaveBeenCalledTimes(1);
-    const converseArgs = ConverseCommand.mock.calls[0][0];
-    expect(converseArgs.messages[0].content[0].text).toContain('new mark');
-
+    expect(mockHttpsRequest).toHaveBeenCalledTimes(1);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input.image_2).toBe(MOCK_SVG_DATA_URI);
+    expect(updateCall[0].variables.input.image_2).toBe(MOCK_IMAGE_DATA_URI);
     expect(updateCall[0].variables.input).not.toHaveProperty('image_1');
   });
 
-  test('MODIFY: when both personality_1 and personality_2 change, generates two SVGs', async () => {
-    const SVG2 = '<svg viewBox="0 0 320 320"><circle cx="160" cy="160" r="160" fill="#E74C3C"/></svg>';
-    const SVG2_WITH_NS = SVG2.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-    mockBedrockSend
-      .mockResolvedValueOnce(makeSVGConverseResponse(MOCK_SVG))
-      .mockResolvedValueOnce(makeSVGConverseResponse(SVG2));
+  test('MODIFY: when both personalities change, makes two Llama3 + two OpenAI calls', async () => {
+    setupOpenAIMock('IMG2_B64');
+    mockBedrockSend.mockResolvedValueOnce({
+      output: { message: { content: [{ text: 'prompt for p1' }] } },
+    }).mockResolvedValueOnce({
+      output: { message: { content: [{ text: 'prompt for p2' }] } },
+    });
+    setupOpenAIMock('IMG1_B64');
+    // Reset and set up two sequential OpenAI responses
+    mockHttpsRequest.mockImplementationOnce((options, callback) => {
+      const res = { statusCode: 200, on: jest.fn((e, h) => { if (e==='data') h(JSON.stringify({data:[{b64_json:'IMG1_B64'}]})); if (e==='end') h(); }) };
+      callback(res);
+      return { on: jest.fn(), write: jest.fn(), end: jest.fn() };
+    }).mockImplementationOnce((options, callback) => {
+      const res = { statusCode: 200, on: jest.fn((e, h) => { if (e==='data') h(JSON.stringify({data:[{b64_json:'IMG2_B64'}]})); if (e==='end') h(); }) };
+      callback(res);
+      return { on: jest.fn(), write: jest.fn(), end: jest.fn() };
+    });
+
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_1: 'old1', personality_2: 'old2' }),
@@ -657,15 +703,16 @@ describe('Personalities stream — image generation', () => {
     await handler(event);
 
     expect(ConverseCommand).toHaveBeenCalledTimes(2);
+    expect(mockHttpsRequest).toHaveBeenCalledTimes(2);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input.image_1).toBe(MOCK_SVG_DATA_URI);
-    expect(updateCall[0].variables.input.image_2).toBe(`data:image/svg+xml;base64,${Buffer.from(SVG2_WITH_NS).toString('base64')}`);
+    expect(updateCall[0].variables.input.image_1).toBe('data:image/png;base64,IMG1_B64');
+    expect(updateCall[0].variables.input.image_2).toBe('data:image/png;base64,IMG2_B64');
   });
 
-  test('INSERT: brand-new Personalities record generates SVGs for both slots', async () => {
+  test('INSERT: brand-new record generates images for both slots', async () => {
     mockBedrockSend
-      .mockResolvedValueOnce(makeSVGConverseResponse(MOCK_SVG))
-      .mockResolvedValueOnce(makeSVGConverseResponse(MOCK_SVG));
+      .mockResolvedValueOnce({ output: { message: { content: [{ text: 'prompt1' }] } } })
+      .mockResolvedValueOnce({ output: { message: { content: [{ text: 'prompt2' }] } } });
     const event = makePersonalitiesStreamEvent({
       eventName: 'INSERT',
       oldImage: null,
@@ -674,9 +721,10 @@ describe('Personalities stream — image generation', () => {
     await handler(event);
 
     expect(ConverseCommand).toHaveBeenCalledTimes(2);
+    expect(mockHttpsRequest).toHaveBeenCalledTimes(2);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input.image_1).toBe(MOCK_SVG_DATA_URI);
-    expect(updateCall[0].variables.input.image_2).toBe(MOCK_SVG_DATA_URI);
+    expect(updateCall[0].variables.input.image_1).toBe(MOCK_IMAGE_DATA_URI);
+    expect(updateCall[0].variables.input.image_2).toBe(MOCK_IMAGE_DATA_URI);
   });
 
   test('LOOP GUARD: MODIFY where only image fields changed does NOT call Bedrock', async () => {
@@ -717,7 +765,7 @@ describe('Personalities stream — image generation', () => {
     expect(mockGraphql).not.toHaveBeenCalled();
   });
 
-  test('does not throw when SVG generation fails — handler returns success', async () => {
+  test('does not throw when image generation fails — handler returns success', async () => {
     mockBedrockSend.mockRejectedValueOnce(new Error('Bedrock throttling'));
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
@@ -731,7 +779,6 @@ describe('Personalities stream — image generation', () => {
 
   test('does not throw when updatePersonalities mutation fails', async () => {
     setupPersonalitiesGraphqlMock({ updateShouldFail: true });
-    mockBedrockSend.mockResolvedValue(makeSVGConverseResponse(MOCK_SVG));
     const event = makePersonalitiesStreamEvent({
       eventName: 'MODIFY',
       oldImage: makePersonalityImage({ personality_1: 'old' }),
