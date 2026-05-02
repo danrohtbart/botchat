@@ -10,6 +10,7 @@
 Amplify Params - DO NOT EDIT */
 
 const https = require('https');
+const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
 const { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
@@ -32,8 +33,24 @@ const top_p = 0.1;
 
 // Two-step avatar generation:
 // 1. Llama3 writes a detailed caricature image prompt from the personality description
-// 2. DALL-E 3 renders the actual image via OpenAI API
+// 2. DALL-E 2 renders the actual image via OpenAI API
 const PROMPT_MODEL_ID = 'meta.llama3-70b-instruct-v1:0';
+
+// OpenAI key is fetched from SSM at cold start and cached for the container lifetime
+let _openAiKey = null;
+async function getOpenAiKey() {
+    if (_openAiKey) return _openAiKey;
+    const ssmPath = process.env.OPENAI_API_KEY_SSM_PATH || process.env.OPENAI_API_KEY;
+    if (!ssmPath || !ssmPath.startsWith('/')) {
+        // Fallback: env var holds the key directly (local testing)
+        _openAiKey = ssmPath;
+        return _openAiKey;
+    }
+    const ssm = new SSMClient({ region: 'us-east-1' });
+    const resp = await ssm.send(new GetParameterCommand({ Name: ssmPath, WithDecryption: true }));
+    _openAiKey = resp.Parameter.Value;
+    return _openAiKey;
+}
 
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
 const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql');
@@ -116,7 +133,8 @@ async function generatePortraitImage(promptText, name) {
     }));
     const imagePrompt = `Caricature portrait illustration: ${promptResponse.output.message.content[0].text.trim()}`;
 
-    // Step 2: Call DALL-E 3 to generate the image
+    // Step 2: Call DALL-E 2 to generate the image
+    const openAiKey = await getOpenAiKey();
     const requestBody = JSON.stringify({
         model: 'dall-e-2',
         prompt: imagePrompt,
@@ -132,7 +150,7 @@ async function generatePortraitImage(promptText, name) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Authorization': `Bearer ${openAiKey}`,
                 'Content-Length': Buffer.byteLength(requestBody),
             },
         };
