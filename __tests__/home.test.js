@@ -117,6 +117,129 @@ describe('Home component', () => {
     ).toBeInTheDocument();
   });
 
+  test('renders bot avatar image next to speaker_name when personality has image_1', async () => {
+    const personalityWithImages = {
+      ...mockPersonality,
+      image_1: 'JIM_BASE64_PNG',
+      image_2: 'MARK_BASE64_PNG',
+    };
+    const chats = [
+      {
+        id: 'c1',
+        message: 'Eagles forever.',
+        speaker_name: 'Jim',
+        user_email: 'bot@botchat.internal',
+        createdAt: '2024-01-01T00:00:01Z',
+      },
+      {
+        id: 'c2',
+        message: 'Indeed they are.',
+        speaker_name: 'Mark',
+        user_email: 'bot@botchat.internal',
+        createdAt: '2024-01-01T00:00:02Z',
+      },
+    ];
+    mockGraphQL.mockImplementation((params) => {
+      if (params.query === subscriptions.onCreateChat) {
+        return { subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }) };
+      }
+      if (params.query === queries.listChats) {
+        return Promise.resolve({ data: { listChats: { items: chats } } });
+      }
+      if (params.query === queries.listPersonalities) {
+        return Promise.resolve({ data: { listPersonalities: { items: [personalityWithImages] } } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+
+    const jimAvatar = screen.getByAltText('Jim avatar');
+    expect(jimAvatar).toBeInTheDocument();
+    expect(jimAvatar.getAttribute('src')).toBe('JIM_BASE64_PNG');
+
+    const markAvatar = screen.getByAltText('Mark avatar');
+    expect(markAvatar).toBeInTheDocument();
+    expect(markAvatar.getAttribute('src')).toBe('MARK_BASE64_PNG');
+  });
+
+  test('does not render an avatar for chat rows whose speaker has no image yet', async () => {
+    // Personality has image_1 but no image_2
+    const personality = {
+      ...mockPersonality,
+      image_1: 'JIM_BASE64',
+      image_2: null,
+    };
+    const chats = [
+      {
+        id: 'c1',
+        message: 'Eagles forever.',
+        speaker_name: 'Jim',
+        user_email: 'bot@botchat.internal',
+        createdAt: '2024-01-01T00:00:01Z',
+      },
+      {
+        id: 'c2',
+        message: 'Polite take.',
+        speaker_name: 'Mark',
+        user_email: 'bot@botchat.internal',
+        createdAt: '2024-01-01T00:00:02Z',
+      },
+    ];
+    mockGraphQL.mockImplementation((params) => {
+      if (params.query === subscriptions.onCreateChat) {
+        return { subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }) };
+      }
+      if (params.query === queries.listChats) {
+        return Promise.resolve({ data: { listChats: { items: chats } } });
+      }
+      if (params.query === queries.listPersonalities) {
+        return Promise.resolve({ data: { listPersonalities: { items: [personality] } } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+
+    expect(screen.getByAltText('Jim avatar')).toBeInTheDocument();
+    expect(screen.queryByAltText('Mark avatar')).not.toBeInTheDocument();
+  });
+
+  test('does not render avatars for the user (speaker_name="You")', async () => {
+    const personality = { ...mockPersonality, image_1: 'JIM_BASE64', image_2: 'MARK_BASE64' };
+    const chats = [
+      {
+        id: 'c1',
+        message: 'My take.',
+        speaker_name: 'You',
+        user_email: 'test@example.com',
+        createdAt: '2024-01-01T00:00:01Z',
+      },
+    ];
+    mockGraphQL.mockImplementation((params) => {
+      if (params.query === subscriptions.onCreateChat) {
+        return { subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }) };
+      }
+      if (params.query === queries.listChats) {
+        return Promise.resolve({ data: { listChats: { items: chats } } });
+      }
+      if (params.query === queries.listPersonalities) {
+        return Promise.resolve({ data: { listPersonalities: { items: [personality] } } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+
+    expect(screen.queryByAltText(/avatar/i)).not.toBeInTheDocument();
+  });
+
   test('renders chat messages returned from the API', async () => {
     const chats = [
       {

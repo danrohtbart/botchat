@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.993.0",
+    "@aws-sdk/client-s3": "^3.993.0",
+    "@aws-sdk/client-ssm": "^3.993.0",
     "@smithy/config-resolver": "^4.4.14",
     "aws-amplify": "^6.16.2"
   }

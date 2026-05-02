@@ -322,7 +322,9 @@ export function Home({ signOut, user }) {
             </div>
             {chats
               .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-              .map((chat) => (
+              .map((chat) => {
+                const avatarBase64 = avatarForSpeaker(personalities, chat.speaker_name);
+                return (
                 <div
                   key={chat.id}
                   className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${
@@ -331,7 +333,14 @@ export function Home({ signOut, user }) {
                 >
                   <div className="text-gray-500">
                     <div className="flex justify-between gap-x-4">
-                      <div className="py-0.5 text-xs leading-5">
+                      <div className="py-0.5 text-xs leading-5 flex items-center gap-2">
+                        {avatarBase64 && (
+                          <img
+                            src={avatarBase64}
+                            alt={`${chat.speaker_name} avatar`}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        )}
                         <span className={`font-medium ${chat.user_email === userEmail && "text-slate-50"}`}>
                           {chat.speaker_name}
                         </span>{" "}
@@ -346,7 +355,8 @@ export function Home({ signOut, user }) {
                     <p className={`text-sm leading-6 ${chat.user_email === userEmail && "text-slate-50"}`}>{chat.message}</p>
                   </div>
                 </div>
-            ))}
+                );
+            })}
             &nbsp;<AlwaysScrollToBottom />
           </ScrollView>
         </div>
@@ -370,7 +380,17 @@ export function Home({ signOut, user }) {
   )
 }
  
-// Same function is used in the Lambda function. Opportunity for refactoring. 
+// Looks up the base64 avatar image for a chat row's speaker, by matching
+// against the user's two personality slots. Returns null when there is no
+// match or when the matching slot has not been generated yet.
+function avatarForSpeaker(personalities, speakerName) {
+  if (!personalities || !speakerName) return null;
+  if (personalities.name_1 === speakerName) return personalities.image_1 || null;
+  if (personalities.name_2 === speakerName) return personalities.image_2 || null;
+  return null;
+}
+
+// Same function is used in the Lambda function. Opportunity for refactoring.
 async function WriteToGraphQL (amplifyClient, output) {
   try {
     const { signInDetails } = await getCurrentUser();

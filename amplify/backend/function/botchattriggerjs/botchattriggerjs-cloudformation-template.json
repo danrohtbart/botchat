@@ -135,6 +135,10 @@
                   }
                 ]
               ]
+            },
+            "OPENAI_API_KEY_SSM_PATH": "/botchat/openai-api-key",
+            "AVATAR_S3_BUCKET": {
+              "Fn::Sub": "botchat-avatars-${env}-253178317163"
             }
           }
         },
@@ -146,7 +150,7 @@
         },
         "Runtime": "nodejs18.x",
         "Layers": [],
-        "Timeout": 25
+        "Timeout": 90
       }
     },
     "LambdaExecutionRole": {
@@ -279,6 +283,62 @@
         "EventSourceArn": {
           "Fn::ImportValue": {
             "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:ChatTable:StreamArn"
+          }
+        },
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaFunction",
+            "Arn"
+          ]
+        },
+        "StartingPosition": "LATEST"
+      }
+    },
+    "LambdaTriggerPolicyPersonalities": {
+      "DependsOn": [
+        "LambdaExecutionRole"
+      ],
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "amplify-lambda-execution-policy-Personalities",
+        "Roles": [
+          {
+            "Ref": "LambdaExecutionRole"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:DescribeStream",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:ListStreams"
+              ],
+              "Resource": {
+                "Fn::ImportValue": {
+                  "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:PersonalitiesTable:StreamArn"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "LambdaEventSourceMappingPersonalities": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "DependsOn": [
+        "LambdaTriggerPolicyPersonalities",
+        "LambdaExecutionRole"
+      ],
+      "Properties": {
+        "BatchSize": 10,
+        "Enabled": true,
+        "EventSourceArn": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${apibotchatGraphQLAPIIdOutput}:GetAtt:PersonalitiesTable:StreamArn"
           }
         },
         "FunctionName": {
@@ -493,6 +553,33 @@
                   ]
                 }
               ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject"
+              ],
+              "Resource": {
+                "Fn::Sub": "arn:aws:s3:::botchat-avatars-${env}-253178317163/*"
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "ssm:GetParameter"
+              ],
+              "Resource": {
+                "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/botchat/openai-api-key"
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "kms:Decrypt"
+              ],
+              "Resource": {
+                "Fn::Sub": "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/alias/aws/ssm"
+              }
             }
           ]
         }
