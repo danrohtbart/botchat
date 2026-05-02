@@ -60,6 +60,11 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+
+# Amplify Gen 2 generated outputs (per-deployment, do not commit)
+.amplify/
+amplify_outputs.json
+amplify_outputs*.json
 /test-results/
 /blob-report/
 /playwright/.cache/
