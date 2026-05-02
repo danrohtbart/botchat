@@ -16,7 +16,7 @@
     "sync-lambda-graphql": "node scripts/sync-lambda-graphql.js"
   },
   "dependencies": {
-    "@aws-amplify/ui-react": "^6.15.0",
+    "@aws-amplify/ui-react": "^6.15.3",
     "@aws-sdk/client-bedrock-runtime": "^3.1041.0",
     "@aws-sdk/client-lambda": "^3.993.0",
     "@aws-sdk/client-sns": "^3.993.0",
