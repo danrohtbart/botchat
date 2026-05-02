@@ -37,6 +37,15 @@ jest.mock('https', () => {
   return { request: mockRequest, __mockRequest: mockRequest };
 });
 
+// Mock SSM so tests don't need real AWS credentials
+jest.mock('@aws-sdk/client-ssm', () => {
+  const send = jest.fn().mockResolvedValue({ Parameter: { Value: 'test-openai-key' } });
+  return {
+    SSMClient: jest.fn(() => ({ send })),
+    GetParameterCommand: jest.fn((params) => params),
+  };
+});
+
 // ─── Retrieve mock references ─────────────────────────────────────────────────
 
 const bedrockMod = require('@aws-sdk/client-bedrock-runtime');
