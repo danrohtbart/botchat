@@ -46,6 +46,15 @@ jest.mock('@aws-sdk/client-ssm', () => {
   };
 });
 
+// Mock S3 upload
+jest.mock('@aws-sdk/client-s3', () => {
+  const send = jest.fn().mockResolvedValue({});
+  return {
+    S3Client: jest.fn(() => ({ send })),
+    PutObjectCommand: jest.fn((params) => params),
+  };
+});
+
 // ─── Retrieve mock references ─────────────────────────────────────────────────
 
 const bedrockMod = require('@aws-sdk/client-bedrock-runtime');
@@ -631,7 +640,7 @@ describe('Personalities stream — image generation', () => {
   }
 
   const MOCK_IMAGE_B64 = 'FAKE_BASE64_PNG_IMAGE';
-  const MOCK_IMAGE_DATA_URI = `data:image/png;base64,${MOCK_IMAGE_B64}`;
+  const S3_URL_PATTERN = /^https:\/\/.+\.s3\.amazonaws\.com\/avatars\/.+\.png$/;
 
   beforeEach(() => {
     setupPersonalitiesGraphqlMock();
@@ -666,7 +675,7 @@ describe('Personalities stream — image generation', () => {
     // image_1 stored as PNG data URI
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
     expect(updateCall).toBeDefined();
-    expect(updateCall[0].variables.input.image_1).toBe(MOCK_IMAGE_DATA_URI);
+    expect(updateCall[0].variables.input.image_1).toMatch(S3_URL_PATTERN);
     expect(updateCall[0].variables.input).not.toHaveProperty('image_2');
   });
 
@@ -681,7 +690,7 @@ describe('Personalities stream — image generation', () => {
     expect(ConverseCommand).toHaveBeenCalledTimes(1);
     expect(mockHttpsRequest).toHaveBeenCalledTimes(1);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input.image_2).toBe(MOCK_IMAGE_DATA_URI);
+    expect(updateCall[0].variables.input.image_2).toMatch(S3_URL_PATTERN);
     expect(updateCall[0].variables.input).not.toHaveProperty('image_1');
   });
 
@@ -714,8 +723,8 @@ describe('Personalities stream — image generation', () => {
     expect(ConverseCommand).toHaveBeenCalledTimes(2);
     expect(mockHttpsRequest).toHaveBeenCalledTimes(2);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input.image_1).toBe('data:image/png;base64,IMG1_B64');
-    expect(updateCall[0].variables.input.image_2).toBe('data:image/png;base64,IMG2_B64');
+    expect(updateCall[0].variables.input.image_1).toMatch(S3_URL_PATTERN);
+    expect(updateCall[0].variables.input.image_2).toMatch(S3_URL_PATTERN);
   });
 
   test('INSERT: brand-new record generates images for both slots', async () => {
@@ -732,8 +741,8 @@ describe('Personalities stream — image generation', () => {
     expect(ConverseCommand).toHaveBeenCalledTimes(2);
     expect(mockHttpsRequest).toHaveBeenCalledTimes(2);
     const updateCall = mockGraphql.mock.calls.find((c) => c[0].query.includes('updatePersonalities'));
-    expect(updateCall[0].variables.input.image_1).toBe(MOCK_IMAGE_DATA_URI);
-    expect(updateCall[0].variables.input.image_2).toBe(MOCK_IMAGE_DATA_URI);
+    expect(updateCall[0].variables.input.image_1).toMatch(S3_URL_PATTERN);
+    expect(updateCall[0].variables.input.image_2).toMatch(S3_URL_PATTERN);
   });
 
   test('LOOP GUARD: MODIFY where only image fields changed does NOT call Bedrock', async () => {

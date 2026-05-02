@@ -11,6 +11,7 @@ Amplify Params - DO NOT EDIT */
 
 const https = require('https');
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
 const { Amplify } = require('aws-amplify');
 const { generateClient } = require('aws-amplify/api');
@@ -170,7 +171,17 @@ async function generatePortraitImage(promptText, name) {
         req.end();
     });
 
-    return `data:image/png;base64,${b64}`;
+    const bucket = process.env.AVATAR_S3_BUCKET;
+    const key = `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+    const imageBytes = Buffer.from(b64, 'base64');
+    const s3 = new S3Client({ region: 'us-east-1' });
+    await s3.send(new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: imageBytes,
+        ContentType: 'image/png',
+    }));
+    return `https://${bucket}.s3.amazonaws.com/${key}`;
 }
 
 async function handlePersonalitiesEvent(record) {
