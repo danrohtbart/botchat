@@ -1,0 +1,7 @@
+{
+  "name": "amplify-gen2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Gen 2 backend definition. Coexists with Gen 1 in amplify/backend/ during the migration. See ClickUp 86b9qh888."
+}
