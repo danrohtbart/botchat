@@ -137,7 +137,9 @@
               ]
             },
             "OPENAI_API_KEY_SSM_PATH": "/botchat/openai-api-key",
-            "AVATAR_S3_BUCKET": "botchat-avatars-dev-253178317163"
+            "AVATAR_S3_BUCKET": {
+              "Fn::Sub": "botchat-avatars-${env}-253178317163"
+            }
           }
         },
         "Role": {
@@ -557,7 +559,9 @@
               "Action": [
                 "s3:PutObject"
               ],
-              "Resource": "arn:aws:s3:::botchat-avatars-dev-253178317163/*"
+              "Resource": {
+                "Fn::Sub": "arn:aws:s3:::botchat-avatars-${env}-253178317163/*"
+              }
             },
             {
               "Effect": "Allow",
