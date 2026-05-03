@@ -3,7 +3,13 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm install
+        # Use `npm ci`, not `npm install`. With the @aws-amplify/backend
+        # dep tree (Gen 2 deps in the root devDependencies), `npm install`
+        # mutates the committed lockfile to a state where the subsequent
+        # `npm ci` in the test phase fails with "Missing: fast-xml-parser
+        # from lock file" plus a long list. See aws-amplify/amplify-backend#3158.
+        # `npm ci` reads the lockfile strictly without touching it.
+        - npm ci
         - node scripts/sync-lambda-graphql.js
         - |
           git diff --exit-code amplify/backend/function/botchattriggerjs/src/graphql.js || (echo "ERROR: graphql.js is out of sync with src/graphql/. Run 'npm run sync-lambda-graphql' and commit the result." && exit 1)
