@@ -1,9 +1,11 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { Effect, ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { auth } from './auth/resource';
-import { data } from './data/resource';
-import { botchatPresignup } from './functions/botchat-presignup/resource';
-import { botchatTrigger } from './functions/botchat-trigger/resource';
+// .js extensions are required because amplify/package.json sets "type": "module".
+// TypeScript's bundler moduleResolution accepts the .js suffix on .ts source files.
+import { auth } from './auth/resource.js';
+import { data } from './data/resource.js';
+import { botchatPresignup } from './functions/botchat-presignup/resource.js';
+import { botchatTrigger } from './functions/botchat-trigger/resource.js';
 
 const backend = defineBackend({
   auth,
