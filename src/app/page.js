@@ -16,11 +16,10 @@ import {
 
 const debug = false;
 
-Amplify.configure({
-  ...awsmobile,
-  // this lets you run Amplify code on the server-side in Next.js
-  ssr: true
-});
+// aws-amplify v6 accepts both Gen 1 (flat aws_* keys) and Gen 2 (nested
+// auth/data) shapes natively. ssr: true belongs in the second-arg library
+// options, not merged into the resource config.
+Amplify.configure(awsmobile, { ssr: true });
 const amplifyClient = generateClient();
 
 /* 
