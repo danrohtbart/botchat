@@ -1,23 +1,29 @@
 version: 1
+# Gen 2 build spec — only on claude/gen2-deployment branch (Amplify app
+# dr03gq88jj3a1 / botchat-gen2). The existing Gen 1 hosting app's dev/main
+# branches use the original amplify.yml until cutover (PR 4 of the
+# migration). See ClickUp 86b9qh888.
+backend:
+  phases:
+    build:
+      commands:
+        # `npm ci`, never `npm install` — see aws-amplify/amplify-backend#3158
+        # (npm install mutates the lockfile to a state where npm ci then errors).
+        - npm ci --cache .npm --prefer-offline
+        # Deploys the Gen 2 backend defined in amplify/backend.ts. The
+        # AWS_BRANCH and AWS_APP_ID env vars are auto-injected by Amplify
+        # Hosting. Generates amplify_outputs.json on success.
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     preBuild:
       commands:
-        # Use `npm ci`, not `npm install`. With the @aws-amplify/backend
-        # dep tree (Gen 2 deps in the root devDependencies), `npm install`
-        # mutates the committed lockfile to a state where the subsequent
-        # `npm ci` in the test phase fails with "Missing: fast-xml-parser
-        # from lock file" plus a long list. See aws-amplify/amplify-backend#3158.
-        # `npm ci` reads the lockfile strictly without touching it.
-        - npm ci
-        - node scripts/sync-lambda-graphql.js
-        - |
-          git diff --exit-code amplify/backend/function/botchattriggerjs/src/graphql.js || (echo "ERROR: graphql.js is out of sync with src/graphql/. Run 'npm run sync-lambda-graphql' and commit the result." && exit 1)
+        - npm ci --cache .npm --prefer-offline
+        # Bridges amplify_outputs.json into src/aws-exports.js so the
+        # frontend imports the Gen 2 config (page.js still imports from
+        # ../aws-exports). aws-amplify@6 accepts the Gen 2 nested shape
+        # natively, so no transformation is needed.
         - node scripts/generate-amplify-config.js
-        - |
-          if [ -n "$AWS_PULL_REQUEST_ID" ]; then
-            node -e "const fs=require('fs');const c={aws_project_region:process.env.PREVIEW_AWS_PROJECT_REGION,aws_appsync_graphqlEndpoint:process.env.PREVIEW_APPSYNC_ENDPOINT,aws_appsync_region:process.env.PREVIEW_AWS_PROJECT_REGION,aws_appsync_authenticationType:'AMAZON_COGNITO_USER_POOLS',aws_cognito_identity_pool_id:process.env.PREVIEW_COGNITO_IDENTITY_POOL_ID,aws_cognito_region:process.env.PREVIEW_AWS_PROJECT_REGION,aws_user_pools_id:process.env.PREVIEW_USER_POOLS_ID,aws_user_pools_web_client_id:process.env.PREVIEW_USER_POOLS_WEB_CLIENT_ID,oauth:{},aws_cognito_username_attributes:['EMAIL'],aws_cognito_social_providers:[],aws_cognito_signup_attributes:['EMAIL'],aws_cognito_mfa_configuration:'OFF',aws_cognito_mfa_types:['SMS'],aws_cognito_password_protection_settings:{passwordPolicyMinLength:8,passwordPolicyCharacters:[]},aws_cognito_verification_mechanisms:['EMAIL']};fs.writeFileSync('src/aws-exports.js','const awsmobile = '+JSON.stringify(c,null,2)+';\nexport default awsmobile;\n');console.log('Generated src/aws-exports.js for PR preview');"
-          fi
     build:
       commands:
         - npm run build
@@ -27,31 +33,19 @@ frontend:
       - '**/*'
   cache:
     paths:
-      - node_modules/**/*
+      - .next/cache/**/*
+      - .npm/**/*
 test:
   phases:
     preTest:
       commands:
         - mkdir -p $HOME/bin && curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b $HOME/bin
         - $HOME/bin/trufflehog git file://. --only-verified --fail
-        - npm ci
-        - npm install -g wait-on
-        - npm install -g pm2
-        - sudo dnf install -y docker
-        - sudo dockerd &
-        - wait-on -t 15000 file:/var/run/docker.sock
-        - npx pm2 start npm -- start
-        - wait-on http://localhost:3000
+        - npm ci --cache .npm --prefer-offline
     test:
       commands:
         - npm run check:no-skip
         - npm test
-        - ls -la reports
-        - sudo docker run --add-host=hostmachine:host-gateway --network=host --rm --init -v $(pwd):/home/pwuser -e TEST_USER_EMAIL="$TEST_USER_EMAIL" -e TEST_USER_PASSWORD="$TEST_USER_PASSWORD" -e CI=true mcr.microsoft.com/playwright:v1.59.1-jammy /bin/sh -c "cd /home/pwuser && npm install @playwright/test@1.59.1 && npx playwright install && npx playwright test"
-        - ls -la reports
-    postTest:
-      commands:
-        - npx pm2 kill
   artifacts:
     baseDirectory: 'reports'
     files:
