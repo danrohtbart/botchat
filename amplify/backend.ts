@@ -1,4 +1,7 @@
 import { defineBackend } from '@aws-amplify/backend';
+import { aws_dynamodb } from 'aws-cdk-lib';
+import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
+import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Effect, ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 // .js extensions are required because amplify/package.json sets "type": "module".
 // TypeScript's bundler moduleResolution accepts the .js suffix on .ts source files.
@@ -66,28 +69,44 @@ triggerFn.addToRolePolicy(
 // and AWS_REGION (both auto-set), so we don't need to call addEnvironment
 // for the GraphQL URL anymore.
 
-// TODO (PR 4 — cutover): attach the botchat-trigger Lambda as an event-source
-// for the Personalities and Chat DDB streams. We do NOT attach in PR 1 because:
-//   1. The Gen 1 Lambda is already attached to those streams in dev/main.
-//      Each stream supports a maximum of 2 consumers. Adding ours during the
-//      sandbox phase would double-fire on every record (duplicate avatars,
-//      duplicate bot replies).
-//   2. The event-source mapping needs to be torn down on the Gen 1 side at
-//      the same instant we attach on the Gen 2 side. That's a cutover script,
-//      not a per-deploy config.
-//
-// Cutover sketch:
-//   const personalitiesTable = aws_dynamodb.Table.fromTableAttributes(
-//     backend.createStack('GenOneDataSources'),
-//     'Personalities',
-//     {
-//       tableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
-//       tableStreamArn: '...',
-//     },
-//   );
-//   triggerFn.addEventSource(new DynamoEventSource(personalitiesTable, {
-//     startingPosition: StartingPosition.LATEST,
-//     batchSize: 1,
-//   }));
+// PR 4 cutover: subscribe the Gen 2 trigger Lambda to the dev DDB streams
+// for Personalities and Chat. The Gen 1 trigger is currently attached too;
+// that mapping is disabled separately via `aws lambda update-event-source-mapping`
+// at deploy time so we don't double-fire (one bot reply per chat, one avatar
+// per personality update). DDB streams support max 2 consumers — keep that
+// in mind for any future swap.
+const dataSourcesStack = backend.createStack('GenOneDataSources');
+
+const personalitiesTable = aws_dynamodb.Table.fromTableAttributes(
+  dataSourcesStack,
+  'PersonalitiesDevTable',
+  {
+    tableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
+    tableStreamArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev/stream/2026-04-13T18:47:53.637',
+  },
+);
+
+const chatTable = aws_dynamodb.Table.fromTableAttributes(
+  dataSourcesStack,
+  'ChatDevTable',
+  {
+    tableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Chat-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
+    tableStreamArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Chat-bgc6zyl7obfwla3r5qiwnrhk7a-dev/stream/2026-04-13T18:48:41.542',
+  },
+);
+
+triggerFn.addEventSource(
+  new DynamoEventSource(personalitiesTable, {
+    startingPosition: StartingPosition.LATEST,
+    batchSize: 1,
+  }),
+);
+
+triggerFn.addEventSource(
+  new DynamoEventSource(chatTable, {
+    startingPosition: StartingPosition.LATEST,
+    batchSize: 1,
+  }),
+);
 
 export default backend;
