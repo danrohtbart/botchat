@@ -69,10 +69,15 @@ triggerFn.addToRolePolicy(
 //      separate from the cutover.
 // Once the frontend itself moves to Gen 2 AppSync (later PR), we can switch
 // the Lambda back to the Gen 2 endpoint.
+// Gen 1 dev AppSync API ID matches the DDB-table-name prefix
+// (bgc6zyl7obfwla3r5qiwnrhk7a) — verified from the Gen 1 Lambda's IAM
+// policy which grants appsync:GraphQL on this exact API. Note: this is
+// NOT the value of the Amplify app's PREVIEW_APPSYNC_ENDPOINT env var
+// (3orw633ymrbvrbyolakl6hjc5a), which appears stale.
 const GEN1_DEV_GRAPHQL_API_ARN =
-  'arn:aws:appsync:us-east-1:253178317163:apis/3orw633ymrbvrbyolakl6hjc5a';
+  'arn:aws:appsync:us-east-1:253178317163:apis/bgc6zyl7obfwla3r5qiwnrhk7a';
 const GEN1_DEV_GRAPHQL_URL =
-  'https://3orw633ymrbvrbyolakl6hjc5a.appsync-api.us-east-1.amazonaws.com/graphql';
+  'https://bgc6zyl7obfwla3r5qiwnrhk7a.appsync-api.us-east-1.amazonaws.com/graphql';
 
 triggerFn.addToRolePolicy(
   new PolicyStatement({
