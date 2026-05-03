@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+import { botchatTrigger } from '../functions/botchat-trigger/resource.js';
 
 const schema = a.schema({
   Personalities: a
@@ -40,7 +41,14 @@ const schema = a.schema({
       allow.owner(),
       allow.authenticated('identityPool'),
     ]),
-});
+})
+  // Schema-level grant: the trigger Lambda needs query+mutate access to all
+  // models. Schema-level allow.resource is the only place .resource() exists
+  // (model-level authorization callbacks omit it). Gen 2 wires the Lambda's
+  // role into AppSync's IAM auth automatically — no separate addToRolePolicy
+  // call needed for appsync:GraphQL (we leave the explicit one in backend.ts
+  // as belt-and-suspenders).
+  .authorization((allow) => [allow.resource(botchatTrigger).to(['query', 'mutate'])]);
 
 export type Schema = ClientSchema<typeof schema>;
 
