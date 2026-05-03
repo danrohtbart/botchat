@@ -54,7 +54,7 @@ async function getOpenAiKey() {
 }
 
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
-const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql');
+const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql.cjs');
 
 function configureAmplify() {
     const amplify_config = {
