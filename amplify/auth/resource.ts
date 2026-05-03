@@ -12,7 +12,7 @@ const envConfig = {
   },
   main: {
     userPoolId: 'us-east-1_N9z5Z5X2w',
-    userPoolClientId: 'TBD-main-pool-client-id',
+    userPoolClientId: '7ds6kjaqjuv9icin8gbvpoa3bm', // botcha15158084_app_clientWeb
     identityPoolId: 'us-east-1:77f88067-5c22-4694-99cd-a16e77aac68f',
     authRoleArn: 'arn:aws:iam::253178317163:role/amplify-botchat-main-223437-authRole',
     unauthRoleArn: 'arn:aws:iam::253178317163:role/amplify-botchat-main-223437-unauthRole',

@@ -42,16 +42,43 @@ triggerFn.addToRolePolicy(
   }),
 );
 
-const branch = process.env.AWS_BRANCH ?? 'dev';
-const avatarBucket = branch === 'main'
-  ? 'botchat-avatars-main-253178317163'
-  : 'botchat-avatars-dev-253178317163';
+// All Gen 1 references — keyed by Amplify branch name. The hosting app
+// builds claude/gen2-deployment for dev validation today; "main" gets its
+// own branch when we're ready for PR 5 cutover. Anything that isn't "main"
+// (including the long feature branch) is treated as dev.
+//
+// AppSync IDs vs URL hostnames are separate identifiers — the API ID goes
+// in IAM ARNs and DDB table-name prefixes; the URL hostname is what you
+// HTTP request. Verified via `aws appsync get-graphql-api --api-id <id>`.
+const ENV_CONFIG = {
+  dev: {
+    avatarBucket: 'botchat-avatars-dev-253178317163',
+    gen1ApiArn: 'arn:aws:appsync:us-east-1:253178317163:apis/bgc6zyl7obfwla3r5qiwnrhk7a',
+    gen1ApiUrl: 'https://3orw633ymrbvrbyolakl6hjc5a.appsync-api.us-east-1.amazonaws.com/graphql',
+    personalitiesTableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
+    personalitiesStreamArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev/stream/2026-04-13T18:47:53.637',
+    chatTableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Chat-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
+    chatStreamArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Chat-bgc6zyl7obfwla3r5qiwnrhk7a-dev/stream/2026-04-13T18:48:41.542',
+  },
+  main: {
+    avatarBucket: 'botchat-avatars-main-253178317163',
+    gen1ApiArn: 'arn:aws:appsync:us-east-1:253178317163:apis/ibuxugjs25bqrc2imosybxgkhe',
+    gen1ApiUrl: 'https://owa7onc5w5fe7nojj5zjbaf3ru.appsync-api.us-east-1.amazonaws.com/graphql',
+    personalitiesTableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-ibuxugjs25bqrc2imosybxgkhe-main',
+    personalitiesStreamArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-ibuxugjs25bqrc2imosybxgkhe-main/stream/2024-01-02T03:32:42.695',
+    chatTableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Chat-ibuxugjs25bqrc2imosybxgkhe-main',
+    chatStreamArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Chat-ibuxugjs25bqrc2imosybxgkhe-main/stream/2023-12-22T22:37:07.812',
+  },
+} as const;
+
+const branch = process.env.AWS_BRANCH === 'main' ? 'main' : 'dev';
+const cfg = ENV_CONFIG[branch];
 
 triggerFn.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ['s3:PutObject'],
-    resources: [`arn:aws:s3:::${avatarBucket}/*`],
+    resources: [`arn:aws:s3:::${cfg.avatarBucket}/*`],
   }),
 );
 
@@ -69,17 +96,12 @@ triggerFn.addToRolePolicy(
 //      separate from the cutover.
 // Once the frontend itself moves to Gen 2 AppSync (later PR), we can switch
 // the Lambda back to the Gen 2 endpoint.
-// AppSync separates the API ID (used in IAM ARNs and the DDB table-name
-// prefix) from the URL hostname (used in HTTP requests). For the dev API
-// named "botchat-dev":
-//   API ID:       bgc6zyl7obfwla3r5qiwnrhk7a   (use in arns:apis/<id>)
-//   URL hostname: 3orw633ymrbvrbyolakl6hjc5a   (use in https://<host>...)
-// Verified via `aws appsync get-graphql-api --api-id <id>`.
-const GEN1_DEV_GRAPHQL_API_ARN =
-  'arn:aws:appsync:us-east-1:253178317163:apis/bgc6zyl7obfwla3r5qiwnrhk7a';
-const GEN1_DEV_GRAPHQL_URL =
-  'https://3orw633ymrbvrbyolakl6hjc5a.appsync-api.us-east-1.amazonaws.com/graphql';
-
+//
+// IMPORTANT: Gen 1's resolvers have a hardcoded adminRoles list in their
+// VTL stash. The Gen 2 trigger Lambda's name has been added to that list
+// out-of-band via `scripts/patch-gen1-resolvers.py`. Any `amplify push
+// --env <env>` on the Gen 1 stack will overwrite that patch — re-run the
+// script after each push.
 triggerFn.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
@@ -88,29 +110,24 @@ triggerFn.addToRolePolicy(
     // Subscription/*) — using just /* somehow doesn't satisfy the AppSync
     // authorizer. Match the Gen 1 pattern exactly.
     resources: [
-      `${GEN1_DEV_GRAPHQL_API_ARN}/types/Query/*`,
-      `${GEN1_DEV_GRAPHQL_API_ARN}/types/Mutation/*`,
-      `${GEN1_DEV_GRAPHQL_API_ARN}/types/Subscription/*`,
+      `${cfg.gen1ApiArn}/types/Query/*`,
+      `${cfg.gen1ApiArn}/types/Mutation/*`,
+      `${cfg.gen1ApiArn}/types/Subscription/*`,
       `${graphqlApi.arn}/*`,
     ],
   }),
 );
 
-(triggerFn as unknown as { addEnvironment(k: string, v: string): unknown }).addEnvironment(
-  'API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT',
-  GEN1_DEV_GRAPHQL_URL,
-);
-(triggerFn as unknown as { addEnvironment(k: string, v: string): unknown }).addEnvironment(
-  'REGION',
-  triggerFn.stack.region,
-);
+const addEnv = (k: string, v: string) =>
+  (triggerFn as unknown as { addEnvironment(k: string, v: string): unknown })
+    .addEnvironment(k, v);
+addEnv('API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT', cfg.gen1ApiUrl);
+addEnv('REGION', triggerFn.stack.region);
 
-// PR 4 cutover: subscribe the Gen 2 trigger Lambda to the dev DDB streams
-// for Personalities and Chat. The Gen 1 trigger is currently attached too;
-// that mapping is disabled separately via `aws lambda update-event-source-mapping`
-// at deploy time so we don't double-fire (one bot reply per chat, one avatar
-// per personality update). DDB streams support max 2 consumers — keep that
-// in mind for any future swap.
+// Subscribe the Gen 2 trigger Lambda to the existing Gen 1 DDB streams. The
+// Gen 1 trigger Lambda is also attached; we disable its mapping at cutover
+// time via `aws lambda update-event-source-mapping --no-enabled`. DDB
+// streams support max 2 consumers — keep that in mind for any future swap.
 //
 // Batch sizes match the existing Gen 1 mappings: Personalities=10, Chat=100.
 // (handler.js only processes Records[0] anyway — a known Gen 1 bug to fix
@@ -119,19 +136,19 @@ const dataSourcesStack = backend.createStack('GenOneDataSources');
 
 const personalitiesTable = aws_dynamodb.Table.fromTableAttributes(
   dataSourcesStack,
-  'PersonalitiesDevTable',
+  'PersonalitiesGen1Table',
   {
-    tableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
-    tableStreamArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev/stream/2026-04-13T18:47:53.637',
+    tableArn: cfg.personalitiesTableArn,
+    tableStreamArn: cfg.personalitiesStreamArn,
   },
 );
 
 const chatTable = aws_dynamodb.Table.fromTableAttributes(
   dataSourcesStack,
-  'ChatDevTable',
+  'ChatGen1Table',
   {
-    tableArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Chat-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
-    tableStreamArn: 'arn:aws:dynamodb:us-east-1:253178317163:table/Chat-bgc6zyl7obfwla3r5qiwnrhk7a-dev/stream/2026-04-13T18:48:41.542',
+    tableArn: cfg.chatTableArn,
+    tableStreamArn: cfg.chatStreamArn,
   },
 );
 
