@@ -1,5 +1,7 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { Effect, ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import type { Function as LambdaFunction } from 'aws-cdk-lib/aws-lambda';
+import type { GraphqlApi } from 'aws-cdk-lib/aws-appsync';
 // .js extensions are required because amplify/package.json sets "type": "module".
 // TypeScript's bundler moduleResolution accepts the .js suffix on .ts source files.
 import { auth } from './auth/resource.js';
@@ -14,7 +16,11 @@ const backend = defineBackend({
   botchatTrigger,
 });
 
-const triggerFn = backend.botchatTrigger.resources.lambda;
+// The lambda is typed as IFunction but at runtime is a Function. Cast so
+// we can call addEnvironment (only exists on the concrete class).
+const triggerFn = backend.botchatTrigger.resources.lambda as LambdaFunction;
+// Same story for graphqlApi: typed as IGraphqlApi, runtime is GraphqlApi.
+const graphqlApi = backend.data.resources.graphqlApi as GraphqlApi;
 
 triggerFn.role!.addManagedPolicy(
   ManagedPolicy.fromAwsManagedPolicyName('AmazonBedrockFullAccess'),
@@ -55,8 +61,22 @@ triggerFn.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ['appsync:GraphQL'],
-    resources: [`${backend.data.resources.graphqlApi.arn}/*`],
+    resources: [`${graphqlApi.arn}/*`],
   }),
+);
+
+// Inject AppSync endpoint and region as env vars. handler.js was written
+// for Gen 1, where Amplify auto-injected these as
+// API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT and REGION via "Amplify Params"
+// magic env vars. Gen 2 doesn't auto-inject — we have to wire them up
+// from the data construct's outputs.
+triggerFn.addEnvironment(
+  'API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT',
+  graphqlApi.graphqlUrl,
+);
+triggerFn.addEnvironment(
+  'REGION',
+  triggerFn.stack.region,
 );
 
 // TODO (PR 4 — cutover): attach the botchat-trigger Lambda as an event-source
