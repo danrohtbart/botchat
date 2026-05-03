@@ -1,8 +1,9 @@
-// Env vars consumed (injected via amplify/backend.ts):
-//   API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT  — AppSync GraphQL URL
-//   REGION                                 — AWS region
-//   AVATAR_S3_BUCKET                       — destination bucket
-//   OPENAI_API_KEY_SSM_PATH                — SSM path to OpenAI key
+// Env vars consumed:
+//   AMPLIFY_DATA_GRAPHQL_ENDPOINT  — AppSync URL (auto-injected by Gen 2's
+//                                    allow.resource() in amplify/data/resource.ts)
+//   AWS_REGION                     — auto-injected by Lambda runtime
+//   AVATAR_S3_BUCKET               — set by amplify/backend.ts
+//   OPENAI_API_KEY_SSM_PATH        — set by amplify/functions/botchat-trigger/resource.ts
 // AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN are auto-injected by Lambda.
 
 import https from 'https';
@@ -54,9 +55,9 @@ import { createChat, updatePersonalities, listPersonalities, listChats } from '.
 
 function configureAmplify() {
     const amplify_config = {
-        "aws_project_region": process.env.REGION,
-        "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
-        "aws_appsync_region": process.env.REGION,
+        "aws_project_region": process.env.AWS_REGION,
+        "aws_appsync_graphqlEndpoint": process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
+        "aws_appsync_region": process.env.AWS_REGION,
         "aws_appsync_authenticationType": "AWS_IAM",
     }
 
