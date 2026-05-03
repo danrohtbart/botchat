@@ -168,10 +168,21 @@ const chatTable = aws_dynamodb.Table.fromTableAttributes(
   },
 );
 
+// Dev cutover is done — Gen 2 dev mappings are the active consumers.
+// Main cutover is gated on Dan's go: the Gen 2 main mappings are created
+// in CFN but disabled by default, then enabled out-of-band via
+// `aws lambda update-event-source-mapping --enabled` when ready. This
+// avoids production dual-fire on every Gen 2 main deploy.
+//
+// Once main cutover is committed (post-soak), flip mappingsEnabled to
+// true here so subsequent deploys preserve the cutover state.
+const mappingsEnabled = branch === 'dev';
+
 triggerFn.addEventSource(
   new DynamoEventSource(personalitiesTable, {
     startingPosition: StartingPosition.LATEST,
     batchSize: 10,
+    enabled: mappingsEnabled,
   }),
 );
 
@@ -179,6 +190,7 @@ triggerFn.addEventSource(
   new DynamoEventSource(chatTable, {
     startingPosition: StartingPosition.LATEST,
     batchSize: 100,
+    enabled: mappingsEnabled,
   }),
 );
 
