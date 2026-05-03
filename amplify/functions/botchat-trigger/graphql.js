@@ -96,4 +96,4 @@ const listChats = /* GraphQL */ `
   }
 `;
 
-module.exports = { createChat, updatePersonalities, listPersonalities, listChats };
+export { createChat, updatePersonalities, listPersonalities, listChats };
