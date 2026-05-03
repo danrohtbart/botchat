@@ -1,7 +1,6 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { Effect, ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import type { Function as LambdaFunction } from 'aws-cdk-lib/aws-lambda';
-import type { GraphqlApi } from 'aws-cdk-lib/aws-appsync';
 // .js extensions are required because amplify/package.json sets "type": "module".
 // TypeScript's bundler moduleResolution accepts the .js suffix on .ts source files.
 import { auth } from './auth/resource.js';
@@ -19,8 +18,13 @@ const backend = defineBackend({
 // The lambda is typed as IFunction but at runtime is a Function. Cast so
 // we can call addEnvironment (only exists on the concrete class).
 const triggerFn = backend.botchatTrigger.resources.lambda as LambdaFunction;
-// Same story for graphqlApi: typed as IGraphqlApi, runtime is GraphqlApi.
-const graphqlApi = backend.data.resources.graphqlApi as GraphqlApi;
+// data.resources.graphqlApi is typed as IGraphqlApi which exposes apiId but
+// NOT graphqlUrl. The Gen 2 data construct doesn't back this with the CDK
+// appsync.GraphqlApi class either, so casting and reading .graphqlUrl
+// returns undefined at runtime — addEnvironment then silently drops the
+// var. Construct the URL from apiId + region instead.
+const graphqlApi = backend.data.resources.graphqlApi;
+const graphqlUrl = `https://${graphqlApi.apiId}.appsync-api.${triggerFn.stack.region}.amazonaws.com/graphql`;
 
 triggerFn.role!.addManagedPolicy(
   ManagedPolicy.fromAwsManagedPolicyName('AmazonBedrockFullAccess'),
@@ -68,11 +72,10 @@ triggerFn.addToRolePolicy(
 // Inject AppSync endpoint and region as env vars. handler.js was written
 // for Gen 1, where Amplify auto-injected these as
 // API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT and REGION via "Amplify Params"
-// magic env vars. Gen 2 doesn't auto-inject — we have to wire them up
-// from the data construct's outputs.
+// magic env vars. Gen 2 doesn't auto-inject — we have to wire them up.
 triggerFn.addEnvironment(
   'API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT',
-  graphqlApi.graphqlUrl,
+  graphqlUrl,
 );
 triggerFn.addEnvironment(
   'REGION',
