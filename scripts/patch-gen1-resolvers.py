@@ -34,9 +34,7 @@ ENV_CONFIG = {
     },
     "main": {
         "api_id": "ibuxugjs25bqrc2imosybxgkhe",
-        # PR 5 cutover: this name comes from the deployed Gen 2 main Lambda.
-        # Update once main env is deployed via the gen2 hosting app.
-        "gen2_lambda_name": "TBD-after-main-deploys-on-gen2-hosting",
+        "gen2_lambda_name": "amplify-dr03gq88jj3a1-cla-botchattriggerlambda9B35-gbtAZShxpLs7",
         "gen1_lambda_marker": '"botchattriggerjs-main"',
     },
 }

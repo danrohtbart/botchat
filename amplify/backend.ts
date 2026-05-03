@@ -131,6 +131,7 @@ const addEnv = (k: string, v: string) =>
     .addEnvironment(k, v);
 addEnv('API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT', cfg.gen1ApiUrl);
 addEnv('REGION', triggerFn.stack.region);
+addEnv('AVATAR_S3_BUCKET', cfg.avatarBucket);
 
 // Subscribe the Gen 2 trigger Lambda to the existing Gen 1 DDB streams. The
 // Gen 1 trigger Lambda is also attached; we disable its mapping at cutover

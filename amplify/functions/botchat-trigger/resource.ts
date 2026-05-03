@@ -36,9 +36,9 @@ export const botchatTrigger = defineFunction({
   // resolution at deploy time, which only works if both live in one stack.
   resourceGroupName: 'data',
   environment: {
+    // Other env vars (AVATAR_S3_BUCKET, REGION, API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT)
+    // are set in amplify/backend.ts via addEnvironment so they share the
+    // same branch-aware ENV_CONFIG lookup.
     OPENAI_API_KEY_SSM_PATH: '/botchat/openai-api-key',
-    AVATAR_S3_BUCKET: process.env.AWS_BRANCH === 'main'
-      ? 'botchat-avatars-main-253178317163'
-      : 'botchat-avatars-dev-253178317163',
   },
 });
