@@ -84,7 +84,15 @@ triggerFn.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ['appsync:GraphQL'],
-    resources: [`${GEN1_DEV_GRAPHQL_API_ARN}/*`, `${graphqlApi.arn}/*`],
+    // The Gen 1 Lambda's IAM policy uses per-type ARNs (Query/*, Mutation/*,
+    // Subscription/*) — using just /* somehow doesn't satisfy the AppSync
+    // authorizer. Match the Gen 1 pattern exactly.
+    resources: [
+      `${GEN1_DEV_GRAPHQL_API_ARN}/types/Query/*`,
+      `${GEN1_DEV_GRAPHQL_API_ARN}/types/Mutation/*`,
+      `${GEN1_DEV_GRAPHQL_API_ARN}/types/Subscription/*`,
+      `${graphqlApi.arn}/*`,
+    ],
   }),
 );
 
