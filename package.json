@@ -34,6 +34,8 @@
     "lodash": "4.18.1"
   },
   "devDependencies": {
+    "@aws-amplify/backend": "^1.22.0",
+    "@aws-amplify/backend-cli": "^1.8.2",
     "@aws-sdk/client-s3": "^3.1041.0",
     "@aws-sdk/client-ssm": "^3.1041.0",
     "@playwright/test": "1.59.1",
@@ -41,13 +43,17 @@
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.6.0",
     "autoprefixer": "^10.0.1",
+    "aws-cdk-lib": "^2.234.1",
+    "constructs": "^10.6.0",
     "dotenv": "^17.4.2",
+    "esbuild": "^0.28.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.4",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
     "jest-junit": "^16.0.0",
     "postcss": "^8",
-    "tailwindcss": "^4.2.4"
+    "tailwindcss": "^4.2.4",
+    "typescript": "^5.0.0"
   }
 }
