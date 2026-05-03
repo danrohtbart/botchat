@@ -29,6 +29,12 @@ export const botchatTrigger = defineFunction({
   runtime: 20,
   timeoutSeconds: 90,
   memoryMB: 512,
+  // Place this function in the data stack to avoid the circular dependency
+  // between the function and data nested stacks. data uses
+  // allow.resource(botchatTrigger), and we add IAM grants in backend.ts that
+  // also reference data.resources.graphqlApi.arn — both directions need
+  // resolution at deploy time, which only works if both live in one stack.
+  resourceGroupName: 'data',
   environment: {
     OPENAI_API_KEY_SSM_PATH: '/botchat/openai-api-key',
     AVATAR_S3_BUCKET: process.env.AWS_BRANCH === 'main'
