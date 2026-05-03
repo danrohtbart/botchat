@@ -55,19 +55,41 @@ triggerFn.addToRolePolicy(
   }),
 );
 
+// During the migration, the Lambda writes via the EXISTING Gen 1 AppSync
+// API (not the Gen 2 one). Two reasons:
+//   1. The Gen 1 frontend still subscribes to Gen 1's onCreateChat /
+//      onUpdatePersonalities. AppSync subscriptions only fire for mutations
+//      sent through THE SAME API — even when both APIs share DDB tables.
+//      A mutation through Gen 2 AppSync writes the record but Gen 1's
+//      subscription stays silent, so users see no bot reply / no new avatar
+//      until they hard-refresh.
+//   2. Gen 2's auto-generated update resolvers apply a stricter conditional
+//      check than Gen 1's, which fails on legacy records (returns
+//      DynamoDB:ConditionalCheckFailedException). Fixing this properly is
+//      separate from the cutover.
+// Once the frontend itself moves to Gen 2 AppSync (later PR), we can switch
+// the Lambda back to the Gen 2 endpoint.
+const GEN1_DEV_GRAPHQL_API_ARN =
+  'arn:aws:appsync:us-east-1:253178317163:apis/3orw633ymrbvrbyolakl6hjc5a';
+const GEN1_DEV_GRAPHQL_URL =
+  'https://3orw633ymrbvrbyolakl6hjc5a.appsync-api.us-east-1.amazonaws.com/graphql';
+
 triggerFn.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ['appsync:GraphQL'],
-    resources: [`${graphqlApi.arn}/*`],
+    resources: [`${GEN1_DEV_GRAPHQL_API_ARN}/*`, `${graphqlApi.arn}/*`],
   }),
 );
 
-// AppSync endpoint and region are auto-injected by Gen 2 (via SSM
-// reference) thanks to the schema-level allow.resource() rule in
-// amplify/data/resource.ts. The handler reads AMPLIFY_DATA_GRAPHQL_ENDPOINT
-// and AWS_REGION (both auto-set), so we don't need to call addEnvironment
-// for the GraphQL URL anymore.
+(triggerFn as unknown as { addEnvironment(k: string, v: string): unknown }).addEnvironment(
+  'API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT',
+  GEN1_DEV_GRAPHQL_URL,
+);
+(triggerFn as unknown as { addEnvironment(k: string, v: string): unknown }).addEnvironment(
+  'REGION',
+  triggerFn.stack.region,
+);
 
 // PR 4 cutover: subscribe the Gen 2 trigger Lambda to the dev DDB streams
 // for Personalities and Chat. The Gen 1 trigger is currently attached too;
