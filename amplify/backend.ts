@@ -134,9 +134,16 @@ addEnv('REGION', triggerFn.stack.region);
 // in a separate ticket — so larger batches just discard the rest.)
 const dataSourcesStack = backend.createStack('GenOneDataSources');
 
+// Construct IDs are per-branch — renaming them in an existing stack would
+// trigger CFN delete+create and fail because the underlying event-source
+// mapping is still in use. Keep dev's existing 'PersonalitiesDevTable' /
+// 'ChatDevTable' IDs stable; use new IDs for main's first deploy.
+const personalitiesConstructId = branch === 'main' ? 'PersonalitiesMainTable' : 'PersonalitiesDevTable';
+const chatConstructId = branch === 'main' ? 'ChatMainTable' : 'ChatDevTable';
+
 const personalitiesTable = aws_dynamodb.Table.fromTableAttributes(
   dataSourcesStack,
-  'PersonalitiesGen1Table',
+  personalitiesConstructId,
   {
     tableArn: cfg.personalitiesTableArn,
     tableStreamArn: cfg.personalitiesStreamArn,
@@ -145,7 +152,7 @@ const personalitiesTable = aws_dynamodb.Table.fromTableAttributes(
 
 const chatTable = aws_dynamodb.Table.fromTableAttributes(
   dataSourcesStack,
-  'ChatGen1Table',
+  chatConstructId,
   {
     tableArn: cfg.chatTableArn,
     tableStreamArn: cfg.chatStreamArn,
