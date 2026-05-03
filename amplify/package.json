@@ -3,5 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Gen 2 backend definition. Coexists with Gen 1 in amplify/backend/ during the migration. See ClickUp 86b9qh888."
+  "description": "Gen 2 backend definition. Coexists with Gen 1 in amplify/backend/ during the migration. See ClickUp 86b9qh888.",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@aws-amplify/backend": "^1.22.0",
+    "@aws-amplify/backend-cli": "^1.8.2",
+    "aws-cdk-lib": "^2.252.0",
+    "constructs": "^10.6.0",
+    "typescript": "^5.0.0"
+  }
 }
