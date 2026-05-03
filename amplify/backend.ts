@@ -71,7 +71,15 @@ const ENV_CONFIG = {
   },
 } as const;
 
-const branch = process.env.AWS_BRANCH === 'main' ? 'main' : 'dev';
+// Map the literal Amplify branch name to a logical env. The gen2 hosting
+// app builds claude/gen2-deployment for dev validation and claude/gen2-main
+// for main validation. After full cutover the branches will be plain
+// dev/main but during the migration we use long-lived feature branches so
+// the existing Gen 1 hosting app's dev/main keep building from origin/dev
+// and origin/main untouched.
+const branchEnv = process.env.AWS_BRANCH ?? '';
+const branch: 'dev' | 'main' =
+  branchEnv === 'main' || branchEnv === 'claude/gen2-main' ? 'main' : 'dev';
 const cfg = ENV_CONFIG[branch];
 
 triggerFn.addToRolePolicy(
