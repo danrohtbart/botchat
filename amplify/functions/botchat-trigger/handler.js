@@ -1,20 +1,16 @@
-/* Amplify Params - DO NOT EDIT
-	API_BOTCHAT_CHATTABLE_ARN
-	API_BOTCHAT_CHATTABLE_NAME
-	API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT
-	API_BOTCHAT_GRAPHQLAPIIDOUTPUT
-	API_BOTCHAT_PERSONALITIESTABLE_ARN
-	API_BOTCHAT_PERSONALITIESTABLE_NAME
-	ENV
-	REGION
-Amplify Params - DO NOT EDIT */
+// Env vars consumed (injected via amplify/backend.ts):
+//   API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT  — AppSync GraphQL URL
+//   REGION                                 — AWS region
+//   AVATAR_S3_BUCKET                       — destination bucket
+//   OPENAI_API_KEY_SSM_PATH                — SSM path to OpenAI key
+// AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN are auto-injected by Lambda.
 
-const https = require('https');
-const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
-const { Amplify } = require('aws-amplify');
-const { generateClient } = require('aws-amplify/api');
+import https from 'https';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/api';
 
 // Set these to false for normal production operation
 const debug = false;
@@ -54,7 +50,7 @@ async function getOpenAiKey() {
 }
 
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
-const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql.cjs');
+import { createChat, updatePersonalities, listPersonalities, listChats } from './graphql.js';
 
 function configureAmplify() {
     const amplify_config = {
@@ -85,7 +81,7 @@ function configureAmplify() {
 /**
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
 
     const record = event.Records[0];

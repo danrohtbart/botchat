@@ -7,7 +7,7 @@
  *   aws cognito-idp update-user-pool --user-pool-id <pool> --lambda-config PreSignUp=<arn>
  * See CLAUDE.md ("amplify push silently clears the Cognito pre-signup trigger").
  */
-exports.handler = (event, context, callback) => {
+export const handler = (event, context, callback) => {
   const email_address = event.request.userAttributes.email.toLowerCase();
   const address = event.request.userAttributes.email.split('@');
   const domain = address[1].toLowerCase();
