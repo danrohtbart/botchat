@@ -57,9 +57,15 @@ export const data = defineData({
   authorizationModes: {
     defaultAuthorizationMode: 'userPool',
   },
+  // branchName here MUST match the literal AWS_BRANCH at deploy time.
+  // We deploy from the long-lived feature branches claude/gen2-deployment
+  // and claude/gen2-main, NOT plain "dev"/"main" — so those names are what
+  // we key on. Without this match, the prior deploy created brand-new
+  // empty tables (Personalities-...-NONE etc.) and the live frontend
+  // started writing to them, stranding all the legacy data.
   migratedAmplifyGen1DynamoDbTableMappings: [
     {
-      branchName: 'dev',
+      branchName: 'claude/gen2-deployment',
       modelNameToTableNameMapping: {
         Personalities: 'Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
         Chat: 'Chat-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
@@ -67,7 +73,7 @@ export const data = defineData({
       },
     },
     {
-      branchName: 'main',
+      branchName: 'claude/gen2-main',
       modelNameToTableNameMapping: {
         Personalities: 'Personalities-ibuxugjs25bqrc2imosybxgkhe-main',
         Chat: 'Chat-ibuxugjs25bqrc2imosybxgkhe-main',
