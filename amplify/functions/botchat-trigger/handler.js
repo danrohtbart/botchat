@@ -61,7 +61,15 @@ import { createChat, updatePersonalities, listPersonalities, listChats } from '.
 function configureAmplify() {
     const amplify_config = {
         "aws_project_region": process.env.REGION,
-        "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
+        // Gen 2 endpoint (auto-injected via SSM by allow.resource() in
+        // amplify/data/resource.ts). Frontend is on Gen 2 too, so its
+        // subscriptions only fire for mutations through this API.
+        // Fallback to API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT (the Gen 1 URL,
+        // explicitly injected from backend.ts) for instant flip-back during
+        // soak if anything regresses.
+        "aws_appsync_graphqlEndpoint":
+            process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT
+            || process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
         "aws_appsync_region": process.env.REGION,
         "aws_appsync_authenticationType": "AWS_IAM",
     }

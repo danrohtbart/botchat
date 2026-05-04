@@ -90,42 +90,29 @@ triggerFn.addToRolePolicy(
   }),
 );
 
-// During the migration, the Lambda writes via the EXISTING Gen 1 AppSync
-// API (not the Gen 2 one). Two reasons:
-//   1. The Gen 1 frontend still subscribes to Gen 1's onCreateChat /
-//      onUpdatePersonalities. AppSync subscriptions only fire for mutations
-//      sent through THE SAME API — even when both APIs share DDB tables.
-//      A mutation through Gen 2 AppSync writes the record but Gen 1's
-//      subscription stays silent, so users see no bot reply / no new avatar
-//      until they hard-refresh.
-//   2. Gen 2's auto-generated update resolvers apply a stricter conditional
-//      check than Gen 1's, which fails on legacy records (returns
-//      DynamoDB:ConditionalCheckFailedException). Fixing this properly is
-//      separate from the cutover.
-// Once the frontend itself moves to Gen 2 AppSync (later PR), we can switch
-// the Lambda back to the Gen 2 endpoint.
-//
-// IMPORTANT: Gen 1's resolvers have a hardcoded adminRoles list in their
-// VTL stash. The Gen 2 trigger Lambda's name has been added to that list
-// out-of-band via `scripts/patch-gen1-resolvers.py`. Any `amplify push
-// --env <env>` on the Gen 1 stack will overwrite that patch — re-run the
-// script after each push.
+// Frontend cutover is complete (botchatapp.com now served by botchat-gen2,
+// using Gen 2 AppSync). Trigger Lambda now writes back through Gen 2
+// AppSync so the frontend's Gen 2 subscriptions see the bot replies and
+// avatar updates. The Gen 1 grant stays for now — harmless extra perm,
+// and will be removed when the rest of Gen 1 is decommissioned.
 triggerFn.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ['appsync:GraphQL'],
-    // The Gen 1 Lambda's IAM policy uses per-type ARNs (Query/*, Mutation/*,
-    // Subscription/*) — using just /* somehow doesn't satisfy the AppSync
-    // authorizer. Match the Gen 1 pattern exactly.
     resources: [
+      `${graphqlApi.arn}/*`,
       `${cfg.gen1ApiArn}/types/Query/*`,
       `${cfg.gen1ApiArn}/types/Mutation/*`,
       `${cfg.gen1ApiArn}/types/Subscription/*`,
-      `${graphqlApi.arn}/*`,
     ],
   }),
 );
 
+// AMPLIFY_DATA_GRAPHQL_ENDPOINT is auto-injected by Gen 2 (via SSM
+// reference) thanks to the schema-level allow.resource() rule. The handler
+// now reads that. The legacy API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT env var
+// is kept (pointing at Gen 1) so we can flip back instantly during the
+// soak window if Gen 2 mutations regress.
 const addEnv = (k: string, v: string) =>
   (triggerFn as unknown as { addEnvironment(k: string, v: string): unknown })
     .addEnvironment(k, v);
