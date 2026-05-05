@@ -98,20 +98,31 @@ function configureAmplify() {
 export const handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
 
-    const record = event.Records[0];
-
-    if (record.eventName === 'REMOVE') {
-        console.log('This is a REMOVE event. Ignoring it.');
-        return { statusCode: 200 };
+    // DDB streams arrive in BATCHES (batchSize: 10 for Personalities,
+    // 100 for Chat in our config). Process each record. The Gen 1
+    // implementation only handled Records[0] which silently lost any
+    // batched events — that's how the e2e personality-edit test caught
+    // the avatar regression: the user's edit happened to be Records[1]
+    // in a 2-record batch.
+    for (const record of event.Records) {
+        if (record.eventName === 'REMOVE') {
+            console.log(`Skipping REMOVE event ${record.eventID}`);
+            continue;
+        }
+        const eventSourceARN = record.eventSourceARN || '';
+        try {
+            if (eventSourceARN.includes('Personalities')) {
+                await handlePersonalitiesEvent(record);
+            } else {
+                await handleChatEvent(record);
+            }
+        } catch (err) {
+            // Log + swallow so a single bad record doesn't block the rest
+            // of the batch. DDB stream redrives the whole batch on throw.
+            console.error(`Failed to process record ${record.eventID}`, err);
+        }
     }
-
-    // Route on the event source. The Lambda is wired to two streams: ChatTable
-    // and PersonalitiesTable. The ARN is how we tell which one fired.
-    const eventSourceARN = record.eventSourceARN || '';
-    if (eventSourceARN.includes('Personalities')) {
-        return handlePersonalitiesEvent(record);
-    }
-    return handleChatEvent(record);
+    return { statusCode: 200 };
 };
 
 // ─── Personalities stream handler ────────────────────────────────────────────
@@ -266,10 +277,6 @@ async function handleChatEvent(record) {
     /**
      * Initialization section. Quickly return if the result can't be 200.
      */
-
-    /*
-    * Focusing only on Records[0] is losing messages. Future improvement: iterate here.
-    */
     const incoming_message = record.dynamodb;
     if (debug) {
         console.log("Incoming message is", incoming_message);
