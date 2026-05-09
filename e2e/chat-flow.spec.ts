@@ -75,30 +75,33 @@ test('personality edit produces a fresh avatar', async ({ page }) => {
     await expect(chatMessages.nth(2)).toBeVisible({ timeout: 90_000 });
   }
 
-  // Snapshot the FIRST avatar's src so we can detect a CHANGE — polling for
-  // "any new URL" lets stale background generations from earlier runs satisfy
-  // the assertion before the test's own edit takes effect.
-  const firstAvatar = page.locator('img[src*="botchat-avatars-"]').first();
-  await expect(firstAvatar).toBeVisible({ timeout: 30_000 });
-  const beforeSrc = await firstAvatar.getAttribute('src');
+  // Read the bot name in slot 1 so we can target THAT specific speaker's
+  // avatar. Picking ".first() avatar" is racy: the chat list is sorted by
+  // createdAt, and whichever bot replies first determines whether the
+  // first <img> is image_1 (slot 1) or image_2 (slot 2). Editing slot 1
+  // only regenerates image_1, so when image_2 is first, no observable
+  // change ever lands on the avatar we're polling.
+  const name1 = await page.getByLabel(/name 1/i).inputValue();
+  const slot1Avatar = page.locator(`img[alt="${name1} avatar"]`).first();
+  await expect(slot1Avatar).toBeVisible({ timeout: 30_000 });
+  const beforeSrc = await slot1Avatar.getAttribute('src');
   expect(beforeSrc).toMatch(/botchat-avatars-/);
 
   // Replace personality_1 with a fresh canonical value + unique token so
   // (a) the trigger Lambda's "no change → skip" guard doesn't fire and
   // (b) the prompt fed to DALL-E stays clean. Appending across runs bloats
   // the field and eventually trips OpenAI's content-policy safety filter.
-  // PersonalitiesUpdateForm's submit button is rendered with override text
-  // "Update Personalities" (see src/app/page.js).
-  const personality1 = page.getByLabel(/personality 1/i);
   // Use a fictional persona, not a real person — DALL-E's safety filter
   // rejects prompts that name real public figures, even when wrapped in a
-  // caricature instruction.
+  // caricature instruction. PersonalitiesUpdateForm's submit button is
+  // rendered with override text "Update Personalities" (see src/app/page.js).
+  const personality1 = page.getByLabel(/personality 1/i);
   await personality1.fill(`A calm wizard named Zelpor with a long silver beard. e2e-${Date.now()}`);
   await page.getByRole('button', { name: 'Update Personalities' }).click();
 
-  // Wait for the first avatar's src to change.
+  // Wait for the slot-1 speaker's avatar src to change.
   await expect.poll(
-    async () => firstAvatar.getAttribute('src'),
+    async () => slot1Avatar.getAttribute('src'),
     { timeout: 120_000, intervals: [2_000] },
   ).not.toBe(beforeSrc);
 });

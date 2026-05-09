@@ -87,32 +87,31 @@ test('Gen 2: personality edit → fresh avatar appears', async ({ page }) => {
     await expect(chatMessages.nth(2)).toBeVisible({ timeout: 90_000 });
   }
 
-  // Snapshot the FIRST avatar img's src — we'll wait for that specific
-  // <img> to change. Polling "any new URL" is too lenient: a stale
-  // background avatar generation from a prior run can satisfy it without
-  // this test's edit ever taking effect.
-  const firstAvatar = page.locator('img[src*="botchat-avatars-"]').first();
-  await expect(firstAvatar).toBeVisible({ timeout: 30_000 });
-  const beforeSrc = await firstAvatar.getAttribute('src');
+  // Target the slot-1 speaker's avatar specifically. Picking ".first()"
+  // is racy: whichever bot replies first determines whether the first
+  // <img> is image_1 or image_2. Editing slot 1 only regenerates image_1.
+  const name1 = await page.getByLabel(/name 1/i).inputValue();
+  const slot1Avatar = page.locator(`img[alt="${name1} avatar"]`).first();
+  await expect(slot1Avatar).toBeVisible({ timeout: 30_000 });
+  const beforeSrc = await slot1Avatar.getAttribute('src');
   expect(beforeSrc).toMatch(/botchat-avatars-/);
 
-  // Edit personality_1 with a unique token so the trigger Lambda's
-  // "no change → skip" guard doesn't fire. The PersonalitiesUpdateForm
-  // is always-mounted in a sidebar (no separate "open form" step). Its
-  // Submit button is rendered with override text "Update Personalities"
-  // (see src/app/page.js).
-  // Replace with a fresh canonical value to avoid bloating the field across
-  // runs (a long accumulated string trips OpenAI's content-policy filter).
+  // Replace personality_1 with a fresh canonical value + unique token so
+  // (a) the trigger Lambda's "no change → skip" guard doesn't fire and
+  // (b) the prompt stays short enough that bloat doesn't trip OpenAI's
+  // content-policy filter. Use a fictional persona — DALL-E rejects
+  // prompts that name real public figures, even when wrapped in a
+  // caricature instruction. The PersonalitiesUpdateForm is always-mounted
+  // in a sidebar; its submit button is rendered with override text
+  // "Update Personalities" (see src/app/page.js).
   const personality1 = page.getByLabel(/personality 1/i);
-  // Use a fictional persona — DALL-E rejects prompts that name real
-  // public figures, even when wrapped in a caricature instruction.
   await personality1.fill(`A calm wizard named Zelpor with a long silver beard. e2e-${Date.now()}`);
   await page.getByRole('button', { name: 'Update Personalities' }).click();
 
-  // Wait for the first avatar's src to change. Avatar generation is
-  // ~20-30s (Llama prompt + DALL-E + S3 + AppSync write + subscription).
+  // Wait for the slot-1 speaker's avatar src to change. Avatar generation
+  // is ~20-30s (Llama prompt + DALL-E + S3 + AppSync write + subscription).
   await expect.poll(
-    async () => firstAvatar.getAttribute('src'),
+    async () => slot1Avatar.getAttribute('src'),
     { timeout: 120_000, intervals: [2_000] },
   ).not.toBe(beforeSrc);
 });
