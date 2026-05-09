@@ -55,21 +55,12 @@ test('submit a topic: input clears and bot responses appear', async ({ page }) =
   expect(count).toBeGreaterThanOrEqual(3); // 1 user + 2 bot minimum
 });
 
-test('auth persists across page reload', async ({ page }) => {
-  // Reload the page — verifies Next.js + Amplify correctly rehydrate auth state
-  // without sending the user back to the login screen.
-  await page.reload();
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
-});
-
-test('sign out returns to login screen', async ({ page }) => {
-  await page.getByRole('button', { name: 'Sign out' }).click();
-  // Amplify Authenticator shows the sign-in tab after sign-out
-  await expect(page.getByRole('tab', { name: 'Sign In' })).toBeVisible();
-});
-
 test('personality edit produces a fresh avatar', async ({ page }) => {
+  // Must run before the sign-out test. Cognito revokes the session's refresh
+  // token on sign-out, which leaves the saved storageState's tokens server-
+  // side invalid; subsequent tests in the same spec then can't make
+  // authenticated AppSync calls, so the Personalities mutation silently fails.
+  //
   // Full pipeline: form Submit → AppSync update → DDB write → stream → trigger
   // Lambda → Llama prompt → DALL-E → S3 upload → AppSync update of image_1 →
   // onUpdatePersonalities subscription → React state replace → <img> re-renders.
@@ -106,4 +97,18 @@ test('personality edit produces a fresh avatar', async ({ page }) => {
     async () => firstAvatar.getAttribute('src'),
     { timeout: 120_000, intervals: [2_000] },
   ).not.toBe(beforeSrc);
+});
+
+test('auth persists across page reload', async ({ page }) => {
+  // Reload the page — verifies Next.js + Amplify correctly rehydrate auth state
+  // without sending the user back to the login screen.
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Delete Chats' })).toBeVisible();
+});
+
+test('sign out returns to login screen', async ({ page }) => {
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  // Amplify Authenticator shows the sign-in tab after sign-out
+  await expect(page.getByRole('tab', { name: 'Sign In' })).toBeVisible();
 });
