@@ -42,10 +42,30 @@ test:
         - mkdir -p $HOME/bin && curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b $HOME/bin
         - $HOME/bin/trufflehog git file://. --only-verified --fail
         - npm ci --cache .npm --prefer-offline
+        - npm install -g wait-on
+        - npm install -g pm2
+        # Playwright runs in a separate Docker container with its own
+        # Node + browser binaries. We need Docker daemon running here.
+        - sudo dnf install -y docker
+        - sudo dockerd &
+        - wait-on -t 15000 file:/var/run/docker.sock
+        # Start Next.js prod server backed by the just-built artifacts.
+        # Playwright will hit it on localhost:3000.
+        - npx pm2 start npm -- start
+        - wait-on http://localhost:3000
     test:
       commands:
         - npm run check:no-skip
         - npm test
+        - ls -la reports
+        # Run the Playwright e2e suite (login, chat-flow). The Lambda the
+        # tests exercise is whichever ampx pipeline-deploy just published,
+        # so this gates every push on real end-to-end behavior.
+        - sudo docker run --add-host=hostmachine:host-gateway --network=host --rm --init -v $(pwd):/home/pwuser -e TEST_USER_EMAIL="$TEST_USER_EMAIL" -e TEST_USER_PASSWORD="$TEST_USER_PASSWORD" -e CI=true mcr.microsoft.com/playwright:v1.59.1-jammy /bin/sh -c "cd /home/pwuser && npm install @playwright/test@1.59.1 && npx playwright install && npx playwright test --grep-invert 'gen2-validation'"
+        - ls -la reports
+    postTest:
+      commands:
+        - npx pm2 kill
   artifacts:
     baseDirectory: 'reports'
     files:

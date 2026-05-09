@@ -68,3 +68,42 @@ test('sign out returns to login screen', async ({ page }) => {
   // Amplify Authenticator shows the sign-in tab after sign-out
   await expect(page.getByRole('tab', { name: 'Sign In' })).toBeVisible();
 });
+
+test('personality edit produces a fresh avatar', async ({ page }) => {
+  // Full pipeline: form Submit → AppSync update → DDB write → stream → trigger
+  // Lambda → Llama prompt → DALL-E → S3 upload → AppSync update of image_1 →
+  // onUpdatePersonalities subscription → React state replace → <img> re-renders.
+  // ~20-30s end-to-end.
+  test.setTimeout(180_000);
+
+  // Need at least one chat row so an avatar <img> is mounted.
+  const chatMessages = page.locator('div[class*="ring-gray-200"][class*="my-2"]');
+  if ((await chatMessages.count()) === 0) {
+    await page.locator('#search').fill(`avatar setup ${Date.now()}`);
+    await page.locator('#search').press('Enter');
+    await expect(chatMessages.nth(2)).toBeVisible({ timeout: 90_000 });
+  }
+
+  // Snapshot the FIRST avatar's src so we can detect a CHANGE — polling for
+  // "any new URL" lets stale background generations from earlier runs satisfy
+  // the assertion before the test's own edit takes effect.
+  const firstAvatar = page.locator('img[src*="botchat-avatars-"]').first();
+  await expect(firstAvatar).toBeVisible({ timeout: 30_000 });
+  const beforeSrc = await firstAvatar.getAttribute('src');
+  expect(beforeSrc).toMatch(/botchat-avatars-/);
+
+  // Edit personality_1 with a unique token so the trigger Lambda's
+  // "no change → skip" guard doesn't fire. PersonalitiesUpdateForm's
+  // submit button is rendered with override text "Update Personalities"
+  // (see src/app/page.js).
+  const personality1 = page.getByLabel(/personality 1/i);
+  const current = await personality1.inputValue();
+  await personality1.fill(`${current} e2e-${Date.now()}`);
+  await page.getByRole('button', { name: 'Update Personalities' }).click();
+
+  // Wait for the first avatar's src to change.
+  await expect.poll(
+    async () => firstAvatar.getAttribute('src'),
+    { timeout: 120_000, intervals: [2_000] },
+  ).not.toBe(beforeSrc);
+});
