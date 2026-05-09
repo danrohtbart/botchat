@@ -18,16 +18,15 @@
  */
 import { test, expect } from '@playwright/test';
 
+// Ad-hoc spec: only runs when GEN2_URL is set. Skipped under CI's
+// default Playwright invocation (no env var), where the localhost-based
+// chat-flow.spec.ts covers the same flows.
 const GEN2_URL = process.env.GEN2_URL;
-if (!GEN2_URL) {
-  throw new Error('GEN2_URL must be set (e.g. https://claude-gen2-main.dr03gq88jj3a1.amplifyapp.com)');
-}
+const EMAIL = process.env.TEST_USER_EMAIL;
+const PASSWORD = process.env.TEST_USER_PASSWORD;
 
-const EMAIL = process.env.TEST_USER_EMAIL!;
-const PASSWORD = process.env.TEST_USER_PASSWORD!;
-if (!EMAIL || !PASSWORD) {
-  throw new Error('TEST_USER_EMAIL and TEST_USER_PASSWORD must be set');
-}
+test.skip(!GEN2_URL, 'GEN2_URL not set — skipping (set to a deployed URL to run).');
+test.skip(!EMAIL || !PASSWORD, 'TEST_USER_EMAIL / TEST_USER_PASSWORD not set');
 
 // Override baseURL for this spec only (config defaults to localhost).
 test.use({ baseURL: GEN2_URL, storageState: undefined });
@@ -35,8 +34,8 @@ test.use({ baseURL: GEN2_URL, storageState: undefined });
 async function login(page: import('@playwright/test').Page) {
   await page.goto('/');
   await page.getByRole('tab', { name: 'Sign In' }).click();
-  await page.getByPlaceholder('Enter your Email').fill(EMAIL);
-  await page.getByPlaceholder('Enter your Password').fill(PASSWORD);
+  await page.getByPlaceholder('Enter your Email').fill(EMAIL!);
+  await page.getByPlaceholder('Enter your Password').fill(PASSWORD!);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('button', { name: /sign\s*out/i })).toBeVisible({ timeout: 30_000 });
 }
