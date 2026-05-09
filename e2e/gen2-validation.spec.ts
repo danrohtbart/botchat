@@ -104,7 +104,9 @@ test('Gen 2: personality edit → fresh avatar appears', async ({ page }) => {
   // Replace with a fresh canonical value to avoid bloating the field across
   // runs (a long accumulated string trips OpenAI's content-policy filter).
   const personality1 = page.getByLabel(/personality 1/i);
-  await personality1.fill(`You are Tom Brady, a calm and focused quarterback. e2e-${Date.now()}`);
+  // Use a fictional persona — DALL-E rejects prompts that name real
+  // public figures, even when wrapped in a caricature instruction.
+  await personality1.fill(`A calm wizard named Zelpor with a long silver beard. e2e-${Date.now()}`);
   await page.getByRole('button', { name: 'Update Personalities' }).click();
 
   // Wait for the first avatar's src to change. Avatar generation is

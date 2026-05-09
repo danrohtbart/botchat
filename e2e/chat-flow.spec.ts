@@ -90,7 +90,10 @@ test('personality edit produces a fresh avatar', async ({ page }) => {
   // PersonalitiesUpdateForm's submit button is rendered with override text
   // "Update Personalities" (see src/app/page.js).
   const personality1 = page.getByLabel(/personality 1/i);
-  await personality1.fill(`You are Tom Brady, a calm and focused quarterback. e2e-${Date.now()}`);
+  // Use a fictional persona, not a real person — DALL-E's safety filter
+  // rejects prompts that name real public figures, even when wrapped in a
+  // caricature instruction.
+  await personality1.fill(`A calm wizard named Zelpor with a long silver beard. e2e-${Date.now()}`);
   await page.getByRole('button', { name: 'Update Personalities' }).click();
 
   // Wait for the first avatar's src to change.
