@@ -83,13 +83,14 @@ test('personality edit produces a fresh avatar', async ({ page }) => {
   const beforeSrc = await firstAvatar.getAttribute('src');
   expect(beforeSrc).toMatch(/botchat-avatars-/);
 
-  // Edit personality_1 with a unique token so the trigger Lambda's
-  // "no change → skip" guard doesn't fire. PersonalitiesUpdateForm's
-  // submit button is rendered with override text "Update Personalities"
-  // (see src/app/page.js).
+  // Replace personality_1 with a fresh canonical value + unique token so
+  // (a) the trigger Lambda's "no change → skip" guard doesn't fire and
+  // (b) the prompt fed to DALL-E stays clean. Appending across runs bloats
+  // the field and eventually trips OpenAI's content-policy safety filter.
+  // PersonalitiesUpdateForm's submit button is rendered with override text
+  // "Update Personalities" (see src/app/page.js).
   const personality1 = page.getByLabel(/personality 1/i);
-  const current = await personality1.inputValue();
-  await personality1.fill(`${current} e2e-${Date.now()}`);
+  await personality1.fill(`You are Tom Brady, a calm and focused quarterback. e2e-${Date.now()}`);
   await page.getByRole('button', { name: 'Update Personalities' }).click();
 
   // Wait for the first avatar's src to change.

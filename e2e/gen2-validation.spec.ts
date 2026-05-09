@@ -101,10 +101,10 @@ test('Gen 2: personality edit → fresh avatar appears', async ({ page }) => {
   // is always-mounted in a sidebar (no separate "open form" step). Its
   // Submit button is rendered with override text "Update Personalities"
   // (see src/app/page.js).
+  // Replace with a fresh canonical value to avoid bloating the field across
+  // runs (a long accumulated string trips OpenAI's content-policy filter).
   const personality1 = page.getByLabel(/personality 1/i);
-  const current = await personality1.inputValue();
-  const token = `e2e-${Date.now()}`;
-  await personality1.fill(`${current} ${token}`);
+  await personality1.fill(`You are Tom Brady, a calm and focused quarterback. e2e-${Date.now()}`);
   await page.getByRole('button', { name: 'Update Personalities' }).click();
 
   // Wait for the first avatar's src to change. Avatar generation is
