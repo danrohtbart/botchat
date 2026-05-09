@@ -78,10 +78,9 @@ test('Gen 2: personality edit → fresh avatar appears', async ({ page }) => {
   test.setTimeout(240_000);
   await login(page);
 
-  // Trigger a chat first so the chat list is populated and the avatar <img>
-  // tags are mounted in the DOM (the avatar belongs to a speaker on a chat
-  // row, not to the personality form).
-  // Make sure we have at least one chat that uses one of the personalities.
+  // Make sure a chat with the bots exists, so an <img> for at least one
+  // personality is mounted before the edit. (The avatar belongs to a chat
+  // speaker row, not to the personality form itself.)
   const chatMessages = page.locator('div[class*="ring-gray-200"][class*="my-2"]');
   if ((await chatMessages.count()) === 0) {
     await page.locator('#search').fill(`avatar setup ${Date.now()}`);
@@ -89,30 +88,30 @@ test('Gen 2: personality edit → fresh avatar appears', async ({ page }) => {
     await expect(chatMessages.nth(2)).toBeVisible({ timeout: 90_000 });
   }
 
-  // Capture every avatar src currently on the page
-  const beforeUrls = await page.locator('img[src*="botchat-avatars-"]').evaluateAll(
-    (imgs) => imgs.map((i) => (i as HTMLImageElement).src),
-  );
+  // Snapshot the FIRST avatar img's src — we'll wait for that specific
+  // <img> to change. Polling "any new URL" is too lenient: a stale
+  // background avatar generation from a prior run can satisfy it without
+  // this test's edit ever taking effect.
+  const firstAvatar = page.locator('img[src*="botchat-avatars-"]').first();
+  await expect(firstAvatar).toBeVisible({ timeout: 30_000 });
+  const beforeSrc = await firstAvatar.getAttribute('src');
+  expect(beforeSrc).toMatch(/botchat-avatars-/);
 
-  // Open personality controls + tweak personality_1 with a unique token
-  // so the trigger Lambda's "no change → skip" guard doesn't fire.
-  await page.getByRole('button', { name: 'Update Personalities' }).click();
+  // Edit personality_1 with a unique token so the trigger Lambda's
+  // "no change → skip" guard doesn't fire. The PersonalitiesUpdateForm
+  // is always-mounted in a sidebar (no separate "open form" step). Its
+  // Submit button is rendered with override text "Update Personalities"
+  // (see src/app/page.js).
   const personality1 = page.getByLabel(/personality 1/i);
   const current = await personality1.inputValue();
   const token = `e2e-${Date.now()}`;
   await personality1.fill(`${current} ${token}`);
-  await page.getByRole('button', { name: /save|update/i }).first().click();
+  await page.getByRole('button', { name: 'Update Personalities' }).click();
 
-  // Wait for a NEW avatar URL to appear — i.e. an <img> with a botchat-avatars
-  // src that wasn't on the page before the edit. Poll up to 120s.
+  // Wait for the first avatar's src to change. Avatar generation is
+  // ~20-30s (Llama prompt + DALL-E + S3 + AppSync write + subscription).
   await expect.poll(
-    async () => {
-      const nowUrls = await page.locator('img[src*="botchat-avatars-"]').evaluateAll(
-        (imgs) => imgs.map((i) => (i as HTMLImageElement).src),
-      );
-      // Any URL that wasn't in the "before" set means a fresh avatar landed.
-      return nowUrls.some((u) => !beforeUrls.includes(u));
-    },
+    async () => firstAvatar.getAttribute('src'),
     { timeout: 120_000, intervals: [2_000] },
-  ).toBe(true);
+  ).not.toBe(beforeSrc);
 });
