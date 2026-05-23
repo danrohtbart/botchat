@@ -155,15 +155,15 @@ async function generatePortraitImage(promptText, name) {
     }));
     const imagePrompt = `Caricature portrait illustration: ${promptResponse.output.message.content[0].text.trim()}`;
 
-    // Step 2: Call DALL-E 2 to generate the image.
-    // response_format is omitted — DALL-E 2 removed b64_json support; the
-    // default 'url' response is fetched and uploaded to S3 instead.
+    // Step 2: Call DALL-E 3 to generate the image.
+    // dall-e-2 was fully removed from the OpenAI API. dall-e-3 minimum
+    // size is 1024x1024; the URL response is downloaded and uploaded to S3.
     const openAiKey = await getOpenAiKey();
     const requestBody = JSON.stringify({
-        model: 'dall-e-2',
+        model: 'dall-e-3',
         prompt: imagePrompt,
         n: 1,
-        size: '256x256',
+        size: '1024x1024',
     });
 
     const imageUrl = await new Promise((resolve, reject) => {
