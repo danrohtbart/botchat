@@ -155,17 +155,18 @@ async function generatePortraitImage(promptText, name) {
     }));
     const imagePrompt = `Caricature portrait illustration: ${promptResponse.output.message.content[0].text.trim()}`;
 
-    // Step 2: Call DALL-E 2 to generate the image
+    // Step 2: Call DALL-E 2 to generate the image.
+    // response_format is omitted — DALL-E 2 removed b64_json support; the
+    // default 'url' response is fetched and uploaded to S3 instead.
     const openAiKey = await getOpenAiKey();
     const requestBody = JSON.stringify({
         model: 'dall-e-2',
         prompt: imagePrompt,
         n: 1,
         size: '256x256',
-        response_format: 'b64_json',
     });
 
-    const b64 = await new Promise((resolve, reject) => {
+    const imageUrl = await new Promise((resolve, reject) => {
         const options = {
             hostname: 'api.openai.com',
             path: '/v1/images/generations',
@@ -181,7 +182,7 @@ async function generatePortraitImage(promptText, name) {
             res.on('data', (chunk) => { data += chunk; });
             res.on('end', () => {
                 if (res.statusCode === 200) {
-                    resolve(JSON.parse(data).data[0].b64_json);
+                    resolve(JSON.parse(data).data[0].url);
                 } else {
                     reject(new Error(`OpenAI API error ${res.statusCode}: ${data}`));
                 }
@@ -192,9 +193,31 @@ async function generatePortraitImage(promptText, name) {
         req.end();
     });
 
+    // Download image bytes from the temporary OpenAI URL (valid ~60 min)
+    const imageBytes = await new Promise((resolve, reject) => {
+        const urlObj = new URL(imageUrl);
+        const opts = {
+            hostname: urlObj.hostname,
+            path: urlObj.pathname + urlObj.search,
+            method: 'GET',
+        };
+        const req = https.request(opts, (res) => {
+            const chunks = [];
+            res.on('data', (chunk) => chunks.push(chunk));
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    resolve(Buffer.concat(chunks));
+                } else {
+                    reject(new Error(`Failed to download image: ${res.statusCode}`));
+                }
+            });
+        });
+        req.on('error', reject);
+        req.end();
+    });
+
     const bucket = process.env.AVATAR_S3_BUCKET;
     const key = `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
-    const imageBytes = Buffer.from(b64, 'base64');
     const s3 = new S3Client({ region: 'us-east-1' });
     await s3.send(new PutObjectCommand({
         Bucket: bucket,
