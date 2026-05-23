@@ -155,18 +155,19 @@ async function generatePortraitImage(promptText, name) {
     }));
     const imagePrompt = `Caricature portrait illustration: ${promptResponse.output.message.content[0].text.trim()}`;
 
-    // Step 2: Call DALL-E 3 to generate the image.
-    // dall-e-2 was fully removed from the OpenAI API. dall-e-3 minimum
-    // size is 1024x1024; the URL response is downloaded and uploaded to S3.
+    // Step 2: Call gpt-image-1 to generate the image.
+    // DALL-E models were removed from this account; gpt-image-1 is the
+    // current generation. It returns b64_json by default — decoded and
+    // uploaded directly to S3 (no intermediate URL download needed).
     const openAiKey = await getOpenAiKey();
     const requestBody = JSON.stringify({
-        model: 'dall-e-3',
+        model: 'gpt-image-1',
         prompt: imagePrompt,
         n: 1,
         size: '1024x1024',
     });
 
-    const imageUrl = await new Promise((resolve, reject) => {
+    const imageBytes = await new Promise((resolve, reject) => {
         const options = {
             hostname: 'api.openai.com',
             path: '/v1/images/generations',
@@ -182,7 +183,8 @@ async function generatePortraitImage(promptText, name) {
             res.on('data', (chunk) => { data += chunk; });
             res.on('end', () => {
                 if (res.statusCode === 200) {
-                    resolve(JSON.parse(data).data[0].url);
+                    const b64 = JSON.parse(data).data[0].b64_json;
+                    resolve(Buffer.from(b64, 'base64'));
                 } else {
                     reject(new Error(`OpenAI API error ${res.statusCode}: ${data}`));
                 }
@@ -190,29 +192,6 @@ async function generatePortraitImage(promptText, name) {
         });
         req.on('error', reject);
         req.write(requestBody);
-        req.end();
-    });
-
-    // Download image bytes from the temporary OpenAI URL (valid ~60 min)
-    const imageBytes = await new Promise((resolve, reject) => {
-        const urlObj = new URL(imageUrl);
-        const opts = {
-            hostname: urlObj.hostname,
-            path: urlObj.pathname + urlObj.search,
-            method: 'GET',
-        };
-        const req = https.request(opts, (res) => {
-            const chunks = [];
-            res.on('data', (chunk) => chunks.push(chunk));
-            res.on('end', () => {
-                if (res.statusCode === 200) {
-                    resolve(Buffer.concat(chunks));
-                } else {
-                    reject(new Error(`Failed to download image: ${res.statusCode}`));
-                }
-            });
-        });
-        req.on('error', reject);
         req.end();
     });
 
