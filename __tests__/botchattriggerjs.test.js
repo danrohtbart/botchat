@@ -234,6 +234,7 @@ function setupGraphqlMock({
 
 beforeAll(() => {
   process.env.REGION = 'us-east-1';
+  process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT = 'https://test.appsync.amazonaws.com/graphql';
   process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT = 'https://test.appsync.amazonaws.com/graphql';
   process.env.API_BOTCHAT_GRAPHQLAPIKEYOUTPUT = 'test-api-key';
   process.env.AWS_ACCESS_KEY_ID = 'test-access-key';
