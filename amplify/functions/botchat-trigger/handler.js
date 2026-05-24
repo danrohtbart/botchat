@@ -326,13 +326,19 @@ async function handleChatEvent(record) {
             console.log ("all_personalities ", all_personalities.data.listPersonalities.items);
         }
 
-        // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner.
-        const owner_personality = all_personalities.data.listPersonalities.items[0];
+        // Sort descending by updatedAt and take the most recently saved record.
+        // The Lambda has IAM bypass of owner filters, so listPersonalities can
+        // return multiple records if the user has stale duplicates (e.g. from a
+        // create-instead-of-update during the Gen 2 migration). Without this
+        // sort, DDB scan order is undefined and an old record can win.
+        const items = all_personalities.data.listPersonalities.items;
+        items.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        if (items.length > 1) {
+            console.log(`Warning: user ${incoming_user_email} has ${items.length} personality records. Using most recently updated (${items[0].id}, updatedAt ${items[0].updatedAt}). Stale IDs: ${items.slice(1).map(p => p.id).join(', ')}`);
+        }
+        const owner_personality = items[0];
 
         if (owner_personality) {
-            if (owner_personality.length > 1) {
-                console.log("Warning: user ", incoming_content.email_address, "has too many personalities: ", owner_personality.length)
-            }
              // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner.
             name_1 = owner_personality.name_1;
             personality_1 = owner_personality.personality_1;
