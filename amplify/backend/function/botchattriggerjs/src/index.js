@@ -1,14 +1,3 @@
-/* Amplify Params - DO NOT EDIT
-	API_BOTCHAT_CHATTABLE_ARN
-	API_BOTCHAT_CHATTABLE_NAME
-	API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT
-	API_BOTCHAT_GRAPHQLAPIIDOUTPUT
-	API_BOTCHAT_PERSONALITIESTABLE_ARN
-	API_BOTCHAT_PERSONALITIESTABLE_NAME
-	ENV
-	REGION
-Amplify Params - DO NOT EDIT */
-
 const https = require('https');
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
@@ -59,7 +48,7 @@ const { createChat, updatePersonalities, listPersonalities, listChats } = requir
 function configureAmplify() {
     const amplify_config = {
         "aws_project_region": process.env.REGION,
-        "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
+        "aws_appsync_graphqlEndpoint": process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
         "aws_appsync_region": process.env.REGION,
         "aws_appsync_authenticationType": "AWS_IAM",
     }
