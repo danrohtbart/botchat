@@ -49,22 +49,4 @@ export const data = defineData({
   authorizationModes: {
     defaultAuthorizationMode: 'userPool',
   },
-  migratedAmplifyGen1DynamoDbTableMappings: [
-    {
-      branchName: 'dev',
-      modelNameToTableNameMapping: {
-        Personalities: 'Personalities-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
-        Chat: 'Chat-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
-        Bot: 'Bot-bgc6zyl7obfwla3r5qiwnrhk7a-dev',
-      },
-    },
-    {
-      branchName: 'main',
-      modelNameToTableNameMapping: {
-        Personalities: 'Personalities-ibuxugjs25bqrc2imosybxgkhe-main',
-        Chat: 'Chat-ibuxugjs25bqrc2imosybxgkhe-main',
-        Bot: 'Bot-ibuxugjs25bqrc2imosybxgkhe-main',
-      },
-    },
-  ],
 });

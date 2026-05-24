@@ -415,4 +415,21 @@ describe('Home component', () => {
     expect(spacer.className).toMatch(/\bh-24\b/);
     expect(spacer.className).toMatch(/\bmd:h-14\b/);
   });
+
+  test('desktop personality form receives an onError handler', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    expect(typeof lastPersonalitiesFormProps.onError).toBe('function');
+  });
+
+  test('mobile personality form receives an onError handler', async () => {
+    setupGraphQLMock([]);
+    await act(async () => {
+      render(<Home {...defaultProps} />);
+    });
+    fireEvent.click(screen.getByTestId('mobile-settings-button'));
+    expect(typeof lastPersonalitiesFormProps.onError).toBe('function');
+  });
 });
