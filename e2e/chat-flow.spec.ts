@@ -62,10 +62,10 @@ test('personality edit produces a fresh avatar', async ({ page }) => {
   // authenticated AppSync calls, so the Personalities mutation silently fails.
   //
   // Full pipeline: form Submit → AppSync update → DDB write → stream → trigger
-  // Lambda → Llama prompt → DALL-E → S3 upload → AppSync update of image_1 →
+  // Lambda → Llama prompt → gpt-image-1 → S3 upload → AppSync update of image_1 →
   // onUpdatePersonalities subscription → React state replace → <img> re-renders.
-  // ~20-30s end-to-end.
-  test.setTimeout(180_000);
+  // ~20-30s end-to-end. Two full pipeline runs if tables are empty (setup + edit).
+  test.setTimeout(300_000);
 
   // Need at least one chat row so an avatar <img> is mounted.
   const chatMessages = page.locator('div[class*="ring-gray-200"][class*="my-2"]');
@@ -75,15 +75,32 @@ test('personality edit produces a fresh avatar', async ({ page }) => {
     await expect(chatMessages.nth(2)).toBeVisible({ timeout: 90_000 });
   }
 
+  // Ensure slot 1 has a name so the avatar locator is stable even on fresh tables.
+  const nameInput = page.getByLabel(/name 1/i);
+  let name1 = await nameInput.inputValue();
+  if (!name1) {
+    await nameInput.fill('Jim');
+    name1 = 'Jim';
+  }
+
   // Read the bot name in slot 1 so we can target THAT specific speaker's
   // avatar. Picking ".first() avatar" is racy: the chat list is sorted by
   // createdAt, and whichever bot replies first determines whether the
   // first <img> is image_1 (slot 1) or image_2 (slot 2). Editing slot 1
   // only regenerates image_1, so when image_2 is first, no observable
   // change ever lands on the avatar we're polling.
-  const name1 = await page.getByLabel(/name 1/i).inputValue();
   const slot1Avatar = page.locator(`img[alt="${name1} avatar"]`).first();
-  await expect(slot1Avatar).toBeVisible({ timeout: 30_000 });
+
+  // If no avatar exists yet (e.g., fresh Gen 2 tables after Gen 1 decommission),
+  // create an initial one before proceeding to the edit-and-verify step.
+  const hasAvatar = await slot1Avatar.isVisible();
+  if (!hasAvatar) {
+    const personality1 = page.getByLabel(/personality 1/i);
+    await personality1.fill(`A calm wizard named Zelpor with a long silver beard. setup-${Date.now()}`);
+    await page.getByRole('button', { name: 'Update Personalities' }).click();
+    await expect(slot1Avatar).toBeVisible({ timeout: 120_000 });
+  }
+
   const beforeSrc = await slot1Avatar.getAttribute('src');
   expect(beforeSrc).toMatch(/botchat-avatars-/);
 
