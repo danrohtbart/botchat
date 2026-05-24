@@ -3,7 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
-        - nvm use 22
+        - nvm use 24
         # Use `npm ci`, not `npm install`. With the @aws-amplify/backend
         # dep tree (Gen 2 deps in the root devDependencies), `npm install`
         # mutates the committed lockfile to a state where the subsequent
@@ -33,7 +33,7 @@ test:
   phases:
     preTest:
       commands:
-        - nvm use 22
+        - nvm use 24
         - mkdir -p $HOME/bin && curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b $HOME/bin
         - $HOME/bin/trufflehog git file://. --only-verified --fail
         - npm ci

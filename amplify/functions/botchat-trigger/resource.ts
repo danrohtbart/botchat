@@ -21,7 +21,7 @@ import { defineFunction } from '@aws-amplify/backend';
 export const botchatTrigger = defineFunction({
   name: 'botchat-trigger',
   entry: './handler.js',
-  runtime: 22,
+  runtime: 24,
   timeoutSeconds: 90,
   memoryMB: 512,
   environment: {
