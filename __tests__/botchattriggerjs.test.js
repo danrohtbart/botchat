@@ -292,6 +292,21 @@ describe('Amplify.configure', () => {
     expect(configArg).not.toHaveProperty('aws_appsync_apiKey');
   });
 
+  test('uses AMPLIFY_DATA_GRAPHQL_ENDPOINT for the AppSync endpoint, not API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT', async () => {
+    const origGen1 = process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT;
+    process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT = 'https://gen1-legacy.appsync.amazonaws.com/graphql';
+    process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT = 'https://gen2-current.appsync.amazonaws.com/graphql';
+    try {
+      const event = makeStreamEvent();
+      await handler(event);
+      const configArg = Amplify.configure.mock.calls[0][0];
+      expect(configArg.aws_appsync_graphqlEndpoint).toBe('https://gen2-current.appsync.amazonaws.com/graphql');
+    } finally {
+      process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT = origGen1;
+      delete process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT;
+    }
+  });
+
   test('passes a credentials provider that reads Lambda IAM env vars', async () => {
     const event = makeStreamEvent();
     await handler(event);
