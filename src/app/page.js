@@ -16,9 +16,14 @@ import {
 
 const debug = false;
 
+// aws-amplify v6 accepts both Gen 1 (flat aws_* keys) and Gen 2 (nested
+// auth/data) shapes natively. Keep the v5-style spread — passing ssr in
+// libraryOptions (the v6 second arg) breaks the client-side session by
+// switching auth storage from localStorage to cookies, which is only
+// correct when the Next.js SSR adapter is in use. App Router 'use client'
+// components like this one don't use that adapter.
 Amplify.configure({
   ...awsmobile,
-  // this lets you run Amplify code on the server-side in Next.js
   ssr: true
 });
 const amplifyClient = generateClient();
