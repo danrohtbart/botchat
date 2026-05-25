@@ -310,7 +310,8 @@ describe('early-exit conditions', () => {
     const event = makeStreamEvent({ message_in_thread: 6 });
     const result = await handler(event);
     expect(result).not.toEqual({ statusCode: 204 });
-    expect(mockBedrockSend).toHaveBeenCalledTimes(1);
+    const chatCall = mockHttpsRequest.mock.calls.find(([opts]) => opts.path === '/v1/chat/completions');
+    expect(chatCall).toBeDefined();
   });
 });
 
@@ -589,7 +590,7 @@ describe('OpenAI response trimming', () => {
 
 describe('createChat output payload', () => {
   test('createChat is called with the correct output shape', async () => {
-    mockBedrockSend.mockResolvedValue(makeBedrockResponse('Great answer.'));
+    setupOpenAIChatMock('Great answer.');
     const event = makeStreamEvent({
       message: 'Q',
       message_in_thread: 0,
