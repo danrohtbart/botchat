@@ -26,7 +26,7 @@ import { defineFunction } from '@aws-amplify/backend';
 export const botchatTrigger = defineFunction({
   name: 'botchat-trigger',
   entry: './handler.js',
-  runtime: 20,
+  runtime: 24,
   timeoutSeconds: 90,
   memoryMB: 512,
   // Place this function in the data stack to avoid the circular dependency
