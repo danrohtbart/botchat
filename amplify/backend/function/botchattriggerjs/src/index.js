@@ -362,7 +362,8 @@ async function handleChatEvent(record) {
         * Moved to AWS Bedrock Converse API, to abstract away the specific model
         */
 
-        const bedrock_converse_system_prompt = [{ text: speaker_personality + ". Do not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking." }];
+        const today = new Date().toISOString().split('T')[0];
+        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You are knowledgeable about current players, teams, and recent sports events. Do not repeat the prompt. Your response should only be one person speaking.` }];
 
         // Converse API introducted in Summer 2024
         let bedrock_converse_messages = [];
@@ -445,7 +446,8 @@ async function handleChatEvent(record) {
          * Select which model will power the Bedrock request
          * Default is Meta Llama Instruct "meta.llama3-70b-instruct-v1:0";
          */
-        let modelId = "meta.llama3-70b-instruct-v1:0"; // Default
+        let modelId = "anthropic.claude-haiku-4-5-20251001-v1:0"; // Claude Haiku 4.5 — knowledge through ~Aug 2025, supports current player references
+//        modelId = "meta.llama3-70b-instruct-v1:0"; // Llama 3 70B — older training cutoff, avoid for sports currency
 //        modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0"; // Working
 //        modelId = "mistral.mistral-large-2402-v1:0" // Working
 //        modelId = "ai21.jamba-instruct-v1:0" // Working
