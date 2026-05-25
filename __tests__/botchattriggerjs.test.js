@@ -591,10 +591,10 @@ describe('return values and error handling', () => {
 });
 
 describe('Bedrock invocation parameters', () => {
-  test('ConverseCommand is called with the default model ID', async () => {
+  test('ConverseCommand is called with the Claude Haiku 4.5 model ID', async () => {
     await handler(makeStreamEvent());
     const converseArgs = ConverseCommand.mock.calls[0][0];
-    expect(converseArgs.modelId).toBe('meta.llama3-70b-instruct-v1:0');
+    expect(converseArgs.modelId).toBe('anthropic.claude-haiku-4-5-20251001-v1:0');
   });
 
   test('ConverseCommand is called with the correct inferenceConfig', async () => {
@@ -610,6 +610,29 @@ describe('Bedrock invocation parameters', () => {
   test('BedrockRuntimeClient is instantiated with the us-east-1 region', async () => {
     await handler(makeStreamEvent());
     expect(BedrockRuntimeClient).toHaveBeenCalledWith({ region: 'us-east-1' });
+  });
+});
+
+describe('system prompt construction', () => {
+  test('system prompt includes today\'s date in ISO format', async () => {
+    await handler(makeStreamEvent());
+    const converseArgs = ConverseCommand.mock.calls[0][0];
+    const systemText = converseArgs.system[0].text;
+    expect(systemText).toMatch(/\d{4}-\d{2}-\d{2}/);
+  });
+
+  test('system prompt does not restrict references to real people', async () => {
+    await handler(makeStreamEvent());
+    const converseArgs = ConverseCommand.mock.calls[0][0];
+    const systemText = converseArgs.system[0].text;
+    expect(systemText).not.toContain('Do not mention specific people');
+  });
+
+  test('system prompt instructs bot to reference current players and events', async () => {
+    await handler(makeStreamEvent());
+    const converseArgs = ConverseCommand.mock.calls[0][0];
+    const systemText = converseArgs.system[0].text;
+    expect(systemText).toContain('current players');
   });
 });
 
