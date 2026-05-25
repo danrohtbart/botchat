@@ -54,6 +54,6 @@
     "jest-junit": "^17.0.0",
     "postcss": "^8",
     "tailwindcss": "^4.2.4",
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.3"
   }
 }
