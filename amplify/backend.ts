@@ -67,6 +67,7 @@ const addEnv = (k: string, v: string) =>
 addEnv('REGION', triggerFn.stack.region);
 addEnv('AVATAR_S3_BUCKET', avatarBucket);
 
+
 const personalitiesTable = backend.data.resources.tables['Personalities'];
 const chatTable = backend.data.resources.tables['Chat'];
 

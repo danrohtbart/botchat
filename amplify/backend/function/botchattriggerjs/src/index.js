@@ -1,14 +1,3 @@
-/* Amplify Params - DO NOT EDIT
-	API_BOTCHAT_CHATTABLE_ARN
-	API_BOTCHAT_CHATTABLE_NAME
-	API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT
-	API_BOTCHAT_GRAPHQLAPIIDOUTPUT
-	API_BOTCHAT_PERSONALITIESTABLE_ARN
-	API_BOTCHAT_PERSONALITIESTABLE_NAME
-	ENV
-	REGION
-Amplify Params - DO NOT EDIT */
-
 const https = require('https');
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
@@ -59,7 +48,7 @@ const { createChat, updatePersonalities, listPersonalities, listChats } = requir
 function configureAmplify() {
     const amplify_config = {
         "aws_project_region": process.env.REGION,
-        "aws_appsync_graphqlEndpoint": process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
+        "aws_appsync_graphqlEndpoint": process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
         "aws_appsync_region": process.env.REGION,
         "aws_appsync_authenticationType": "AWS_IAM",
     }
@@ -182,6 +171,43 @@ async function generatePortraitImage(promptText, name) {
         ContentType: 'image/png',
     }));
     return `https://${bucket}.s3.amazonaws.com/${key}`;
+}
+
+async function callOpenAIChatCompletions(systemText, messages, openAiKey) {
+    const openaiMessages = [
+        { role: 'system', content: systemText },
+        ...messages.map(m => ({ role: m.role, content: m.content[0].text })),
+    ];
+    const requestBody = JSON.stringify({
+        model: 'gpt-4o-search-preview',
+        messages: openaiMessages,
+    });
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.openai.com',
+            path: '/v1/chat/completions',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${openAiKey}`,
+                'Content-Length': Buffer.byteLength(requestBody),
+            },
+        };
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    resolve(JSON.parse(data).choices[0].message.content);
+                } else {
+                    reject(new Error(`OpenAI chat API error ${res.statusCode}: ${data}`));
+                }
+            });
+        });
+        req.on('error', reject);
+        req.write(requestBody);
+        req.end();
+    });
 }
 
 async function handlePersonalitiesEvent(record) {
@@ -373,7 +399,8 @@ async function handleChatEvent(record) {
         * Moved to AWS Bedrock Converse API, to abstract away the specific model
         */
 
-        const bedrock_converse_system_prompt = [{ text: speaker_personality + ". Do not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking." }];
+        const today = new Date().toISOString().split('T')[0];
+        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You are knowledgeable about current players, teams, and recent sports events. Do not repeat the prompt. Your response should only be one person speaking.` }];
 
         // Converse API introducted in Summer 2024
         let bedrock_converse_messages = [];
@@ -452,74 +479,23 @@ async function handleChatEvent(record) {
             }
         }
 
-        /**
-         * Select which model will power the Bedrock request
-         * Default is Meta Llama Instruct "meta.llama3-70b-instruct-v1:0";
-         */
-        let modelId = "meta.llama3-70b-instruct-v1:0"; // Default
-//        modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0"; // Working
-//        modelId = "mistral.mistral-large-2402-v1:0" // Working
-//        modelId = "ai21.jamba-instruct-v1:0" // Working
-//        modelId = "cohere.command-r-plus-v1:0" // Working
-
-
-
-
-        /**
-         * Configure the Bedrock request for the Converse API
-         */
-        const bedrock_converse_params = {
-            maxTokens: length,
-            temperature: temperature,
-            top_p: top_p
-          };
-
-
-        /**
-         * Configure the BedrockRuntimeClient
-         */
-        const aws_sdk_config = {
-            region: 'us-east-1',
-        }
-
-
-        if (debug_admin) {
-            console.log("Bedrock config is", aws_sdk_config);
-            //console.log("Parameters: ", Parameters)
-        }
         if (debug) {
             console.log("bedrock_converse_messages is", bedrock_converse_messages);
-            for (let i = 0; i < bedrock_converse_messages.length; i++) {
-                console.log("bedrock_converse_messages ", i, ": ", bedrock_converse_messages[i]);
-            }
         }
 
         let message = '';
         if(mock_bedrock) {
             message = "Yo, what's up folks? It's Jim Hoagies here, and I gotta say, that game last night was a freakin' joke. The Ravens? They're a real team, they know how to get the job done. But the Jaguars? They're a bunch of scrubs, they don't belong on the same field as the Ravens. I mean, come on, they got shut out ";
         } else {
-            const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
-            if(debug) {
-                console.log("Running with Converse API.");
-            }
-            const converse_command = new ConverseCommand({
-                modelId: modelId,
-                messages: bedrock_converse_messages,
-                system: bedrock_converse_system_prompt,
-                inferenceConfig: bedrock_converse_params,
-            });
-            const converse_response = await bedrock_client.send(converse_command);
-            if (debug) {
-                console.log("Full Response from Bedrock Converse is", converse_response);
-                // iterate through the converse_response.output.message.content array
-                for (let i = 0; i < converse_response.output.message.content.length; i++) {
-                    console.log("content ", i, ": ", converse_response.output.message.content[i]);
-                }
-            }
-            message = converse_response.output.message.content[0].text || '';
+            const openAiKey = await getOpenAiKey();
+            message = await callOpenAIChatCompletions(
+                bedrock_converse_system_prompt[0].text,
+                bedrock_converse_messages,
+                openAiKey
+            );
         }
         if (debug) {
-            console.log("Full message body from Bedrock is:", message);
+            console.log("Full message body from OpenAI is:", message);
         }
         // Trim off any sentence fragments. Keep only the content to the left of the last punctuation in message.
         // Originally the code only checked for periods. Bots are expressive and sometimes use only exclamation points!

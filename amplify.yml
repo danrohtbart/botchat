@@ -18,11 +18,11 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci --cache .npm --prefer-offline
-        # Bridges amplify_outputs.json into src/aws-exports.js so the
-        # frontend imports the Gen 2 config (page.js still imports from
-        # ../aws-exports). aws-amplify@6 accepts the Gen 2 nested shape
-        # natively, so no transformation is needed.
+        - nvm use 24
+        - npm ci
+        - node scripts/sync-lambda-graphql.js
+        - |
+          git diff --exit-code amplify/backend/function/botchattriggerjs/src/graphql.js || (echo "ERROR: graphql.js is out of sync with src/graphql/. Run 'npm run sync-lambda-graphql' and commit the result." && exit 1)
         - node scripts/generate-amplify-config.js
     build:
       commands:
@@ -39,6 +39,7 @@ test:
   phases:
     preTest:
       commands:
+        - nvm use 24
         - mkdir -p $HOME/bin && curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b $HOME/bin
         - $HOME/bin/trufflehog git file://. --only-verified --fail
         - npm ci --cache .npm --prefer-offline
