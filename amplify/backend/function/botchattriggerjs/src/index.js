@@ -181,6 +181,7 @@ async function callOpenAIChatCompletions(systemText, messages, openAiKey) {
     const requestBody = JSON.stringify({
         model: 'gpt-4o-search-preview',
         messages: openaiMessages,
+        max_tokens: 120,
     });
     return new Promise((resolve, reject) => {
         const options = {
@@ -400,7 +401,7 @@ async function handleChatEvent(record) {
         */
 
         const today = new Date().toISOString().split('T')[0];
-        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You are knowledgeable about current players, teams, and recent sports events. Do not repeat the prompt. Your response should only be one person speaking.` }];
+        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You can use current sports news and player information to back your opinions, but stay in character at all times. Keep your response to 2-3 short sentences — this is live sports radio banter, not a report. Be opinionated and colorful. No markdown, no bullet points, no citations, no URLs. Do not repeat the prompt. Only one person is speaking.` }];
 
         // Converse API introducted in Summer 2024
         let bedrock_converse_messages = [];
