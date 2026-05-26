@@ -55,6 +55,74 @@ test('submit a topic: input clears and bot responses appear', async ({ page }) =
   expect(count).toBeGreaterThanOrEqual(3); // 1 user + 2 bot minimum
 });
 
+test('personality edit produces a fresh avatar', async ({ page }) => {
+  // Must run before the sign-out test. Cognito revokes the session's refresh
+  // token on sign-out, which leaves the saved storageState's tokens server-
+  // side invalid; subsequent tests in the same spec then can't make
+  // authenticated AppSync calls, so the Personalities mutation silently fails.
+  //
+  // Full pipeline: form Submit → AppSync update → DDB write → stream → trigger
+  // Lambda → Llama prompt → gpt-image-1 → S3 upload → AppSync update of image_1 →
+  // onUpdatePersonalities subscription → React state replace → <img> re-renders.
+  // ~20-30s end-to-end. Two full pipeline runs if tables are empty (setup + edit).
+  test.setTimeout(300_000);
+
+  // Need at least one chat row so an avatar <img> is mounted.
+  const chatMessages = page.locator('div[class*="ring-gray-200"][class*="my-2"]');
+  if ((await chatMessages.count()) === 0) {
+    await page.locator('#search').fill(`avatar setup ${Date.now()}`);
+    await page.locator('#search').press('Enter');
+    await expect(chatMessages.nth(2)).toBeVisible({ timeout: 90_000 });
+  }
+
+  // Ensure slot 1 has a name so the avatar locator is stable even on fresh tables.
+  const nameInput = page.getByLabel(/name 1/i);
+  let name1 = await nameInput.inputValue();
+  if (!name1) {
+    await nameInput.fill('Jim');
+    name1 = 'Jim';
+  }
+
+  // Read the bot name in slot 1 so we can target THAT specific speaker's
+  // avatar. Picking ".first() avatar" is racy: the chat list is sorted by
+  // createdAt, and whichever bot replies first determines whether the
+  // first <img> is image_1 (slot 1) or image_2 (slot 2). Editing slot 1
+  // only regenerates image_1, so when image_2 is first, no observable
+  // change ever lands on the avatar we're polling.
+  const slot1Avatar = page.locator(`img[alt="${name1} avatar"]`).first();
+
+  // If no avatar exists yet (e.g., fresh Gen 2 tables after Gen 1 decommission),
+  // create an initial one before proceeding to the edit-and-verify step.
+  const hasAvatar = await slot1Avatar.isVisible();
+  if (!hasAvatar) {
+    const personality1 = page.getByLabel(/personality 1/i);
+    await personality1.fill(`A calm wizard named Zelpor with a long silver beard. setup-${Date.now()}`);
+    await page.getByRole('button', { name: 'Update Personalities' }).click();
+    await expect(slot1Avatar).toBeVisible({ timeout: 120_000 });
+  }
+
+  const beforeSrc = await slot1Avatar.getAttribute('src');
+  expect(beforeSrc).toMatch(/botchat-avatars-/);
+
+  // Replace personality_1 with a fresh canonical value + unique token so
+  // (a) the trigger Lambda's "no change → skip" guard doesn't fire and
+  // (b) the prompt fed to DALL-E stays clean. Appending across runs bloats
+  // the field and eventually trips OpenAI's content-policy safety filter.
+  // Use a fictional persona, not a real person — DALL-E's safety filter
+  // rejects prompts that name real public figures, even when wrapped in a
+  // caricature instruction. PersonalitiesUpdateForm's submit button is
+  // rendered with override text "Update Personalities" (see src/app/page.js).
+  const personality1 = page.getByLabel(/personality 1/i);
+  await personality1.fill(`A calm wizard named Zelpor with a long silver beard. e2e-${Date.now()}`);
+  await page.getByRole('button', { name: 'Update Personalities' }).click();
+
+  // Wait for the slot-1 speaker's avatar src to change.
+  await expect.poll(
+    async () => slot1Avatar.getAttribute('src'),
+    { timeout: 120_000, intervals: [2_000] },
+  ).not.toBe(beforeSrc);
+});
+
 test('auth persists across page reload', async ({ page }) => {
   // Reload the page — verifies Next.js + Amplify correctly rehydrate auth state
   // without sending the user back to the login screen.

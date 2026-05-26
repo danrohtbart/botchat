@@ -83,7 +83,7 @@ const mockPersonality = {
 
 function setupGraphQLMock(chatItems = []) {
   mockGraphQL.mockImplementation((params) => {
-    if (params.query === subscriptions.onCreateChat) {
+    if (params.query === subscriptions.onCreateChat || params.query === subscriptions.onUpdatePersonalities) {
       return { subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }) };
     }
     if (params.query === queries.listChats) {
@@ -140,7 +140,7 @@ describe('Home component', () => {
       },
     ];
     mockGraphQL.mockImplementation((params) => {
-      if (params.query === subscriptions.onCreateChat) {
+      if (params.query === subscriptions.onCreateChat || params.query === subscriptions.onUpdatePersonalities) {
         return { subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }) };
       }
       if (params.query === queries.listChats) {
@@ -189,7 +189,7 @@ describe('Home component', () => {
       },
     ];
     mockGraphQL.mockImplementation((params) => {
-      if (params.query === subscriptions.onCreateChat) {
+      if (params.query === subscriptions.onCreateChat || params.query === subscriptions.onUpdatePersonalities) {
         return { subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }) };
       }
       if (params.query === queries.listChats) {
@@ -221,7 +221,7 @@ describe('Home component', () => {
       },
     ];
     mockGraphQL.mockImplementation((params) => {
-      if (params.query === subscriptions.onCreateChat) {
+      if (params.query === subscriptions.onCreateChat || params.query === subscriptions.onUpdatePersonalities) {
         return { subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }) };
       }
       if (params.query === queries.listChats) {

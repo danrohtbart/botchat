@@ -1,9 +1,17 @@
-const https = require('https');
-const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand }  = require('@aws-sdk/client-bedrock-runtime');
-const { Amplify } = require('aws-amplify');
-const { generateClient } = require('aws-amplify/api');
+// Env vars consumed (all set by amplify/backend.ts or the function resource):
+//   AMPLIFY_DATA_GRAPHQL_ENDPOINT         — Gen 2 AppSync URL (primary).
+//   API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT  — Gen 1 fallback AppSync URL.
+//   REGION                                 — AWS region.
+//   AVATAR_S3_BUCKET                       — destination bucket.
+//   OPENAI_API_KEY_SSM_PATH                — SSM path to OpenAI key.
+// AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN are auto-injected by Lambda.
+
+import https from 'https';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/api';
 
 // Set these to false for normal production operation
 const debug = false;
@@ -43,12 +51,14 @@ async function getOpenAiKey() {
 }
 
 // GraphQL operations — generated from src/graphql/ by `npm run sync-lambda-graphql`
-const { createChat, updatePersonalities, listPersonalities, listChats } = require('./graphql');
+import { createChat, updatePersonalities, listPersonalities, listChats } from './graphql.js';
 
 function configureAmplify() {
     const amplify_config = {
         "aws_project_region": process.env.REGION,
-        "aws_appsync_graphqlEndpoint": process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
+        "aws_appsync_graphqlEndpoint":
+            process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT
+            || process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
         "aws_appsync_region": process.env.REGION,
         "aws_appsync_authenticationType": "AWS_IAM",
     }
@@ -74,23 +84,34 @@ function configureAmplify() {
 /**
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
 
-    const record = event.Records[0];
-
-    if (record.eventName === 'REMOVE') {
-        console.log('This is a REMOVE event. Ignoring it.');
-        return { statusCode: 200 };
+    // DDB streams arrive in BATCHES (batchSize: 10 for Personalities,
+    // 100 for Chat in our config). Process each record. The Gen 1
+    // implementation only handled Records[0] which silently lost any
+    // batched events — that's how the e2e personality-edit test caught
+    // the avatar regression: the user's edit happened to be Records[1]
+    // in a 2-record batch.
+    for (const record of event.Records) {
+        if (record.eventName === 'REMOVE') {
+            console.log(`Skipping REMOVE event ${record.eventID}`);
+            continue;
+        }
+        const eventSourceARN = record.eventSourceARN || '';
+        try {
+            if (eventSourceARN.includes('Personalities')) {
+                await handlePersonalitiesEvent(record);
+            } else {
+                await handleChatEvent(record);
+            }
+        } catch (err) {
+            // Log + swallow so a single bad record doesn't block the rest
+            // of the batch. DDB stream redrives the whole batch on throw.
+            console.error(`Failed to process record ${record.eventID}`, err);
+        }
     }
-
-    // Route on the event source. The Lambda is wired to two streams: ChatTable
-    // and PersonalitiesTable. The ARN is how we tell which one fired.
-    const eventSourceARN = record.eventSourceARN || '';
-    if (eventSourceARN.includes('Personalities')) {
-        return handlePersonalitiesEvent(record);
-    }
-    return handleChatEvent(record);
+    return { statusCode: 200 };
 };
 
 // ─── Personalities stream handler ────────────────────────────────────────────
@@ -123,17 +144,19 @@ async function generatePortraitImage(promptText, name) {
     }));
     const imagePrompt = `Caricature portrait illustration: ${promptResponse.output.message.content[0].text.trim()}`;
 
-    // Step 2: Call DALL-E 2 to generate the image
+    // Step 2: Call gpt-image-1 to generate the image.
+    // DALL-E models were removed from this account; gpt-image-1 is the
+    // current generation. It returns b64_json by default — decoded and
+    // uploaded directly to S3 (no intermediate URL download needed).
     const openAiKey = await getOpenAiKey();
     const requestBody = JSON.stringify({
-        model: 'dall-e-2',
+        model: 'gpt-image-1',
         prompt: imagePrompt,
         n: 1,
-        size: '256x256',
-        response_format: 'b64_json',
+        size: '1024x1024',
     });
 
-    const b64 = await new Promise((resolve, reject) => {
+    const imageBytes = await new Promise((resolve, reject) => {
         const options = {
             hostname: 'api.openai.com',
             path: '/v1/images/generations',
@@ -149,7 +172,8 @@ async function generatePortraitImage(promptText, name) {
             res.on('data', (chunk) => { data += chunk; });
             res.on('end', () => {
                 if (res.statusCode === 200) {
-                    resolve(JSON.parse(data).data[0].b64_json);
+                    const b64 = JSON.parse(data).data[0].b64_json;
+                    resolve(Buffer.from(b64, 'base64'));
                 } else {
                     reject(new Error(`OpenAI API error ${res.statusCode}: ${data}`));
                 }
@@ -162,7 +186,6 @@ async function generatePortraitImage(promptText, name) {
 
     const bucket = process.env.AVATAR_S3_BUCKET;
     const key = `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
-    const imageBytes = Buffer.from(b64, 'base64');
     const s3 = new S3Client({ region: 'us-east-1' });
     await s3.send(new PutObjectCommand({
         Bucket: bucket,
@@ -171,6 +194,43 @@ async function generatePortraitImage(promptText, name) {
         ContentType: 'image/png',
     }));
     return `https://${bucket}.s3.amazonaws.com/${key}`;
+}
+
+async function callOpenAIChatCompletions(systemText, messages, openAiKey) {
+    const openaiMessages = [
+        { role: 'system', content: systemText },
+        ...messages.map(m => ({ role: m.role, content: m.content[0].text })),
+    ];
+    const requestBody = JSON.stringify({
+        model: 'gpt-4o-search-preview',
+        messages: openaiMessages,
+    });
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.openai.com',
+            path: '/v1/chat/completions',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${openAiKey}`,
+                'Content-Length': Buffer.byteLength(requestBody),
+            },
+        };
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    resolve(JSON.parse(data).choices[0].message.content);
+                } else {
+                    reject(new Error(`OpenAI chat API error ${res.statusCode}: ${data}`));
+                }
+            });
+        });
+        req.on('error', reject);
+        req.write(requestBody);
+        req.end();
+    });
 }
 
 async function handlePersonalitiesEvent(record) {
@@ -245,10 +305,6 @@ async function handleChatEvent(record) {
     /**
      * Initialization section. Quickly return if the result can't be 200.
      */
-
-    /*
-    * Focusing only on Records[0] is losing messages. Future improvement: iterate here.
-    */
     const incoming_message = record.dynamodb;
     if (debug) {
         console.log("Incoming message is", incoming_message);
@@ -296,13 +352,19 @@ async function handleChatEvent(record) {
             console.log ("all_personalities ", all_personalities.data.listPersonalities.items);
         }
 
-        // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner.
-        const owner_personality = all_personalities.data.listPersonalities.items[0];
+        // Sort descending by updatedAt and take the most recently saved record.
+        // The Lambda has IAM bypass of owner filters, so listPersonalities can
+        // return multiple records if the user has stale duplicates (e.g. from a
+        // create-instead-of-update during the Gen 2 migration). Without this
+        // sort, DDB scan order is undefined and an old record can win.
+        const items = all_personalities.data.listPersonalities.items;
+        items.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        if (items.length > 1) {
+            console.log(`Warning: user ${incoming_user_email} has ${items.length} personality records. Using most recently updated (${items[0].id}, updatedAt ${items[0].updatedAt}). Stale IDs: ${items.slice(1).map(p => p.id).join(', ')}`);
+        }
+        const owner_personality = items[0];
 
         if (owner_personality) {
-            if (owner_personality.length > 1) {
-                console.log("Warning: user ", incoming_content.email_address, "has too many personalities: ", owner_personality.length)
-            }
              // Assumes that there is only one personality per owner. The front end handles managing how many personalities there are per owner.
             name_1 = owner_personality.name_1;
             personality_1 = owner_personality.personality_1;
@@ -362,7 +424,8 @@ async function handleChatEvent(record) {
         * Moved to AWS Bedrock Converse API, to abstract away the specific model
         */
 
-        const bedrock_converse_system_prompt = [{ text: speaker_personality + ". Do not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking." }];
+        const today = new Date().toISOString().split('T')[0];
+        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You are knowledgeable about current players, teams, and recent sports events. Do not repeat the prompt. Your response should only be one person speaking.` }];
 
         // Converse API introducted in Summer 2024
         let bedrock_converse_messages = [];
@@ -441,74 +504,23 @@ async function handleChatEvent(record) {
             }
         }
 
-        /**
-         * Select which model will power the Bedrock request
-         * Default is Meta Llama Instruct "meta.llama3-70b-instruct-v1:0";
-         */
-        let modelId = "meta.llama3-70b-instruct-v1:0"; // Default
-//        modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0"; // Working
-//        modelId = "mistral.mistral-large-2402-v1:0" // Working
-//        modelId = "ai21.jamba-instruct-v1:0" // Working
-//        modelId = "cohere.command-r-plus-v1:0" // Working
-
-
-
-
-        /**
-         * Configure the Bedrock request for the Converse API
-         */
-        const bedrock_converse_params = {
-            maxTokens: length,
-            temperature: temperature,
-            top_p: top_p
-          };
-
-
-        /**
-         * Configure the BedrockRuntimeClient
-         */
-        const aws_sdk_config = {
-            region: 'us-east-1',
-        }
-
-
-        if (debug_admin) {
-            console.log("Bedrock config is", aws_sdk_config);
-            //console.log("Parameters: ", Parameters)
-        }
         if (debug) {
             console.log("bedrock_converse_messages is", bedrock_converse_messages);
-            for (let i = 0; i < bedrock_converse_messages.length; i++) {
-                console.log("bedrock_converse_messages ", i, ": ", bedrock_converse_messages[i]);
-            }
         }
 
         let message = '';
         if(mock_bedrock) {
             message = "Yo, what's up folks? It's Jim Hoagies here, and I gotta say, that game last night was a freakin' joke. The Ravens? They're a real team, they know how to get the job done. But the Jaguars? They're a bunch of scrubs, they don't belong on the same field as the Ravens. I mean, come on, they got shut out ";
         } else {
-            const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
-            if(debug) {
-                console.log("Running with Converse API.");
-            }
-            const converse_command = new ConverseCommand({
-                modelId: modelId,
-                messages: bedrock_converse_messages,
-                system: bedrock_converse_system_prompt,
-                inferenceConfig: bedrock_converse_params,
-            });
-            const converse_response = await bedrock_client.send(converse_command);
-            if (debug) {
-                console.log("Full Response from Bedrock Converse is", converse_response);
-                // iterate through the converse_response.output.message.content array
-                for (let i = 0; i < converse_response.output.message.content.length; i++) {
-                    console.log("content ", i, ": ", converse_response.output.message.content[i]);
-                }
-            }
-            message = converse_response.output.message.content[0].text || '';
+            const openAiKey = await getOpenAiKey();
+            message = await callOpenAIChatCompletions(
+                bedrock_converse_system_prompt[0].text,
+                bedrock_converse_messages,
+                openAiKey
+            );
         }
         if (debug) {
-            console.log("Full message body from Bedrock is:", message);
+            console.log("Full message body from OpenAI is:", message);
         }
         // Trim off any sentence fragments. Keep only the content to the left of the last punctuation in message.
         // Originally the code only checked for periods. Bots are expressive and sometimes use only exclamation points!
@@ -522,7 +534,7 @@ async function handleChatEvent(record) {
             console.log("Message is ", message);
         }
         if (message == '') {
-            console.warn("Warning: empty message returned by Bedrock.");
+            console.warn("Warning: empty message returned by OpenAI.");
             message = "I'm speechless. ";
         }
 

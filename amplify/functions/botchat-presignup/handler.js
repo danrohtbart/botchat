@@ -6,11 +6,12 @@
  * The trigger is attached out-of-band via:
  *   aws cognito-idp update-user-pool --user-pool-id <pool> --lambda-config PreSignUp=<arn>
  * See CLAUDE.md ("amplify push silently clears the Cognito pre-signup trigger").
+ *
+ * Must use async/await — callback-based handlers do not work with ESM bundles.
  */
-exports.handler = (event, context, callback) => {
+export const handler = async (event) => {
   const email_address = event.request.userAttributes.email.toLowerCase();
-  const address = event.request.userAttributes.email.split('@');
-  const domain = address[1].toLowerCase();
+  const domain = email_address.split('@')[1];
 
   const acceptableDomains = ['rohtbart.com', 'aetion.com', 'arccosgolf.com'];
   const acceptableAddresses = [
@@ -21,8 +22,7 @@ exports.handler = (event, context, callback) => {
   ];
 
   if (acceptableDomains.includes(domain) || acceptableAddresses.includes(email_address)) {
-    callback(null, event);
-  } else {
-    callback('Sorry, we are not yet open to the internet. Ask Dan.', null);
+    return event;
   }
+  throw new Error('Sorry, we are not yet open to the internet. Ask Dan.');
 };
