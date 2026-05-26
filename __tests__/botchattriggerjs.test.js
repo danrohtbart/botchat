@@ -472,11 +472,13 @@ describe('OpenAI message construction — continuation (message_in_thread > 0)',
     ]);
   });
 
-  test('length=2 (even): start=2, loop never runs — msg1 is skipped', async () => {
+  test('length=2 (even): co-host reply is folded into user message so bot 2 can react', async () => {
     const chats = [makeChat(0, 'Q0'), makeChat(1, 'A1')];
     const messages = await getOpenAIMessages(chats, 2);
     expect(messages).toHaveLength(1);
-    expect(messages[0]).toEqual({ role: 'user', content: 'Q0' });
+    expect(messages[0].role).toBe('user');
+    expect(messages[0].content).toContain('Q0');
+    expect(messages[0].content).toContain('A1');
   });
 
   test('length=3 (odd): [user(Q0), assistant(A1), user(Q2)]', async () => {
