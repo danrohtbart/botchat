@@ -685,7 +685,26 @@ describe('system prompt construction', () => {
   test('system message instructs bot to reference current players and events', async () => {
     await handler(makeStreamEvent());
     const body = getOpenAIChatRequestBody();
-    expect(body.messages[0].content).toContain('current players');
+    expect(body.messages[0].content).toContain('current');
+  });
+
+  test('system message bans markdown, citations, and URLs', async () => {
+    await handler(makeStreamEvent());
+    const body = getOpenAIChatRequestBody();
+    expect(body.messages[0].content).toMatch(/no markdown|no citation|no URL/i);
+  });
+
+  test('system message enforces short 2-3 sentence responses', async () => {
+    await handler(makeStreamEvent());
+    const body = getOpenAIChatRequestBody();
+    expect(body.messages[0].content).toMatch(/2.3 sentence|short|brief/i);
+  });
+
+  test('OpenAI request includes max_tokens to cap response length', async () => {
+    await handler(makeStreamEvent());
+    const body = getOpenAIChatRequestBody();
+    expect(body.max_tokens).toBeDefined();
+    expect(body.max_tokens).toBeLessThanOrEqual(150);
   });
 });
 
