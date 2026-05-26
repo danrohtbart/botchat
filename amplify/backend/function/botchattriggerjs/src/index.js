@@ -181,6 +181,7 @@ async function callOpenAIChatCompletions(systemText, messages, openAiKey) {
     const requestBody = JSON.stringify({
         model: 'gpt-4o-search-preview',
         messages: openaiMessages,
+        max_tokens: 120,
     });
     return new Promise((resolve, reject) => {
         const options = {
@@ -400,7 +401,7 @@ async function handleChatEvent(record) {
         */
 
         const today = new Date().toISOString().split('T')[0];
-        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You are knowledgeable about current players, teams, and recent sports events. Do not repeat the prompt. Your response should only be one person speaking.` }];
+        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You can use current sports news and player information to back your opinions, but stay in character at all times. Keep your response to 2-3 short sentences — this is live sports radio banter, not a report. Be opinionated and colorful. You are speaking live on radio, not writing — never type URLs, citation markers, bracketed references, or footnotes. No markdown, no bullet points. Do not repeat the prompt. Only one person is speaking.` }];
 
         // Converse API introducted in Summer 2024
         let bedrock_converse_messages = [];
@@ -451,6 +452,12 @@ async function handleChatEvent(record) {
                     start = 2;
                     if (debug) {
                         console.log("chat_messages.length is even", chat_messages.length);
+                    }
+                    // length=2 means bot 1 responded but bot 2 has no context.
+                    // Fold bot 1's reply into the user message so bot 2 can react.
+                    if (chat_messages.length === 2) {
+                        const cohost = chat_messages[1].message.replace(/\n/g, ' ');
+                        bedrock_converse_messages[0].content[0].text += ` Co-host just said: "${cohost}"`;
                     }
                 }
 
