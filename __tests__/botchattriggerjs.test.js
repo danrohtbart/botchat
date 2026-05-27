@@ -588,6 +588,20 @@ describe('OpenAI response trimming', () => {
     const msg = await getWrittenMessage('');
     expect(msg).toBe("I'm speechless. ");
   });
+
+  test('strips inline markdown citation links before writing to DynamoDB', async () => {
+    const msg = await getWrittenMessage('Brunson was incredible. ([nba.com](https://nba.com/test?utm_source=openai)) Best player in the playoffs!');
+    expect(msg).not.toMatch(/\(\[/);
+    expect(msg).toContain('Brunson was incredible.');
+    expect(msg).toContain('Best player in the playoffs!');
+  });
+
+  test('strips multiple citation links in one response', async () => {
+    const msg = await getWrittenMessage('Brunson dropped 30. ([nba.com](https://nba.com/a)) Towns added 22. ([cbsnews.com](https://cbsnews.com/b)) Knicks win!');
+    expect(msg).not.toMatch(/\(\[/);
+    expect(msg).toContain('Brunson dropped 30.');
+    expect(msg).toContain('Towns added 22.');
+  });
 });
 
 describe('createChat output payload', () => {
@@ -707,6 +721,12 @@ describe('system prompt construction', () => {
     const body = getOpenAIChatRequestBody();
     expect(body.max_tokens).toBeDefined();
     expect(body.max_tokens).toBeLessThanOrEqual(150);
+  });
+
+  test('system message tells bot to react to co-host before adding their own take', async () => {
+    await handler(makeStreamEvent());
+    const body = getOpenAIChatRequestBody();
+    expect(body.messages[0].content).toMatch(/react.*co-host/i);
   });
 });
 
