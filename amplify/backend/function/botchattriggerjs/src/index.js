@@ -439,43 +439,19 @@ async function handleChatEvent(record) {
                     console.log ("Sorted chat_messages ", chat_messages);
                 }
 
-                // Handle the slightly unusual first message: it is always the User's prompt
+                // Anchor on the original question.
                 bedrock_converse_messages.push({
                     role: "user",
                     content: [{ text: chat_messages[0].message.replace(/\n/g, ' ') }]
                 });
 
-                // Iterate through the rest of the messages IN PAIRS, appending them to the prompt.
-                // Trade-off decision: when chat_messages is even and >0. To prompt the bot correctly, we're skipping the first response by the prior bots.
-                let start = 1;
-                if (chat_messages.length % 2 == 0) {
-                    start = 2;
-                    if (debug) {
-                        console.log("chat_messages.length is even", chat_messages.length);
-                    }
-                    // length=2 means bot 1 responded but bot 2 has no context.
-                    // Fold bot 1's reply into the user message so bot 2 can react.
-                    if (chat_messages.length === 2) {
-                        const cohost = chat_messages[1].message.replace(/\n/g, ' ');
-                        bedrock_converse_messages[0].content[0].text += ` Co-host just said: "${cohost}"`;
-                    }
-                }
-
-                for (let i = start; i < chat_messages.length - 1; i += 2) {
-                    if (debug) {
-                        console.log("i is", i);
-                        console.log("chat_messages[i].message is", chat_messages[i].message);
-                        console.log("chat_messages[i+1].message is", chat_messages[i+1].message);
-                    }
-
-                    bedrock_converse_messages.push({
-                        role: "assistant",
-                        content: [{ text: chat_messages[i].message.replace(/\n/g, ' ') }]
-                    });
-                    bedrock_converse_messages.push({
-                        role: "user",
-                        content: [{ text: chat_messages[i+1].message.replace(/\n/g, ' ') }]
-                    });
+                // Fold in co-host's most recent message so this bot can react directly.
+                // Passing the full alternating history caused gpt-4o-search-preview to echo
+                // the co-host verbatim (unlabelled "user" messages + same web search → same text).
+                if (chat_messages.length >= 2) {
+                    const cohostLatest = chat_messages[chat_messages.length - 1];
+                    const cohost = cohostLatest.message.replace(/\n/g, ' ');
+                    bedrock_converse_messages[0].content[0].text += ` Co-host ${cohostLatest.speaker_name} just said: "${cohost}"`;
                 }
             } catch (error) {
                 bedrock_converse_messages.push({
