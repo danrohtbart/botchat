@@ -401,7 +401,10 @@ async function handleChatEvent(record) {
         */
 
         const today = new Date().toISOString().split('T')[0];
-        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You can use current sports news and player information to back your opinions, but stay in character at all times. React directly to your co-host's last point, then add your own take. Keep your response brief — this is live sports radio banter, not a report. Be opinionated and colorful. You are speaking live on radio, not writing — never type URLs, citation markers, bracketed references, or footnotes. No markdown, no bullet points. Do not repeat the prompt. Only one person is speaking.` }];
+        const react_or_open = message_in_thread === 0
+            ? 'Open the conversation with your take on the topic.'
+            : `React directly to your co-host's last point, then add your own take.`;
+        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You can use current sports news and player information to back your opinions, but stay in character at all times. ${react_or_open} Keep your response brief — this is live sports radio banter, not a report. Be opinionated and colorful. You are speaking live on radio, not writing — never type URLs, citation markers, bracketed references, or footnotes. No markdown, no bullet points. Do not repeat the prompt. Only one person is speaking.` }];
 
         // Converse API introducted in Summer 2024
         let bedrock_converse_messages = [];
