@@ -426,7 +426,7 @@ async function handleChatEvent(record) {
         */
 
         const today = new Date().toISOString().split('T')[0];
-        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You can use current sports news and player information to back your opinions, but stay in character at all times. React directly to your co-host's last point, then add your own take. Keep your response to 2-3 short sentences — this is live sports radio banter, not a report. Be opinionated and colorful. You are speaking live on radio, not writing — never type URLs, citation markers, bracketed references, or footnotes. No markdown, no bullet points. Do not repeat the prompt. Only one person is speaking.` }];
+        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You can use current sports news and player information to back your opinions, but stay in character at all times. React directly to your co-host's last point, then add your own take. Keep your response brief — this is live sports radio banter, not a report. Be opinionated and colorful. You are speaking live on radio, not writing — never type URLs, citation markers, bracketed references, or footnotes. No markdown, no bullet points. Do not repeat the prompt. Only one person is speaking.` }];
 
         // Converse API introducted in Summer 2024
         let bedrock_converse_messages = [];
@@ -507,6 +507,8 @@ async function handleChatEvent(record) {
         }
         // Strip inline citation links that gpt-4o-search-preview injects: ([source](url))
         message = message.replace(/\s*\(\[[^\]]*\]\([^)]*\)\)/g, '');
+        // Strip markdown header lines (## ...) and bullet lines (- ...) from search result blocks
+        message = message.replace(/^#+\s.*$/gm, '').replace(/^-\s.*$/gm, '').replace(/^\s*\n/gm, '').trim();
         // Trim off any sentence fragments. Keep only the content to the left of the last punctuation in message.
         // Originally the code only checked for periods. Bots are expressive and sometimes use only exclamation points!
         const last_period = message.lastIndexOf(".")+1;

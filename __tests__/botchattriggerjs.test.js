@@ -598,6 +598,23 @@ describe('OpenAI response trimming', () => {
     expect(msg).toContain('Brunson dropped 30.');
     expect(msg).toContain('Towns added 22.');
   });
+
+  test('strips markdown header lines injected by search results', async () => {
+    const msg = await getWrittenMessage(
+      '\n## NBA Schedule\n- Thunder @ Spurs on Thursday, May 28 at 8:30 PM\n\n\nThe Spurs are facing elimination tonight.'
+    );
+    expect(msg).not.toMatch(/^##/m);
+    expect(msg).not.toContain('## NBA Schedule');
+    expect(msg).toContain('The Spurs are facing elimination tonight.');
+  });
+
+  test('strips markdown bullet lines injected by search results', async () => {
+    const msg = await getWrittenMessage(
+      '\n## NBA Schedule\n- Thunder @ Spurs on Thursday, May 28 at 8:30 PM\n\n\nThe Spurs are facing elimination tonight.'
+    );
+    expect(msg).not.toMatch(/^- /m);
+    expect(msg).not.toContain('Thunder @ Spurs');
+  });
 });
 
 describe('createChat output payload', () => {
@@ -706,10 +723,11 @@ describe('system prompt construction', () => {
     expect(body.messages[0].content).toMatch(/no markdown|no citation|no URL/i);
   });
 
-  test('system message enforces short 2-3 sentence responses', async () => {
+  test('system message tells bot to keep response brief', async () => {
     await handler(makeStreamEvent());
     const body = getOpenAIChatRequestBody();
-    expect(body.messages[0].content).toMatch(/2.3 sentence|short|brief/i);
+    expect(body.messages[0].content).toMatch(/\bbrief\b/i);
+    expect(body.messages[0].content).not.toMatch(/2-3 (short )?sentences/i);
   });
 
   test('OpenAI request includes max_tokens to cap response length', async () => {
