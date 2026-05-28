@@ -481,51 +481,47 @@ describe('OpenAI message construction — continuation (message_in_thread > 0)',
     expect(messages[0].content).toContain('A1');
   });
 
-  test('length=3 (odd): [user(Q0), assistant(A1), user(Q2)]', async () => {
+  test('length=3: single message — original Q + co-host most recent (Q2)', async () => {
     const chats = [makeChat(0, 'Q0'), makeChat(1, 'A1'), makeChat(2, 'Q2')];
     const messages = await getOpenAIMessages(chats, 3);
-    expect(messages).toEqual([
-      { role: 'user',      content: 'Q0' },
-      { role: 'assistant', content: 'A1' },
-      { role: 'user',      content: 'Q2' },
-    ]);
+    expect(messages).toHaveLength(1);
+    expect(messages[0].role).toBe('user');
+    expect(messages[0].content).toContain('Q0');
+    expect(messages[0].content).toContain('Q2');
+    expect(messages[0].content).not.toContain('A1');
   });
 
-  test('length=4 (even): start=2, msg1 skipped — [user(Q0), assistant(A2), user(Q3)]', async () => {
+  test('length=4: single message — original Q + co-host most recent (Q3)', async () => {
     const chats = [makeChat(0, 'Q0'), makeChat(1, 'A1'), makeChat(2, 'A2'), makeChat(3, 'Q3')];
     const messages = await getOpenAIMessages(chats, 4);
-    expect(messages).toEqual([
-      { role: 'user',      content: 'Q0' },
-      { role: 'assistant', content: 'A2' },
-      { role: 'user',      content: 'Q3' },
-    ]);
+    expect(messages).toHaveLength(1);
+    expect(messages[0].role).toBe('user');
+    expect(messages[0].content).toContain('Q0');
+    expect(messages[0].content).toContain('Q3');
   });
 
-  test('length=5 (odd): full alternating sequence of 5 messages', async () => {
+  test('length=5: single message — original Q + co-host most recent (Q4)', async () => {
     const chats = [
       makeChat(0, 'Q0'), makeChat(1, 'A1'), makeChat(2, 'Q2'),
       makeChat(3, 'A3'), makeChat(4, 'Q4'),
     ];
     const messages = await getOpenAIMessages(chats, 5);
-    expect(messages).toEqual([
-      { role: 'user',      content: 'Q0' },
-      { role: 'assistant', content: 'A1' },
-      { role: 'user',      content: 'Q2' },
-      { role: 'assistant', content: 'A3' },
-      { role: 'user',      content: 'Q4' },
-    ]);
+    expect(messages).toHaveLength(1);
+    expect(messages[0].role).toBe('user');
+    expect(messages[0].content).toContain('Q0');
+    expect(messages[0].content).toContain('Q4');
   });
 
-  test('sorts chats by message_in_thread before building messages', async () => {
+  test('sorts chats by message_in_thread — original Q is always first in the prompt', async () => {
     const chats = [makeChat(2, 'Q2'), makeChat(0, 'Q0'), makeChat(1, 'A1')];
     const messages = await getOpenAIMessages(chats, 3);
-    expect(messages[0].content).toBe('Q0');
+    expect(messages[0].content).toMatch(/^Q0/);
   });
 
-  test('newlines in chat history messages are replaced with spaces', async () => {
+  test('newlines in chat messages are replaced with spaces', async () => {
     const chats = [makeChat(0, 'Q0\npart2'), makeChat(1, 'A1'), makeChat(2, 'Q2')];
     const messages = await getOpenAIMessages(chats, 3);
-    expect(messages[0].content).toBe('Q0 part2');
+    expect(messages[0].content).toContain('Q0 part2');
   });
 
   test('falls back to last_statement single message when listChats throws — handler does not throw', async () => {
