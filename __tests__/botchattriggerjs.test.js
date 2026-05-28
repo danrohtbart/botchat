@@ -738,9 +738,25 @@ describe('system prompt construction', () => {
   });
 
   test('system message tells bot to react to co-host before adding their own take', async () => {
-    await handler(makeStreamEvent());
+    setupGraphqlMock({ chats: [makeChat(0, 'Q'), makeChat(1, 'A')] });
+    const event = makeStreamEvent({ message_in_thread: 1, thread_id: 'thread-abc' });
+    await handler(event);
     const body = getOpenAIChatRequestBody();
     expect(body.messages[0].content).toMatch(/react.*co-host/i);
+  });
+
+  test('opening system message (msg0) does not tell bot to react to co-host', async () => {
+    const event = makeStreamEvent({ message_in_thread: 0 });
+    await handler(event);
+    const body = getOpenAIChatRequestBody();
+    expect(body.messages[0].content).not.toMatch(/react.*co-host/i);
+  });
+
+  test('opening system message (msg0) tells bot to open the conversation with their take', async () => {
+    const event = makeStreamEvent({ message_in_thread: 0 });
+    await handler(event);
+    const body = getOpenAIChatRequestBody();
+    expect(body.messages[0].content).toMatch(/open.*conversation/i);
   });
 });
 
