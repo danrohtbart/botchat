@@ -19,7 +19,7 @@
     "@aws-amplify/ui-react": "^6.15.3",
     "@aws-sdk/client-bedrock-runtime": "^3.1041.0",
     "@aws-sdk/client-lambda": "^3.993.0",
-    "@aws-sdk/client-sns": "^3.993.0",
+    "@aws-sdk/client-sns": "^3.1043.0",
     "@tailwindcss/postcss": "^4.2.4",
     "aws-amplify": "^6.16.4",
     "boto3": "^0.0.1",
@@ -37,7 +37,7 @@
     "@aws-amplify/backend": "^1.22.0",
     "@aws-amplify/backend-cli": "^1.8.2",
     "@aws-sdk/client-s3": "^3.1041.0",
-    "@aws-sdk/client-ssm": "^3.1041.0",
+    "@aws-sdk/client-ssm": "^3.1043.0",
     "@playwright/test": "1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -51,9 +51,9 @@
     "eslint-config-next": "^16.2.4",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
-    "jest-junit": "^16.0.0",
+    "jest-junit": "^17.0.0",
     "postcss": "^8",
     "tailwindcss": "^4.2.4",
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.3"
   }
 }

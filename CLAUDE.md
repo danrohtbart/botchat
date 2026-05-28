@@ -104,6 +104,7 @@ Constraints that apply in both modes (never override):
 - Never delete, skip, or disable a test from a prior PR to make a new test pass.
 - Never disable or work around TruffleHog.
 - **Never merge a PR to `main`** — only Dan promotes to production.
+- **Always check IAM privileges when planning AWS operations.** Before executing any plan that calls AWS APIs (especially destructive ones like `delete-domain-association`, `update-event-source-mapping`, anything touching Route 53, IAM, CloudFront, Cognito user pool config, or production CFN stacks), confirm the calling identity (`aws sts get-caller-identity`) has the privileges every step needs — including the implicit ones services call on your behalf (e.g. Amplify domain association requires `route53:ListHostedZones` / `route53:ChangeResourceRecordSets` on the hosted zone). If a step lacks privileges, stop and either escalate to Dan to run via the console with root creds, or refuse the plan. Do **not** execute the destructive first step (the one that takes prod offline) hoping the next step works — Amplify domain association already burned us once: the gen2-deployment cutover deleted the Gen 1 domain assoc, then the Gen 2 create failed on `route53:ListHostedZones`, leaving `botchatapp.com` unresolvable until Dan re-attached via the console.
 
 ---
 
@@ -242,15 +243,21 @@ When writing Lambda tests, always import AWS SDK modules from the project root `
 - **Selenium** is no longer used in CI (replaced by Playwright). Do not add Selenium back to the CI pipeline.
 - **`aws-amplify` v6 does not auto-discover Lambda IAM credentials.** When the Lambda calls AppSync with `AWS_IAM` auth, it must pass a custom `credentialsProvider` to `Amplify.configure()` that reads `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` from the environment. Without this, every GraphQL call fails with `NoCredentials`. The Lambda's `amplify_config` block handles this — do not remove or simplify the second argument to `Amplify.configure()`.
 - **CSS percentage heights cascade** — if you remove an explicit height from a parent div (e.g. `h-1/8`), any child using `height: %` or `maxHeight: %` will resolve to 0 in WebKit (Safari) because percentage heights require a sized parent. Before removing a height class from any container, grep for `h-`, `maxHeight`, and percentage-based sizing in its direct children and descendants, and switch them to viewport-relative units (e.g. `vh`) or fixed values if needed.
-- **`amplify push` silently clears the Cognito pre-signup trigger.** The auth CloudFormation template does not include `LambdaConfig`, so every `amplify push` that touches the auth stack resets the trigger to empty. After any `amplify push --env dev` or `--env main`, re-apply the trigger manually:
+- **CDK deployments can clear the Cognito pre-signup trigger.** The Gen 2 referenceAuth construct cannot modify the referenced user pool's `LambdaConfig`, so every CDK deploy that touches the auth stack may reset the trigger to empty. If signup starts rejecting all users, re-apply the trigger manually (using the Gen 2 Lambda ARNs — the Gen 1 `botchatpresignup-*` functions were deleted as part of the Gen 1 decommission):
   ```bash
   # dev
   aws cognito-idp update-user-pool --user-pool-id us-east-1_D4wZSVZIu \
-    --lambda-config PreSignUp=arn:aws:lambda:us-east-1:253178317163:function:botchatpresignup-dev \
+    --lambda-config PreSignUp=arn:aws:lambda:us-east-1:253178317163:function:amplify-dr03gq88jj3a1-cla-botchatpresignuplambdaAE-sOiOci7OONWD \
+    --auto-verified-attributes email \
+    --user-attribute-update-settings AttributesRequireVerificationBeforeUpdate=email \
+    --mfa-configuration OFF \
     --region us-east-1
   # main
   aws cognito-idp update-user-pool --user-pool-id us-east-1_N9z5Z5X2w \
-    --lambda-config PreSignUp=arn:aws:lambda:us-east-1:253178317163:function:botchatpresignup-main \
+    --lambda-config PreSignUp=arn:aws:lambda:us-east-1:253178317163:function:amplify-dr03gq88jj3a1-cla-botchatpresignuplambdaAE-ijw65k9dO8XT \
+    --auto-verified-attributes email \
+    --user-attribute-update-settings AttributesRequireVerificationBeforeUpdate=email \
+    --mfa-configuration OFF \
     --region us-east-1
   ```
 - **`amplify push` can strip `AmazonBedrockFullAccess` from Lambda roles.** After any backend push, verify both `botchatLambdaRole*` roles in the updated environment still have the policy attached — and re-attach if missing:

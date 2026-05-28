@@ -1,11 +1,6 @@
 // Env vars consumed (all set by amplify/backend.ts or the function resource):
-//   API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT  — AppSync URL the handler calls.
-//                                            During the migration this points
-//                                            at GEN 1's API (not Gen 2's), so
-//                                            mutations fire Gen 1's
-//                                            subscriptions and the existing
-//                                            frontend sees new bot replies.
-//                                            See backend.ts for why.
+//   AMPLIFY_DATA_GRAPHQL_ENDPOINT         — Gen 2 AppSync URL (primary).
+//   API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT  — Gen 1 fallback AppSync URL.
 //   REGION                                 — AWS region.
 //   AVATAR_S3_BUCKET                       — destination bucket.
 //   OPENAI_API_KEY_SSM_PATH                — SSM path to OpenAI key.
@@ -61,12 +56,6 @@ import { createChat, updatePersonalities, listPersonalities, listChats } from '.
 function configureAmplify() {
     const amplify_config = {
         "aws_project_region": process.env.REGION,
-        // Gen 2 endpoint (auto-injected via SSM by allow.resource() in
-        // amplify/data/resource.ts). Frontend is on Gen 2 too, so its
-        // subscriptions only fire for mutations through this API.
-        // Fallback to API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT (the Gen 1 URL,
-        // explicitly injected from backend.ts) for instant flip-back during
-        // soak if anything regresses.
         "aws_appsync_graphqlEndpoint":
             process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT
             || process.env.API_BOTCHAT_GRAPHQLAPIENDPOINTOUTPUT,
@@ -205,6 +194,44 @@ async function generatePortraitImage(promptText, name) {
         ContentType: 'image/png',
     }));
     return `https://${bucket}.s3.amazonaws.com/${key}`;
+}
+
+async function callOpenAIChatCompletions(systemText, messages, openAiKey) {
+    const openaiMessages = [
+        { role: 'system', content: systemText },
+        ...messages.map(m => ({ role: m.role, content: m.content[0].text })),
+    ];
+    const requestBody = JSON.stringify({
+        model: 'gpt-4o-search-preview',
+        messages: openaiMessages,
+        max_tokens: 120,
+    });
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.openai.com',
+            path: '/v1/chat/completions',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${openAiKey}`,
+                'Content-Length': Buffer.byteLength(requestBody),
+            },
+        };
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    resolve(JSON.parse(data).choices[0].message.content);
+                } else {
+                    reject(new Error(`OpenAI chat API error ${res.statusCode}: ${data}`));
+                }
+            });
+        });
+        req.on('error', reject);
+        req.write(requestBody);
+        req.end();
+    });
 }
 
 async function handlePersonalitiesEvent(record) {
@@ -398,7 +425,8 @@ async function handleChatEvent(record) {
         * Moved to AWS Bedrock Converse API, to abstract away the specific model
         */
 
-        const bedrock_converse_system_prompt = [{ text: speaker_personality + ". Do not mention specific people who were alive when the model was trained. Do not repeat the prompt. Your response should only be one person speaking." }];
+        const today = new Date().toISOString().split('T')[0];
+        const bedrock_converse_system_prompt = [{ text: speaker_personality + `. Today is ${today}. You can use current sports news and player information to back your opinions, but stay in character at all times. React directly to your co-host's last point, then add your own take. Keep your response brief — this is live sports radio banter, not a report. Be opinionated and colorful. You are speaking live on radio, not writing — never type URLs, citation markers, bracketed references, or footnotes. No markdown, no bullet points. Do not repeat the prompt. Only one person is speaking.` }];
 
         // Converse API introducted in Summer 2024
         let bedrock_converse_messages = [];
@@ -436,37 +464,19 @@ async function handleChatEvent(record) {
                     console.log ("Sorted chat_messages ", chat_messages);
                 }
 
-                // Handle the slightly unusual first message: it is always the User's prompt
+                // Anchor on the original question.
                 bedrock_converse_messages.push({
                     role: "user",
                     content: [{ text: chat_messages[0].message.replace(/\n/g, ' ') }]
                 });
 
-                // Iterate through the rest of the messages IN PAIRS, appending them to the prompt.
-                // Trade-off decision: when chat_messages is even and >0. To prompt the bot correctly, we're skipping the first response by the prior bots.
-                let start = 1;
-                if (chat_messages.length % 2 == 0) {
-                    start = 2;
-                    if (debug) {
-                        console.log("chat_messages.length is even", chat_messages.length);
-                    }
-                }
-
-                for (let i = start; i < chat_messages.length - 1; i += 2) {
-                    if (debug) {
-                        console.log("i is", i);
-                        console.log("chat_messages[i].message is", chat_messages[i].message);
-                        console.log("chat_messages[i+1].message is", chat_messages[i+1].message);
-                    }
-
-                    bedrock_converse_messages.push({
-                        role: "assistant",
-                        content: [{ text: chat_messages[i].message.replace(/\n/g, ' ') }]
-                    });
-                    bedrock_converse_messages.push({
-                        role: "user",
-                        content: [{ text: chat_messages[i+1].message.replace(/\n/g, ' ') }]
-                    });
+                // Fold in co-host's most recent message so this bot can react directly.
+                // Passing the full alternating history caused gpt-4o-search-preview to echo
+                // the co-host verbatim (unlabelled "user" messages + same web search → same text).
+                if (chat_messages.length >= 2) {
+                    const cohostLatest = chat_messages[chat_messages.length - 1];
+                    const cohost = cohostLatest.message.replace(/\n/g, ' ');
+                    bedrock_converse_messages[0].content[0].text += ` Co-host ${cohostLatest.speaker_name} just said: "${cohost}"`;
                 }
             } catch (error) {
                 bedrock_converse_messages.push({
@@ -477,75 +487,28 @@ async function handleChatEvent(record) {
             }
         }
 
-        /**
-         * Select which model will power the Bedrock request
-         * Default is Meta Llama Instruct "meta.llama3-70b-instruct-v1:0";
-         */
-        let modelId = "meta.llama3-70b-instruct-v1:0"; // Default
-//        modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0"; // Working
-//        modelId = "mistral.mistral-large-2402-v1:0" // Working
-//        modelId = "ai21.jamba-instruct-v1:0" // Working
-//        modelId = "cohere.command-r-plus-v1:0" // Working
-
-
-
-
-        /**
-         * Configure the Bedrock request for the Converse API
-         */
-        const bedrock_converse_params = {
-            maxTokens: length,
-            temperature: temperature,
-            top_p: top_p
-          };
-
-
-        /**
-         * Configure the BedrockRuntimeClient
-         */
-        const aws_sdk_config = {
-            region: 'us-east-1',
-        }
-
-
-        if (debug_admin) {
-            console.log("Bedrock config is", aws_sdk_config);
-            //console.log("Parameters: ", Parameters)
-        }
         if (debug) {
             console.log("bedrock_converse_messages is", bedrock_converse_messages);
-            for (let i = 0; i < bedrock_converse_messages.length; i++) {
-                console.log("bedrock_converse_messages ", i, ": ", bedrock_converse_messages[i]);
-            }
         }
 
         let message = '';
         if(mock_bedrock) {
             message = "Yo, what's up folks? It's Jim Hoagies here, and I gotta say, that game last night was a freakin' joke. The Ravens? They're a real team, they know how to get the job done. But the Jaguars? They're a bunch of scrubs, they don't belong on the same field as the Ravens. I mean, come on, they got shut out ";
         } else {
-            const bedrock_client = new BedrockRuntimeClient(aws_sdk_config);
-            if(debug) {
-                console.log("Running with Converse API.");
-            }
-            const converse_command = new ConverseCommand({
-                modelId: modelId,
-                messages: bedrock_converse_messages,
-                system: bedrock_converse_system_prompt,
-                inferenceConfig: bedrock_converse_params,
-            });
-            const converse_response = await bedrock_client.send(converse_command);
-            if (debug) {
-                console.log("Full Response from Bedrock Converse is", converse_response);
-                // iterate through the converse_response.output.message.content array
-                for (let i = 0; i < converse_response.output.message.content.length; i++) {
-                    console.log("content ", i, ": ", converse_response.output.message.content[i]);
-                }
-            }
-            message = converse_response.output.message.content[0].text || '';
+            const openAiKey = await getOpenAiKey();
+            message = await callOpenAIChatCompletions(
+                bedrock_converse_system_prompt[0].text,
+                bedrock_converse_messages,
+                openAiKey
+            );
         }
         if (debug) {
-            console.log("Full message body from Bedrock is:", message);
+            console.log("Full message body from OpenAI is:", message);
         }
+        // Strip inline citation links that gpt-4o-search-preview injects: ([source](url))
+        message = message.replace(/\s*\(\[[^\]]*\]\([^)]*\)\)/g, '');
+        // Strip markdown header lines (## ...) and bullet lines (- ...) from search result blocks
+        message = message.replace(/^#+\s.*$/gm, '').replace(/^-\s.*$/gm, '').replace(/^\s*\n/gm, '').trim();
         // Trim off any sentence fragments. Keep only the content to the left of the last punctuation in message.
         // Originally the code only checked for periods. Bots are expressive and sometimes use only exclamation points!
         const last_period = message.lastIndexOf(".")+1;
@@ -558,7 +521,7 @@ async function handleChatEvent(record) {
             console.log("Message is ", message);
         }
         if (message == '') {
-            console.warn("Warning: empty message returned by Bedrock.");
+            console.warn("Warning: empty message returned by OpenAI.");
             message = "I'm speechless. ";
         }
 

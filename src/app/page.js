@@ -324,7 +324,7 @@ export function Home({ signOut, user }) {
             SubmitButton: {
               children: 'Update Personalities'
             }
-          }} />
+          }} onError={(fields, messages) => alert(`Could not save personalities: ${messages}`)} />
         </div>
         <div className="hidden md:block w-1/4">
           &nbsp;
@@ -390,6 +390,7 @@ export function Home({ signOut, user }) {
               personalities={personalities}
               overrides={{ SubmitButton: { children: 'Update Personalities' } }}
               onSuccess={() => setShowSettings(false)}
+              onError={(fields, messages) => alert(`Could not save personalities: ${messages}`)}
             />
           </div>
         </div>

@@ -140,6 +140,9 @@ export default function PersonalitiesUpdateForm(props) {
               modelFields[key] = null;
             }
           });
+          if (!personalitiesRecord?.id) {
+            throw new Error("Personality record not loaded yet — please wait a moment and try again.");
+          }
           await client.graphql({
             query: updatePersonalities.replaceAll("__typename", ""),
             variables: {
@@ -148,13 +151,16 @@ export default function PersonalitiesUpdateForm(props) {
                 ...modelFields,
               },
             },
+            authMode: 'userPool',
           });
           if (onSuccess) {
             onSuccess(modelFields);
           }
         } catch (err) {
           if (onError) {
-            const messages = err.errors.map((e) => e.message).join("\n");
+            const messages = err.errors
+              ? err.errors.map((e) => e.message).join("\n")
+              : err.message || String(err);
             onError(modelFields, messages);
           }
         }
